@@ -1,0 +1,9 @@
+.idea
+build
+dist
+docs/*
+tests/__pycache__
+venv
+python_conflux_sdk.egg-info
+conflux/__init__.pyc
+conflux.egg-info
