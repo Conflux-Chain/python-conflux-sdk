@@ -64,10 +64,10 @@ from conflux import (
 provider = HTTPProvider('https://test.confluxrpc.com')
 c = Conflux(provider)
 
-random_account = Account.create("custom random inputs", 1)
-private_key_account = Account.from_key("your private key", 1)
+random_account = Account.create("custom random inputs")
+private_key_account = Account.from_key("your private key")
 
-print(random_account.address)
+print(random_account.address)  # this is an hex address, you can use Address convert it to an base32 address
 print(random_account.key)
 
 transaction = {
