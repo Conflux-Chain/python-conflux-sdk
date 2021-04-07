@@ -1,11 +1,19 @@
 # python-conflux-sdk
 A Python SDK for interacting with Conflux network.
 
+Note: this SDK still is in developing, and the API may change in the future.
+
 ## How to install
 
 ```shell
 $ pip3 install conflux
 ```
+
+## Features
+
+1. Base32 address utilities
+2. Account for signing Conflux transaction
+3. Conflux RPC interaction
 
 ## How to use
 
@@ -82,6 +90,30 @@ print(signed_tx.rawTransaction.hex())
 c.cfx.sendRawTransaction(signed_tx.rawTransaction.hex())
 ```
 
+### Contract interaction
+If you want to interact with a contract, currently you only can use web3py's contract 
+functionality, which can be used to build a transaction's data, then construct a conflux transaction,
+finally send it with sendRawTransaction method.
+
+```python
+# initiate an contract instance with abi, bytecode, or address
+Greeter = w3.eth.contract(abi=abi, bytecode=bytecode)
+# Greeter = w3.eth.contract(abi=abi, address=contract_address)
+tx_info = Greeter.constructor().buildTransaction({})
+# populate tx with other parameters for example: chainId, epochHeight, storageLimit
+# then sign it with account
+signed_tx = Account.sign_transaction(tx_info, random_account.key)
+c.cfx.sendRawTransaction(signed_tx.rawTransaction.hex())
+```
+
+We will add more support for contract interaction in the future.
+
+## Work with web3.py
+A lot of web3py utilities can directly work on Conflux, for example:
+
+1. [eth-utils](https://eth-utils.readthedocs.io/en/stable/) for type conversion, hex encodings and so on 
+2. [eth-abi](https://eth-abi.readthedocs.io/en/latest/) for abi encoding & decoding
+3. [eth-hash](https://eth-hash.readthedocs.io/en/latest/) for keccak256
 
 ## Conflux network misc
 
@@ -92,3 +124,10 @@ c.cfx.sendRawTransaction(signed_tx.rawTransaction.hex())
 ### RPC 
 1. main-net: https://main.confluxrpc.com
 2. test-net: https://test.confluxrpc.com
+
+## Docs
+
+1. [Official development site](https://developer.conflux-chain.org/)
+2. [RPC methods documentation](https://developer.conflux-chain.org/docs/conflux-doc/docs/json_rpc)
+3. [Available public RPCs](https://github.com/conflux-fans/conflux-rpc-endpoints)
+4. [Conflux faqs](https://github.com/conflux-fans/conflux-faqs)
