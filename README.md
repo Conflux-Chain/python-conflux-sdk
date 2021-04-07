@@ -1,5 +1,5 @@
 # python-conflux-sdk
-The Python SDK to interact with Conflux network.
+A Python SDK for interacting with Conflux network.
 
 ## How to install
 
@@ -16,7 +16,7 @@ from conflux import (
     Conflux,
     HTTPProvider,
 )
-provider = HTTPProvider('https://testnet-rpc.conflux-chain.org.cn/v2')
+provider = HTTPProvider('https://test.confluxrpc.com')
 c = Conflux(provider)
 
 # get RPC's clientVersion
@@ -48,7 +48,13 @@ address_b = Address.create_from_hex_address('0x1ecde7223747601823f7535d7968ba98b
 ### Account 
 
 ```python
-from conflux import Account
+from conflux import (
+    Account,
+    Conflux,
+    HTTPProvider,
+)
+provider = HTTPProvider('https://test.confluxrpc.com')
+c = Conflux(provider)
 
 random_account = Account.create("custom random inputs", 1)
 private_key_account = Account.from_key("your private key", 1)

@@ -6,10 +6,11 @@ from setuptools import (
 )
 
 VERSION = '0.0.2'
-DESCRIPTION = 'The python conflux SDK'
+DESCRIPTION = 'Conflux\'s python  SDK'
+LONG_DESCRIPTION = 'A Python SDK for interacting with Conflux network'
 
-with open("readme.md", "r") as fh:
-    long_description = fh.read()
+# with open("readme.md", "r") as fh:
+#     long_description = fh.read()
 
 # Setting up
 setup(
@@ -19,7 +20,7 @@ setup(
         author="Conflux-Dev",
         author_email="wangpan@conflux-chain.org",
         description=DESCRIPTION,
-        long_description=long_description,
+        long_description=LONG_DESCRIPTION,
         packages=find_packages(),
         install_requires=[
             # "eth-account>=0.5.3,<0.6.0",
