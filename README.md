@@ -26,7 +26,7 @@ test_address = 'cfxtest:aak7fsws4u4yf38fk870218p1h3gxut3ku00u1k1da'
 
 balance = c.cfx.getBalance(test_address)
 
-print(c.fromDrip(balance))
+print(balance)
 ```
 
 
