@@ -31,9 +31,7 @@ c = Conflux(provider)
 print(c.clientVersion)
 
 test_address = 'cfxtest:aak7fsws4u4yf38fk870218p1h3gxut3ku00u1k1da'
-
 balance = c.cfx.getBalance(test_address)
-
 print(balance)
 ```
 
@@ -46,6 +44,7 @@ from conflux import Address
 addr_a = Address('cfxtest:aak7fsws4u4yf38fk870218p1h3gxut3ku00u1k1da')
 print(addr_a.address)
 print(addr_a.hex_address)
+print(addr_a.eth_checksum_address)
 print(addr_a.network_id)
 print(addr_a.verbose_address)
 # create from hex address and network_id
@@ -91,19 +90,27 @@ c.cfx.sendRawTransaction(signed_tx.rawTransaction.hex())
 ```
 
 ### Contract interaction
-If you want to interact with a contract, currently you only can use web3py's contract 
-functionality, which can be used to build a transaction's data, then construct a conflux transaction,
-finally send it with sendRawTransaction method.
+The SDK currently only have primitive support for contract interaction 
 
+If you need invoke contract's method and change it's state
 ```python
 # initiate an contract instance with abi, bytecode, or address
-Greeter = w3.eth.contract(abi=abi, bytecode=bytecode)
-# Greeter = w3.eth.contract(abi=abi, address=contract_address)
-tx_info = Greeter.constructor().buildTransaction({})
+contract = c.contract(contract_address, contract_abi)
+data = contract.encodeABI(fn_name="transfer", args=["0x13d2bA4eD43542e7c54fbB6c5fCCb9f269C1f94C", 100])
+tx_info = {
+    'from': 'cfxtest:aak2rra2njvd77ezwjvx04kkds9fzagfe6d5r8e957',
+    'to': 'cfxtest:aak7fsws4u4yf38fk870218p1h3gxut3ku00u1k1da',
+    'data': data,
+}
 # populate tx with other parameters for example: chainId, epochHeight, storageLimit
 # then sign it with account
 signed_tx = Account.sign_transaction(tx_info, random_account.key)
 c.cfx.sendRawTransaction(signed_tx.rawTransaction.hex())
+```
+
+If you only want to query contract's state
+```python
+result = c.call_contract_method(contract_address, contract_abi, 'balanceOf', "0x13d2bA4eD43542e7c54fbB6c5fCCb9f269C1f94C")
 ```
 
 We will add more support for contract interaction in the future.

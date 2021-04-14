@@ -5,7 +5,7 @@ from setuptools import (
     setup,
 )
 
-VERSION = '0.0.2'
+VERSION = '0.0.3'
 DESCRIPTION = 'Conflux\'s python  SDK'
 LONG_DESCRIPTION = 'A Python SDK for interacting with Conflux network'
 

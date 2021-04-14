@@ -41,6 +41,24 @@ from eth_utils import (
     to_wei,
     from_wei,
 )
+from eth_utils.address import (
+    to_checksum_address
+)
+from eth_utils.conversions import (
+    to_bytes
+)
+from web3._utils.contracts import (
+    find_matching_fn_abi
+)
+from web3._utils.abi import (
+    get_abi_output_types
+)
+from cfx_address import (
+    Address
+)
+from web3 import (
+    Web3,
+)
 
 def get_default_modules() -> Dict[str, Sequence[Any]]:
     return {
@@ -77,6 +95,33 @@ class Conflux:
 
         attach_modules(self, modules)
 
+        self._w3 = Web3(Web3.EthereumTesterProvider())
+
     @property
     def clientVersion(self) -> str:
         return self.manager.request_blocking(RPC.cfx_clientVersion, [])
+
+    def contract(self, address, abi):
+        hex_address = address
+        if Address.has_network_prefix(address):
+            hex_address = Address(address).eth_checksum_address
+
+        return self._w3.eth.contract(address=hex_address, abi=abi)
+
+    def call_contract_method(self, address, abi, method_name, *kargs):
+        contract = self.contract(address, abi)
+        tx = contract.functions[method_name](*kargs).buildTransaction({
+            "gas": 21000,
+            "gasPrice": 1,
+        })
+        call_result = self.cfx.call({
+            "to": address,
+            "data": tx['data']
+        })
+        fn_abi = find_matching_fn_abi(contract.abi, self._w3.codec, method_name, kargs)
+        output_types = get_abi_output_types(fn_abi)
+        decoded_result = self._w3.codec.decode_abi(output_types, to_bytes(hexstr=call_result))
+        if len(output_types) == 1:
+            return decoded_result[0]
+        else:
+            return decoded_result
