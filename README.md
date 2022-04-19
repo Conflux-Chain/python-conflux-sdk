@@ -1,4 +1,5 @@
 # python-conflux-sdk
+
 A Python SDK for interacting with Conflux network.
 
 Note: this SDK still is in developing, and the API may change in the future.
@@ -7,6 +8,7 @@ Note: this SDK still is in developing, and the API may change in the future.
 
 ```shell
 $ pip3 install conflux
+//
 ```
 
 ## Features
@@ -35,7 +37,6 @@ balance = c.cfx.getBalance(test_address)
 print(balance)
 ```
 
-
 ### Conflux base32 address utilities
 
 ```python
@@ -51,8 +52,7 @@ print(addr_a.verbose_address)
 address_b = Address.create_from_hex_address('0x1ecde7223747601823f7535d7968ba98b4881e09', 1)
 ```
 
-
-### Account 
+### Account
 
 ```python
 from conflux import (
@@ -90,9 +90,28 @@ c.cfx.sendRawTransaction(signed_tx.rawTransaction.hex())
 ```
 
 ### Contract interaction
-The SDK currently only have primitive support for contract interaction 
+
+The SDK currently only have primitive support for contract interaction
+
+If you need deploy a contract, you need the contract's abi and bytecode
+
+```python
+contract = c._w3.eth.contract(abi = abi, bytecode = bytecode)
+constructor_info = contract.constructor("Sometoken", "ST")  # pass constructor parameter
+data = constructor_info.data_in_transaction
+tx_info = {
+    'from': 'cfxtest:aak2rra2njvd77ezwjvx04kkds9fzagfe6d5r8e957',
+    'to': 'cfxtest:aak7fsws4u4yf38fk870218p1h3gxut3ku00u1k1da',
+    'data': data,
+}
+# populate tx with other parameters for example: chainId, epochHeight, storageLimit
+# then sign it with account
+signed_tx = Account.sign_transaction(tx_info, random_account.key)
+c.cfx.sendRawTransaction(signed_tx.rawTransaction.hex())
+```
 
 If you need invoke contract's method and change it's state
+
 ```python
 # initiate an contract instance with abi, bytecode, or address
 contract = c.contract(contract_address, contract_abi)
@@ -109,6 +128,7 @@ c.cfx.sendRawTransaction(signed_tx.rawTransaction.hex())
 ```
 
 If you only want to query contract's state
+
 ```python
 result = c.call_contract_method(contract_address, contract_abi, 'balanceOf', "0x13d2bA4eD43542e7c54fbB6c5fCCb9f269C1f94C")
 ```
@@ -116,6 +136,7 @@ result = c.call_contract_method(contract_address, contract_abi, 'balanceOf', "0x
 We will add more support for contract interaction in the future.
 
 ## Work with web3.py
+
 A lot of web3py utilities can directly work on Conflux, for example:
 
 1. [eth-utils](https://eth-utils.readthedocs.io/en/stable/) for type conversion, hex encodings and so on 
@@ -125,10 +146,12 @@ A lot of web3py utilities can directly work on Conflux, for example:
 ## Conflux network misc
 
 ### chainId (networkId)
+
 1. main-net: 1029
 2. test-net: 1
 
-### RPC 
+### RPC
+
 1. main-net: https://main.confluxrpc.com
 2. test-net: https://test.confluxrpc.com
 

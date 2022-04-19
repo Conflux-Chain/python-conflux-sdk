@@ -6,3 +6,4 @@ tests/__pycache__
 venv
 conflux/__init__.pyc
 conflux.egg-info
+.pytest_cache
