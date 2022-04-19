@@ -61,13 +61,14 @@ from conflux.consts import (
     LATEST_MINED
 )
 
+
 class Cfx(ModuleV2, Module):
     defaultEpoch: EpochIdentifier = LATEST_STATE
 
     gas_price: Method[Callable[[], Drip]] = Method(
         RPC.cfx_gasPrice,
         mungers=None,
-        result_formatters = get_result_formatters
+        result_formatters=get_result_formatters
     )
 
     @property
@@ -94,13 +95,13 @@ class Cfx(ModuleV2, Module):
     epochNumber: Method[Callable[[Optional[EpochIdentifier]], EpochNumber]] = Method(
         RPC.cfx_epochNumber,
         mungers=[epoch_munger],
-        result_formatters = get_result_formatters,
+        result_formatters=get_result_formatters,
     )
 
     def account_id_munger(
-        self,
-        account: str,
-        epoch_identifier: Optional[EpochIdentifier] = None
+            self,
+            account: str,
+            epoch_identifier: Optional[EpochIdentifier] = None
     ) -> Tuple[str, EpochIdentifier]:
         if epoch_identifier is None:
             epoch_identifier = self.defaultEpoch
@@ -109,8 +110,8 @@ class Cfx(ModuleV2, Module):
     getBalance: Method[Callable[..., Drip]] = Method(
         RPC.cfx_getBalance,
         mungers=[account_id_munger],
-        request_formatters= get_request_formatters,
-        result_formatters = get_result_formatters,
+        request_formatters=get_request_formatters,
+        result_formatters=get_result_formatters,
     )
 
     getStakingBalance: Method[Callable[..., Drip]] = Method(
@@ -165,7 +166,7 @@ class Cfx(ModuleV2, Module):
     )
 
     def get_block_munger(
-        self, block_identifier: BlockIdentifier, full_transactions: bool = False
+            self, block_identifier: BlockIdentifier, full_transactions: bool = False
     ) -> Tuple[BlockIdentifier, bool]:
         return (block_identifier, full_transactions)
 
@@ -252,9 +253,9 @@ class Cfx(ModuleV2, Module):
     )
 
     def call_munger(
-        self,
-        transaction: TxParams,
-        block_identifier: Optional[BlockIdentifier] = None
+            self,
+            transaction: TxParams,
+            block_identifier: Optional[BlockIdentifier] = None
     ) -> Tuple[TxParams, BlockIdentifier]:
         # if 'from' not in transaction and is_checksum_address(self.defaultAccount):
         #     transaction = assoc(transaction, 'from', self.defaultAccount)
@@ -270,9 +271,9 @@ class Cfx(ModuleV2, Module):
     )
 
     def estimate_gas_munger(
-        self,
-        transaction: TxParams,
-        block_identifier: Optional[BlockIdentifier] = None
+            self,
+            transaction: TxParams,
+            block_identifier: Optional[BlockIdentifier] = None
     ) -> Sequence[Union[TxParams, BlockIdentifier]]:
         # if 'from' not in transaction and is_checksum_address(self.defaultAccount):
         #     transaction = assoc(transaction, 'from', self.defaultAccount)

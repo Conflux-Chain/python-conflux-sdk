@@ -40,6 +40,7 @@ LatestEpochParam = Literal["latest_state"]
 Drip = NewType('Drip', int)
 EpochNumber = NewType("EpochNumber", int)
 
+
 class FilterParams(TypedDict, total=False):
     address: Union[str, List[str]]
     blockHashes: List[HexBytes]
@@ -48,10 +49,12 @@ class FilterParams(TypedDict, total=False):
     topics: Sequence[Optional[Union[_Hash32, Sequence[_Hash32]]]]
     limit: int
 
+
 class LogReceipt(TypedDict):
     address: str
     data: HexStr
     topics: Sequence[HexBytes]
+
 
 class ChainStatus:
     bestHash: str
@@ -64,6 +67,7 @@ class ChainStatus:
     latestConfirmed: int
     latestState: int
 
+
 class Account:
     balance: int
     nonce: int
@@ -72,6 +76,7 @@ class Account:
     stakingBalance: int
     collateralForStorage: int
     accumulatedInterestReturn: int
+
 
 class Log(TypedDict):
     address: str
@@ -83,6 +88,7 @@ class Log(TypedDict):
     transactionIndex: int
     logIndex: int
     transactionLogIndex: int
+
 
 TxData = TypedDict("TxData", {
     "blockHash": HexBytes,
@@ -118,9 +124,11 @@ TxParams = TypedDict("TxParams", {
     "storageLimit": int,
 }, total=False)
 
+
 class StorageRelease:
     address: str
     collaterals: int
+
 
 TxReceipt = TypedDict("TxReceipt", {
     "blockHash": HexBytes,
@@ -141,6 +149,7 @@ TxReceipt = TypedDict("TxReceipt", {
     "transactionHash": HexBytes,
     "index": int,
 })
+
 
 class BlockData(TypedDict, total=False):
     adaptive: bool
@@ -164,9 +173,11 @@ class BlockData(TypedDict, total=False):
     transactions: Union[Sequence[HexBytes], Sequence[TxData]]
     transactionsRoot: HexBytes
 
+
 class EstimateResult(TypedDict):
     gasUsed: int
     storageCollateralized: int
+
 
 class SponsorInfo(TypedDict):
     sponsorBalanceForCollateral: int
@@ -174,6 +185,7 @@ class SponsorInfo(TypedDict):
     sponsorGasBound: int
     sponsorForCollateral: str
     sponsorForGas: str
+
 
 class RewardInfo:
     author: str

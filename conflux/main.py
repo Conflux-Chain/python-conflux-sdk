@@ -60,10 +60,12 @@ from web3 import (
     Web3,
 )
 
+
 def get_default_modules() -> Dict[str, Sequence[Any]]:
     return {
         "cfx": (Cfx,),
     }
+
 
 class Conflux:
     # Providers
@@ -81,10 +83,10 @@ class Conflux:
     cfx: Cfx
 
     def __init__(
-        self,
-        provider: Optional[BaseProvider] = None,
-        middlewares: Optional[Sequence[Any]] = None,
-        modules: Optional[Dict[str, Sequence[Any]]] = None,
+            self,
+            provider: Optional[BaseProvider] = None,
+            middlewares: Optional[Sequence[Any]] = None,
+            modules: Optional[Dict[str, Sequence[Any]]] = None,
     ) -> None:
         self.manager = self.RequestManager(self, provider, middlewares)
 
