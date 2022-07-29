@@ -2,12 +2,12 @@ from hexbytes import HexBytes
 from conflux_web3 import Web3 as CfxWeb3
 from web3 import Web3
 import json
-from conflux_module.contract import ConfluxContract
+from conflux_web3.contract import ConfluxContract
 
 conflux_testnet_rpc = 'https://test.confluxrpc.com'
 provider = Web3.HTTPProvider(conflux_testnet_rpc)
 w3 = CfxWeb3(provider=provider)
-print(status := w3.cfx.get_status)
+print(status := w3.cfx.get_status())
 print(w3.cfx.chain_id)
 
 private_key = "0xxxxxxx"
@@ -19,7 +19,7 @@ print(w3.cfx.get_balance(addr))
 
 w3.cfx.default_account = addr
 
-erc20 = json.load(open("conflux_module/contracts/ERC20.json"))
+erc20 = json.load(open("conflux_web3/contracts/ERC20.json"))
 abi = erc20["abi"]
 
 tokenContract = w3.cfx.contract(address="cfxtest:acf3zrjx1zs4p4k2eta8je2uy4ypuzjy92dty4abt5", abi=abi)

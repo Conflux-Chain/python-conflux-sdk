@@ -12,7 +12,7 @@ import json
 conflux_testnet_rpc = 'https://test.confluxrpc.com'
 provider = Web3.HTTPProvider(conflux_testnet_rpc)
 w3 = CfxWeb3(provider=provider)
-print(status := w3.cfx.get_status)
+print(status := w3.cfx.get_status())
 print(w3.cfx.chain_id)
 
 private_key = "0xdcb3d3b448ff5e08ca7efeb0bdb739f6c70a680a5275e7fbea2e408c6eb1fed9"
@@ -25,7 +25,7 @@ print(w3.cfx.get_balance(addr))
 w3.cfx.default_account = addr
 
 
-erc20 = json.load(open("conflux_module/contracts/ERC20.json"))
+erc20 = json.load(open("conflux_web3/contracts/ERC20.json"))
 
 abi = erc20["abi"]
 

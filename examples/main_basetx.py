@@ -6,14 +6,11 @@ print(sys.path)
 
 from conflux_web3 import Web3 as CfxWeb3
 from web3 import Web3
-# from conflux_module import ConfluxClient
-# from typing import cast, Type
-# from cfx_account import Account
 
 conflux_testnet_rpc = 'https://test.confluxrpc.com'
 provider = Web3.HTTPProvider(conflux_testnet_rpc)
 w3 = CfxWeb3(provider=provider)
-print(status := w3.cfx.get_status)
+print(status := w3.cfx.get_status())
 print(w3.cfx.chain_id)
 
 private_key = "0xxxxxxx"
