@@ -5,6 +5,7 @@ from typing import (
     Union
 )
 
+from web3.datastructures import AttributeDict
 from web3.types import (
     BlockIdentifier,
     CallOverrideParams,
@@ -28,9 +29,9 @@ from web3._utils.normalizers import (
     abi_int_to_hex,
     abi_string_to_hex,
 )
-
+from web3.module import Module
 from web3._utils.formatters import (
-    # hex_to_integer,
+    hex_to_integer,
     # integer_to_hex,
     # is_array_of_dicts,
     # is_array_of_strings,
@@ -38,17 +39,24 @@ from web3._utils.formatters import (
 )
 from web3._utils.rpc_abi import abi_request_formatters
 
+from eth_utils.types import (
+    is_string,
+    is_dict
+)
+
 from eth_utils.toolz import (
-    # complement,
+    complement, # type: ignore
     compose,  # type: ignore
     # curried,
     # partial,
 )
 from eth_utils.curried import (
     apply_formatter_at_index, # type: ignore
+    apply_formatters_to_dict,
+    apply_formatter_if,
 )
 
-from conflux_module._utils.rpc_abi import (
+from conflux_web3._utils.rpc_abi import (
     RPC_ABIS,
     RPC
 )
@@ -67,8 +75,8 @@ STANDARD_NORMALIZERS = [
 # }
 # transaction_request_formatter = apply_formatters_to_dict(TRANSACTION_REQUEST_FORMATTERS)
 transaction_param_formatter = compose(
-    remove_key_if('to', lambda txn: txn['to'] in {'', b'', None}),
-    remove_key_if('gasPrice', lambda txn: txn['gasPrice'] in {'', b'', None}),
+    remove_key_if('to', lambda txn: txn['to'] in {'', b'', None}),  # type: ignore
+    remove_key_if('gasPrice', lambda txn: txn['gasPrice'] in {'', b'', None}),  # type: ignore
     # transaction_request_formatter,
 )
 
@@ -77,6 +85,9 @@ ABI_REQUEST_FORMATTERS = abi_request_formatters(STANDARD_NORMALIZERS, RPC_ABIS)
 #     RPC.cfx_getLogs: apply_formatter_at_index(FILTER_PARAM_NORMALIZERS, 0),
 #     # RPC.eth_newFilter: apply_formatter_at_index(FILTER_PARAM_NORMALIZERS, 0)
 # }
+
+to_integer_if_hex = apply_formatter_if(is_string, hex_to_integer)
+
 
 
 PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
@@ -140,19 +151,40 @@ PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # ),
 }
 
+STATUS_FORMATTERS = {
+    # "bestHash": "0xe4bf02ad95ad5452c7676d3dfc2e57fde2a70806c2e68231c58c77cdda5b7c6c",
+    "chainId": to_integer_if_hex,
+    "networkId": to_integer_if_hex,
+    "blockNumber": to_integer_if_hex,
+    "epochNumber": to_integer_if_hex,
+    "latestCheckpoint": to_integer_if_hex,
+    "latestConfirmed": to_integer_if_hex,
+    "latestState": to_integer_if_hex,
+    "latestFinalized": to_integer_if_hex,
+    "ethereumSpaceChainId": to_integer_if_hex,
+    "pendingTxNumber": to_integer_if_hex
+}
+
+ESTIMATE_FORMATTERS = {
+    "gasLimit": to_integer_if_hex,
+    "gasUsed": to_integer_if_hex,
+    "storageCollateralized": to_integer_if_hex
+}
+
 
 PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # Eth
     # RPC.eth_accounts: apply_list_to_array_formatter(to_checksum_address),
-    # RPC.eth_blockNumber: to_integer_if_hex,
-    # RPC.eth_chainId: to_integer_if_hex,
+    RPC.cfx_epochNumber: to_integer_if_hex,
+    RPC.cfx_getStatus: apply_formatters_to_dict(STATUS_FORMATTERS),
     # RPC.eth_coinbase: to_checksum_address,
     # RPC.eth_call: HexBytes,
-    # RPC.eth_estimateGas: to_integer_if_hex,
+    RPC.cfx_estimateGasAndCollateral: apply_formatters_to_dict(ESTIMATE_FORMATTERS),
     # RPC.eth_feeHistory: fee_history_formatter,
     # RPC.eth_maxPriorityFeePerGas: to_integer_if_hex,
-    # RPC.eth_gasPrice: to_integer_if_hex,
-    # RPC.eth_getBalance: to_integer_if_hex,
+    RPC.cfx_gasPrice: to_integer_if_hex,
+    RPC.cfx_getBalance: to_integer_if_hex,
+    RPC.cfx_getNextNonce: to_integer_if_hex,
     # RPC.eth_getBlockByHash: apply_formatter_if(is_not_null, block_formatter),
     # RPC.eth_getBlockByNumber: apply_formatter_if(is_not_null, block_formatter),
     # RPC.eth_getBlockTransactionCountByHash: to_integer_if_hex,
@@ -224,3 +256,25 @@ def cfx_request_formatters(
     )
     formatters = combine_formatters(request_formatter_maps, method_name)
     return compose(*formatters)
+
+
+def is_attrdict(val: Any) -> bool:
+    return isinstance(val, AttributeDict)
+not_attrdict = complement(is_attrdict)
+
+def cfx_result_formatters(
+    method_name: Union[RPCEndpoint, Callable[..., RPCEndpoint]],
+    module: "Module",
+) -> Dict[str, Callable[..., Any]]:
+    formatters = combine_formatters((PYTHONIC_RESULT_FORMATTERS,), method_name)
+    # formatters_requiring_module = combine_formatters(
+    #     (FILTER_RESULT_FORMATTERS,), method_name
+    # )
+
+    # partial_formatters = apply_module_to_formatters(
+    #     formatters_requiring_module, module, method_name
+    # )
+    attrdict_formatter = apply_formatter_if(
+        is_dict and not_attrdict, AttributeDict.recursive
+    )
+    return compose(attrdict_formatter, *formatters)

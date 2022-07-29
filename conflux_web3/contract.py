@@ -28,16 +28,18 @@ from web3.types import (
 
 from cfx_address import Address as CfxAddress
 
-from conflux_module.types import Base32Address
-from conflux_module._utils.validation import validate_base32_address
-from conflux_module._utils.contracts import prepare_transaction
+from conflux_web3.types import Base32Address
+from conflux_web3._utils.validation import validate_base32_address
+from conflux_web3._utils.contracts import prepare_transaction
 
 
 if TYPE_CHECKING:
-    from web3 import Web3
+    from conflux_web3 import Web3
 
 
 class ConfluxContractFunction(ContractFunction):
+    w3: "Web3"
+    
     def build_transaction(self, transaction: Optional[TxParams] = None) -> TxParams:
         built_transaction = self._build_transaction(transaction)
         return build_transaction_for_function(
@@ -93,9 +95,9 @@ def build_transaction_for_function(
 
 
 class ConfluxContract(Contract):
-    address: Base32Address = None  # type: ignore
-    w3: 'Web3' = None # type: ignore
-    _hex_address: ChecksumAddress = None # type: ignore
+    address: Base32Address
+    w3: 'Web3'
+    _hex_address: ChecksumAddress
     functions: ConfluxContractFunctions
     
     def __init__(self, address: Base32Address) -> None:

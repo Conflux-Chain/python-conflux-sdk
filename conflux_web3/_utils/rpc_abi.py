@@ -50,8 +50,8 @@ class RPC:
     cfx_method = RPCEndpoint("cfx_method")
 
 TRANSACTION_PARAMS_ABIS = {
-    # 'from': 'address',
-    # 'to': 'address',
+    'from': 'address',
+    'to': 'address',
     'data': 'bytes',
     'gas': 'uint',
     'gasPrice': 'uint',

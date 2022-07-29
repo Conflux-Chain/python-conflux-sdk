@@ -7,16 +7,11 @@ from typing import (
 )
 from hexbytes import HexBytes
 
-from eth_typing.encoding import (
-    HexStr,
-)
-from eth_utils.hexadecimal import (
-    encode_hex,
-)
-from eth_utils.conversions import (
-    to_hex,
-)
+from eth_typing.encoding import HexStr
+from eth_utils.hexadecimal import encode_hex
+from eth_utils.conversions import to_hex
 
+from web3.types import ABIFunction
 from web3._utils import contracts
 from web3._utils.abi import (
     check_if_arguments_can_be_encoded,
@@ -27,17 +22,14 @@ from web3._utils.normalizers import (
     abi_bytes_to_bytes,
     abi_string_to_text,
 )
-from web3.types import (
-    ABIFunction,
-)
 
-from conflux_module._utils.decorators import (
+from conflux_web3._utils.decorators import (
     cfx_web3_condition,
     conditional_func
 )
 
 if TYPE_CHECKING:
-    from web3 import Web3
+    from conflux_web3 import Web3
 
 def cfx_encode_abi(
     web3: "Web3", abi: ABIFunction, arguments: Sequence[Any], data: Optional[HexStr] = None

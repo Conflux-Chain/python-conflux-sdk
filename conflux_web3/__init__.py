@@ -18,8 +18,8 @@ from web3._utils.empty import (
 )
 
 
-from conflux_module import ConfluxClient
-from conflux_module._utils.abi import build_cfx_default_registry
+from conflux_web3.client import ConfluxClient
+from conflux_web3._utils.abi import build_cfx_default_registry
 
 # The module name __name__ should be Web3 
 class Web3(OriWeb3):
@@ -48,7 +48,7 @@ class Web3(OriWeb3):
             "eth": ConfluxClient
         }
 
-        self.attach_modules(modules)
+        self.attach_modules(modules)  # type: ignore
 
         # if external_modules is not None:
         #     self.attach_modules(external_modules)

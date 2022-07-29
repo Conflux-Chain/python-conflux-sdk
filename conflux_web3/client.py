@@ -32,11 +32,19 @@ import functools
 # from eth_typing import Address
 from hexbytes import HexBytes
 
-from web3.eth import BaseEth, Eth
+from web3.eth import (
+    BaseEth, 
+    Eth
+)
 from web3.method import (
     # DeprecatedMethod,
-    Method,
     default_root_munger,
+)
+from web3.datastructures import (
+    AttributeDict,
+)
+from conflux_web3.method import (
+    ConfluxMethod
 )
 from web3.types import (
     # ENS,
@@ -64,15 +72,16 @@ from eth_utils.toolz import assoc  # type: ignore
 from cfx_address import Address as CfxAddress
 from cfx_account import Account as CfxAccount
 
-from conflux_module._utils.rpc_abi import RPC
-from conflux_module._utils.method_formatters import cfx_request_formatters
-from conflux_module.types import (
+from conflux_web3._utils.rpc_abi import RPC
+from conflux_web3._utils.method_formatters import cfx_request_formatters
+from conflux_web3.types import (
     Drip,
     BlockIdentifier,
-    AddressParam
+    AddressParam,
+    EstimateResult
 )
-from conflux_module.contract import ConfluxContract
-from conflux_module._utils.validation import validate_base32_address
+from conflux_web3.contract import ConfluxContract
+from conflux_web3._utils.validation import validate_base32_address
 
 class BaseCfx(BaseEth):
     _default_block: BlockIdentifier = "latest_state"
@@ -86,31 +95,45 @@ class BaseCfx(BaseEth):
 
         return (transaction,)
     
-    _get_status: Method[Callable[[], Any]] = Method(
+    _get_status: ConfluxMethod[Callable[[], Dict]] = ConfluxMethod(
         RPC.cfx_getStatus,
-        mungers=None,
     )
     
-    _get_balance: Method[Callable[..., HexStr]] = Method(
+    _gas_price: ConfluxMethod[Callable[[], int]] = ConfluxMethod(
+        RPC.cfx_gasPrice,
+    )
+    
+    _estimate_gas: None
+    
+    _estimate_gas_and_collateral: ConfluxMethod[Callable[..., EstimateResult]] = ConfluxMethod(
+        RPC.cfx_estimateGasAndCollateral,
+    )
+    
+    _get_balance: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
         RPC.cfx_getBalance,
-        mungers=[BaseEth.block_id_munger],
+        # mungers=[BaseEth.block_id_munger],
     )
     
-    _get_next_nonce: Method[Callable[..., HexStr]] = Method(
+    _epoch_number: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
+        RPC.cfx_epochNumber,
+        # mungers=[BaseEth.block_id_munger],
+    )
+    
+    _get_next_nonce: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
         RPC.cfx_getNextNonce,
-        mungers=[BaseEth.block_id_munger],
+        # mungers=[BaseEth.block_id_munger],
     )
     
-    _send_raw_transaction: Method[Callable[[Union[HexStr, bytes]], HexBytes]] = Method(
+    _send_raw_transaction: ConfluxMethod[Callable[[Union[HexStr, bytes]], HexBytes]] = ConfluxMethod(
         RPC.cfx_sendRawTransaction,
         mungers=[default_root_munger],
-        request_formatters=cfx_request_formatters
+        # request_formatters=cfx_request_formatters
     )
     
-    _send_transaction: Method[Callable[[TxParams], HexBytes]] = Method(
+    _send_transaction: ConfluxMethod[Callable[[TxParams], HexBytes]] = ConfluxMethod(
         RPC.cfx_sendTransaction,
         mungers=[send_transaction_munger],
-        request_formatters=cfx_request_formatters
+        # request_formatters=cfx_request_formatters
     )
     
 
@@ -119,8 +142,7 @@ class ConfluxClient(BaseCfx, Eth):
     address = CfxAddress
     defaultContractFactory = ConfluxContract
     
-    @property
-    def get_status(self) -> Dict[str, str]:
+    def get_status(self) -> AttributeDict:
         """
             Returns the node status.
         Returns:
@@ -142,15 +164,23 @@ class ConfluxClient(BaseCfx, Eth):
         """
         return self._get_status()
     
+    @property
+    def gas_price(self) -> Drip:
+        return self._gas_price()
+    
+    @property
+    def epoch_number(self) -> int:
+        return self._epoch_number()
+    
     @functools.cached_property
     def chain_id(self) -> int:
-        return int(self._get_status()["chainId"], 16)
+        return self._get_status()["chainId"]
     
-    def get_balance(self, address: Union[str, AddressParam], block_identifier: BlockIdentifier = BaseCfx._default_block) -> Drip:
-        return Drip(int(self._get_balance(address, block_identifier), 16))
+    def get_balance(self, address: Union[str, AddressParam], block_identifier: BlockIdentifier = None) -> Drip:
+        return Drip(self._get_balance(address, block_identifier))
     
-    def get_next_nonce(self, address: Union[str, AddressParam], block_identifier: BlockIdentifier = BaseCfx._default_block) -> Drip:
-        return Drip(int(self._get_next_nonce(address, block_identifier), 16))
+    def get_next_nonce(self, address: Union[str, AddressParam], block_identifier: BlockIdentifier = None) -> Drip:
+        return self._get_next_nonce(address, block_identifier)
 
     def send_raw_transaction(self, transaction: Union[HexStr, bytes]) -> HexBytes:
         return self._send_raw_transaction(transaction)

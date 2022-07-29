@@ -7,7 +7,7 @@ from eth_abi.decoding import (
     AddressDecoder
 )
 from web3._utils.abi import build_default_registry, AddressEncoder
-from conflux_module._utils.validation import validate_base32_address
+from conflux_web3._utils.validation import validate_base32_address
 from cfx_address import Address
 
 class Base32AddressEncoder(AddressEncoder):

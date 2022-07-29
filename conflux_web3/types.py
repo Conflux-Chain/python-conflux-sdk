@@ -9,6 +9,7 @@ from typing import (
     Sequence,
     Type,
     TypeVar,
+    TypedDict,
     Union,
     Literal
 )
@@ -38,11 +39,21 @@ Base32Address = NewType("Base32Address", str)
 AddressParam = Union[Base32Address, CfxAccount, CfxAddress]
 
 BlockParams = Literal["latest_checkpoint", "earliest", "latest_finalized", "latest_confirmed", "latest_state", "latest_mined"]
-BlockIdentifier = Union[BlockParams, BlockNumber, Hash32, HexStr, HexBytes, int]
+BlockIdentifier = Union[BlockParams, BlockNumber, Hash32, HexStr, HexBytes, int, None]
+
+EstimateResult = TypedDict(
+    "EstimateResult",
+    {
+        "gasLimit": int,
+        "gasUsed": int,
+        "storageCollateralized": int,
+    }
+)
 
 __all__ = (
     "Drip",
     "BlockParams",
     "BlockIdentifier",
-    "Base32Address"
+    "Base32Address",
+    "EstimateResult",
 )
