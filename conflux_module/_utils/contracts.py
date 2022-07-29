@@ -1,89 +1,50 @@
-from copy import deepcopy
-# from modulefinder import Module
 # import functools
-from turtle import clone
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     Optional,
     Sequence,
-    Type,
-    # Tuple,
-    # Type,
-    # Union,
-    # cast,
-    
 )
+from hexbytes import HexBytes
 
-from eth_typing import (
-    # ChecksumAddress,
+from eth_typing.encoding import (
     HexStr,
 )
-from eth_utils import (
+from eth_utils.hexadecimal import (
     encode_hex,
 )
-# from eth_utils.toolz import (
-#     pipe,
-#     valmap,
-# )
-from hexbytes import (
-    HexBytes,
-)
-
-from web3._utils.abi import (
-    abi_to_signature,
-    check_if_arguments_can_be_encoded,
-    filter_by_argument_count,
-    filter_by_argument_name,
-    filter_by_encodability,
-    filter_by_name,
-    filter_by_type,
-    get_abi_input_types,
-    get_aligned_abi_inputs,
-    get_fallback_func_abi,
-    get_receive_func_abi,
-    map_abi_data,
-    merge_args_and_kwargs,
-)
-from web3._utils.encoding import (
+from eth_utils.conversions import (
     to_hex,
 )
-from web3._utils.function_identifiers import (
-    FallbackFn,
-    ReceiveFn,
+
+from web3._utils import contracts
+from web3._utils.abi import (
+    check_if_arguments_can_be_encoded,
+    get_abi_input_types,
+    map_abi_data,
 )
 from web3._utils.normalizers import (
-    abi_address_to_hex,
     abi_bytes_to_bytes,
-    abi_ens_resolver,
     abi_string_to_text,
 )
-from web3._utils import contracts
-# from web3._utils.contracts import (
-#     encode_abi,
-#     prepare_transaction
-# )
-from web3.exceptions import (
-    ValidationError,
-)
 from web3.types import (
-    ABI,
-    ABIEvent,
     ABIFunction,
-    TxParams,
 )
 
 from conflux_module._utils.decorators import (
-    temp_alter_module_variable,
     cfx_web3_condition,
     conditional_func
 )
 
+if TYPE_CHECKING:
+    from web3 import Web3
 
 def cfx_encode_abi(
     web3: "Web3", abi: ABIFunction, arguments: Sequence[Any], data: Optional[HexStr] = None
 ) -> HexStr:
+    """
+    do what encode_abi does except for normalizers
+    """
     argument_types = get_abi_input_types(abi)
 
     if not check_if_arguments_can_be_encoded(abi, web3.codec, arguments, {}):
@@ -94,6 +55,7 @@ def cfx_encode_abi(
             )
         )
 
+    # abi_ens_resolver and abi_address_to_hex are eliminated
     normalizers = [
         # abi_ens_resolver(web3),
         # abi_address_to_hex,
@@ -115,7 +77,7 @@ def cfx_encode_abi(
     else:
         return encode_hex(encoded_arguments)
     
-# contracts.encode_abi = cfx_encode_abi
+# hack the encode_abi function of _util.contracts module
 contracts.encode_abi = conditional_func(
     cfx_encode_abi,
     cfx_web3_condition

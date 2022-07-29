@@ -1,11 +1,18 @@
-
 from typing import (
+    TYPE_CHECKING,
     Any,
     Optional,
     cast
 )
 from eth_typing.evm import ChecksumAddress
-from web3 import contract
+from web3.contract import (
+    BaseContractFunctions,
+    ContractFunction,
+    Contract,
+    ContractCaller,
+    ContractEvents
+    
+)
 from web3.types import (
     ABI,
     # ABIEvent,
@@ -24,12 +31,36 @@ from cfx_address import Address as CfxAddress
 from conflux_module.types import Base32Address
 from conflux_module._utils.validation import validate_base32_address
 from conflux_module._utils.contracts import prepare_transaction
-from conflux_module._utils.decorators import (
-    temp_alter_module_variable,
-    cfx_web3_condition,
-    conditional_func
-)
-        
+
+
+if TYPE_CHECKING:
+    from web3 import Web3
+
+
+class ConfluxContractFunction(ContractFunction):
+    def build_transaction(self, transaction: Optional[TxParams] = None) -> TxParams:
+        built_transaction = self._build_transaction(transaction)
+        return build_transaction_for_function(
+            self.address,
+            self.w3,
+            self.function_identifier,
+            built_transaction,
+            self.contract_abi,
+            self.abi,
+            *self.args,
+            **self.kwargs,
+        )
+
+
+class ConfluxContractFunctions(BaseContractFunctions):
+    def __init__(
+        self,
+        abi: ABI,
+        w3: "Web3",
+        address: Optional[Base32Address] = None,
+    ) -> None:
+        super().__init__(abi, w3, ConfluxContractFunction, address)  # type: ignore
+     
 def build_transaction_for_function(
         address: ChecksumAddress,
         web3: 'Web3',
@@ -47,36 +78,32 @@ def build_transaction_for_function(
     prepared_transaction = prepare_transaction(
         address,
         web3,
-        fn_identifier=function_name,
+        fn_identifier=function_name, # type: ignore
         contract_abi=contract_abi,
         fn_abi=fn_abi,
         transaction=transaction,
         fn_args=args,
         fn_kwargs=kwargs,
-    )
+    ) 
 
     # TODO
     # prepared_transaction = fill_transaction_defaults(web3, prepared_transaction)
 
     return prepared_transaction
 
-contract.build_transaction_for_function = conditional_func(
-    build_transaction_for_function, 
-    cfx_web3_condition
-)(contract.build_transaction_for_function)
 
-
-class ConfluxContract(contract.Contract):
+class ConfluxContract(Contract):
     address: Base32Address = None  # type: ignore
-    web3: 'Web3' = None # type: ignore
+    w3: 'Web3' = None # type: ignore
     _hex_address: ChecksumAddress = None # type: ignore
+    functions: ConfluxContractFunctions
     
     def __init__(self, address: Base32Address) -> None:
         """Create a new smart contract proxy object.
 
         :param address: Base32 Contract address 
         """
-        if self.web3 is None:
+        if self.w3 is None:
             raise AttributeError(
                 'The `Contract` class has not been initialized.  Please use the '
                 '`web3.contract` interface to create your contract class.'
@@ -92,8 +119,8 @@ class ConfluxContract(contract.Contract):
         if not self.address:
             raise TypeError("The address argument is required to instantiate a contract.")
 
-        self.functions = contract.ContractFunctions(self.abi, self.web3, self.address)
-        self.caller = contract.ContractCaller(self.abi, self.web3, self.address)
-        self.events = contract.ContractEvents(self.abi, self.web3, self.address)
-        self.fallback = contract.Contract.get_fallback_function(self.abi, self.web3, self.address)
-        self.receive = contract.Contract.get_receive_function(self.abi, self.web3, self.address)
+        self.functions = ConfluxContractFunctions(self.abi, self.w3, self.address)
+        self.caller = ContractCaller(self.abi, self.w3, self.address) # type: ignore
+        self.events = ContractEvents(self.abi, self.w3, self.address) # type: ignore
+        self.fallback = Contract.get_fallback_function(self.abi, self.w3, self.address) # type: ignore
+        self.receive = Contract.get_receive_function(self.abi, self.w3, self.address) # type: ignore

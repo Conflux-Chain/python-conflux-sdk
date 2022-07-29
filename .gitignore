@@ -13,3 +13,4 @@ conflux/
 __pycache__
 .DS_Store
 .vscode
+private_tests

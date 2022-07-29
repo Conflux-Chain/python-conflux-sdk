@@ -1,4 +1,9 @@
-from hexbytes import HexBytes
+from pathlib import Path
+import sys
+path_root = Path(__file__).parents[1]
+sys.path.append(str(path_root))
+print(sys.path)
+
 from conflux_web3 import Web3 as CfxWeb3
 from web3 import Web3
 # from conflux_module import ConfluxClient

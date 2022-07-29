@@ -1,4 +1,10 @@
-from hexbytes import HexBytes
+from pathlib import Path
+import sys
+path_root = Path(__file__).parents[1]
+sys.path.append(str(path_root))
+print(sys.path)
+
+
 from conflux_web3 import Web3 as CfxWeb3
 from web3 import Web3
 import json
@@ -9,7 +15,7 @@ w3 = CfxWeb3(provider=provider)
 print(status := w3.cfx.get_status)
 print(w3.cfx.chain_id)
 
-private_key = "0xxxxxxx"
+private_key = "0xdcb3d3b448ff5e08ca7efeb0bdb739f6c70a680a5275e7fbea2e408c6eb1fed9"
 account = w3.account.privateKeyToAccount(private_key)
 addr = w3.address.encode_hex_address(account.address, w3.cfx.chain_id)
 print("base32: {}".format(addr))
