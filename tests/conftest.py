@@ -14,7 +14,7 @@ from conflux_web3 import (
 @pytest.fixture(scope="session")
 def node() -> Iterable[BaseNode]:
     
-    if os.environ.get("USE_TESTNET"):
+    if os.environ.get("TESTNET_SECRET"):
         node = RemoteTestnetNode()
         yield node
     else:
