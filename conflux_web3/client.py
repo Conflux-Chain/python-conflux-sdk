@@ -24,6 +24,8 @@ SOFTWARE.
 from typing import (
     Any,
     Callable,
+    Optional,
+    Sequence,
     Tuple,
     Union,
     Dict
@@ -105,8 +107,16 @@ class BaseCfx(BaseEth):
     
     _estimate_gas: None
     
+    def estimate_gas_and_collateral_munger(
+        self, transaction: TxParams) -> Sequence[TxParams]:
+        if "from" not in transaction and validate_base32_address(self.default_account):
+            transaction = assoc(transaction, "from", self.default_account)
+
+        params = [transaction]
+        return params
+    
     _estimate_gas_and_collateral: ConfluxMethod[Callable[..., EstimateResult]] = ConfluxMethod(
-        RPC.cfx_estimateGasAndCollateral,
+        RPC.cfx_estimateGasAndCollateral, mungers=estimate_gas_and_collateral_munger
     )
     
     _get_balance: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
@@ -146,7 +156,7 @@ class ConfluxClient(BaseCfx, Eth):
         """
             Returns the node status.
         Returns:
-            Dict[str, str]: node status
+            AttributeDict: node status
             e.g.
             {
                 "bestHash": "0xe4bf02ad95ad5452c7676d3dfc2e57fde2a70806c2e68231c58c77cdda5b7c6c",
@@ -181,6 +191,8 @@ class ConfluxClient(BaseCfx, Eth):
     
     def get_next_nonce(self, address: Union[str, AddressParam], block_identifier: BlockIdentifier = None) -> Drip:
         return self._get_next_nonce(address, block_identifier)
+
+    # def estimate_gas_and_collateral(self, )
 
     def send_raw_transaction(self, transaction: Union[HexStr, bytes]) -> HexBytes:
         return self._send_raw_transaction(transaction)

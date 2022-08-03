@@ -1,4 +1,6 @@
 .idea
+.pytest_cache
+.hypothesis
 build
 dist
 docs/*
@@ -14,3 +16,6 @@ __pycache__
 .DS_Store
 .vscode
 private_tests
+legacy_tests
+note.ipynb
+share

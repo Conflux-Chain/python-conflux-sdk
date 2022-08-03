@@ -7,11 +7,12 @@ from typing import (
 
 from eth_abi.codec import ABICodec
 from web3 import Web3 as OriWeb3
+from web3 import HTTPProvider
 from web3.providers.base import (
     BaseProvider,
 )
-from web3.providers.base import (
-    BaseProvider,
+from web3 import (
+    HTTPProvider,
 )
 from web3._utils.empty import (
     empty,
@@ -64,3 +65,8 @@ class Web3(OriWeb3):
         self.address = self.cfx.address
         
         # TODO: set contract
+
+__all__ = [
+    "Web3",
+    "HTTPProvider"
+]
