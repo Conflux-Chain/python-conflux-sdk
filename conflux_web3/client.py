@@ -28,7 +28,8 @@ from typing import (
     Sequence,
     Tuple,
     Union,
-    Dict
+    Dict,
+    cast
 )
 import functools
 # from eth_typing import Address
@@ -38,15 +39,16 @@ from web3.eth import (
     BaseEth, 
     Eth
 )
+from web3._utils.empty import (
+    Empty,
+    empty,
+)
 from web3.method import (
     # DeprecatedMethod,
     default_root_munger,
 )
 from web3.datastructures import (
     AttributeDict,
-)
-from conflux_web3.method import (
-    ConfluxMethod
 )
 from web3.types import (
     # ENS,
@@ -73,6 +75,8 @@ from eth_utils.toolz import assoc  # type: ignore
 
 from cfx_address import Address as CfxAddress
 from cfx_account import Account as CfxAccount
+from cfx_account.account import LocalAccount
+
 
 from conflux_web3._utils.rpc_abi import RPC
 from conflux_web3._utils.method_formatters import cfx_request_formatters
@@ -80,13 +84,39 @@ from conflux_web3.types import (
     Drip,
     BlockIdentifier,
     AddressParam,
-    EstimateResult
+    EstimateResult,
+    Base32Address
 )
 from conflux_web3.contract import ConfluxContract
 from conflux_web3._utils.validation import validate_base32_address
+from conflux_web3.method import (
+    ConfluxMethod
+)
 
 class BaseCfx(BaseEth):
     _default_block: BlockIdentifier = "latest_state"
+    _default_account: Union[Base32Address, str, Empty] = empty
+
+    
+    @property
+    def default_account(self) -> Union[Base32Address, str, Empty]:
+        """default account address rather than a local account with private key
+        """
+        return self._default_account
+
+    @default_account.setter
+    def default_account(self, account: Union[Base32Address, str, LocalAccount, Empty]) -> None:
+        """set default account address
+        Args:
+            account: an address or a local account (but only address field works)
+        """
+        if getattr(account, "address", None):
+            validate_base32_address(account.address) # type: ignore
+            self._default_account = account.address # type: ignore
+        else:
+            validate_base32_address(account)
+            self._default_account = account # type: ignore
+    
     
     def send_transaction_munger(self, transaction: TxParams) -> Tuple[TxParams]:
         if self.default_account:
@@ -108,42 +138,42 @@ class BaseCfx(BaseEth):
     _estimate_gas: None
     
     def estimate_gas_and_collateral_munger(
-        self, transaction: TxParams) -> Sequence[TxParams]:
-        if "from" not in transaction and validate_base32_address(self.default_account):
+        self, transaction: Union[TxParams, dict[str, Any]], block_identifier: Optional[BlockIdentifier]=None
+    ) -> Sequence[Union[TxParams, dict[str, Any], BlockIdentifier]]:
+        if "from" not in transaction and self.default_account:
             transaction = assoc(transaction, "from", self.default_account)
 
-        params = [transaction]
+        if block_identifier is None:
+            params = [transaction]
+        else:
+            params = [transaction, block_identifier]
+
         return params
     
     _estimate_gas_and_collateral: ConfluxMethod[Callable[..., EstimateResult]] = ConfluxMethod(
-        RPC.cfx_estimateGasAndCollateral, mungers=estimate_gas_and_collateral_munger
+        RPC.cfx_estimateGasAndCollateral, mungers=[estimate_gas_and_collateral_munger]
     )
     
     _get_balance: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
         RPC.cfx_getBalance,
-        # mungers=[BaseEth.block_id_munger],
     )
     
     _epoch_number: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
         RPC.cfx_epochNumber,
-        # mungers=[BaseEth.block_id_munger],
     )
     
     _get_next_nonce: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
         RPC.cfx_getNextNonce,
-        # mungers=[BaseEth.block_id_munger],
     )
     
     _send_raw_transaction: ConfluxMethod[Callable[[Union[HexStr, bytes]], HexBytes]] = ConfluxMethod(
         RPC.cfx_sendRawTransaction,
         mungers=[default_root_munger],
-        # request_formatters=cfx_request_formatters
     )
     
     _send_transaction: ConfluxMethod[Callable[[TxParams], HexBytes]] = ConfluxMethod(
         RPC.cfx_sendTransaction,
         mungers=[send_transaction_munger],
-        # request_formatters=cfx_request_formatters
     )
     
 
@@ -182,7 +212,7 @@ class ConfluxClient(BaseCfx, Eth):
     def epoch_number(self) -> int:
         return self._epoch_number()
     
-    @functools.cached_property
+    @property
     def chain_id(self) -> int:
         return self._get_status()["chainId"]
     
@@ -192,7 +222,8 @@ class ConfluxClient(BaseCfx, Eth):
     def get_next_nonce(self, address: Union[str, AddressParam], block_identifier: BlockIdentifier = None) -> Drip:
         return self._get_next_nonce(address, block_identifier)
 
-    # def estimate_gas_and_collateral(self, )
+    def estimate_gas_and_collateral(self, transaction: Union[TxParams, dict], block_identifier: Optional[BlockIdentifier]=None):
+        return self._estimate_gas_and_collateral(transaction, block_identifier)
 
     def send_raw_transaction(self, transaction: Union[HexStr, bytes]) -> HexBytes:
         return self._send_raw_transaction(transaction)

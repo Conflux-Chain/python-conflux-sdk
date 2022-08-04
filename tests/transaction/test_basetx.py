@@ -1,11 +1,9 @@
 from conflux_web3 import Web3
 
 def test_basetx(w3: Web3, secret_key: str):
-    account = w3.account.from_key(secret_key, w3.cfx.chain_id)
-    # assert w3.isConnected()
+    account = w3.account.from_key(secret_key)
     status = w3.cfx.get_status()
     
-    # addr = w3.address.encode_hex_address(account.address, w3.cfx.chain_id)
     addr = account.address
     
     tx = {

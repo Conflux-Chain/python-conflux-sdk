@@ -11,6 +11,7 @@ from conflux_web3 import (
     Web3
 )
 
+
 @pytest.fixture(scope="session")
 def node() -> Iterable[BaseNode]:
     
@@ -27,6 +28,15 @@ def node_url(node):
     return node.url
 
 @pytest.fixture(scope="session")
+def secret_key(node: LocalNode) -> str:
+    """
+    Returns:
+        str: secret key with enough balance
+    """
+    return node.secrets[0]
+
+# no scope here
+@pytest.fixture
 def w3(node_url: str, node: LocalNode) -> Web3:
     """
     Returns:
@@ -37,12 +47,7 @@ def w3(node_url: str, node: LocalNode) -> Web3:
     # assert w3.isConnected()
     return w3
 
-
-@pytest.fixture(scope="session")
-def secret_key(node: LocalNode) -> str:
-    """
-    Returns:
-        str: secret key with enough balance
-    """
-    return node.secrets[0]
+@pytest.fixture
+def address(w3: Web3, secret_key):
+    addr = w3.account.from_key(secret_key).address
 

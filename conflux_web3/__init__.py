@@ -61,8 +61,9 @@ class Web3(OriWeb3):
         self.__setattr__("cfx", self.eth)
         
         # provide easy access
-        self.account = self.cfx.account
-        self.address = self.cfx.address
+        Web3.account = self.cfx.account
+        Web3.account.set_w3(self)
+        Web3.address = self.cfx.address
         
         # TODO: set contract
 
