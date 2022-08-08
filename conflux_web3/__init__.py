@@ -17,6 +17,9 @@ from web3 import (
 from web3._utils.empty import (
     empty,
 )
+from conflux_web3.types import (
+    MiddlewareOnion
+)
 
 
 from conflux_web3.client import ConfluxClient
@@ -29,7 +32,7 @@ class Web3(OriWeb3):
     def __init__(
         self,
         provider: Optional[BaseProvider] = None,
-        middlewares: Optional[Sequence[Any]] = None,
+        middlewares: Optional[Sequence[Any]] = [],
         # modules: Optional[Dict[str, Union[Type[Module], Sequence[Any]]]] = None,
         # external_modules: Optional[Dict[str, Union[Type[Module], Sequence[Any]]]] = None,
         # ens: ENS = cast(ENS, empty)
@@ -56,7 +59,6 @@ class Web3(OriWeb3):
 
         self.ens = empty  # type: ignore
         
-        
         # use __setattr__ to avoid language server type hint
         self.__setattr__("cfx", self.eth)
         
@@ -67,6 +69,10 @@ class Web3(OriWeb3):
         
         # TODO: set contract
 
+    @property
+    def middleware_onion(self) -> MiddlewareOnion:
+        return cast(MiddlewareOnion, self.manager.middleware_onion)
+    
 __all__ = [
     "Web3",
     "HTTPProvider"

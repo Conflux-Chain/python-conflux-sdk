@@ -1,24 +1,23 @@
 from abc import ABC
 import json
 import os
-from typing import List
-from urllib.request import urlopen
-# from aiohttp import ServerDisconnectedError
-import docker
+from typing import (
+    List
+)
 import time
 import urllib3
-from docker.models.containers import (
-    ContainerCollection
-)
+import functools
+
+import docker
 from docker.errors import (
     ImageNotFound,
     NotFound
 )
-import functools
 
-from conflux_web3 import Web3
-
-from tests._utils.ENV_SETTING import (
+from conflux_web3 import (
+    Web3,
+)
+from tests._test_helpers.ENV_SETTING import (
     IMAGE_FULL_NAME,
     LOCAL_NODE_NAME,
     LOCAL_HOST,
@@ -38,23 +37,6 @@ def setup_docker_env(client: docker.client.DockerClient, image_name:str, node_na
         time.sleep(10)
     except NotFound:
         pass # do nothing
-
-# def no_retry_session(retries=1,
-#     backoff_factor=0.3,
-#     status_forcelist=(500, 502, 504),
-#     session=None,):
-#     session = session or requests.Session()
-#     retry = Retry(
-#         total=retries,
-#         read=retries,
-#         connect=retries,
-#         backoff_factor=backoff_factor,
-#         status_forcelist=status_forcelist,
-#     )
-#     adapter = HTTPAdapter(max_retries=retry)
-#     session.mount('http://', adapter)
-#     session.mount('https://', adapter)
-#     return session
      
 def connect_to_server(url):
     # http = urllib3.PoolManager()

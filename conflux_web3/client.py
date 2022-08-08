@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Optional,
@@ -63,11 +64,11 @@ from web3.types import (
     # SignedTx,
     # SyncStatus,
     # TxData,
-    TxParams,
+    # TxParams,
     # TxReceipt,
     # Uncle,
     # Wei,
-    # _Hash32,
+    _Hash32,
 )
 
 from eth_typing.encoding import HexStr
@@ -77,7 +78,6 @@ from cfx_address import Address as CfxAddress
 from cfx_account import Account as CfxAccount
 from cfx_account.account import LocalAccount
 
-
 from conflux_web3._utils.rpc_abi import RPC
 from conflux_web3._utils.method_formatters import cfx_request_formatters
 from conflux_web3.types import (
@@ -85,27 +85,37 @@ from conflux_web3.types import (
     BlockIdentifier,
     AddressParam,
     EstimateResult,
-    Base32Address
+    Base32Address,
+    TxParam,
+    TxReceipt,
+    TxData
 )
 from conflux_web3.contract import ConfluxContract
 from conflux_web3._utils.validation import validate_base32_address
+from conflux_web3._utils.transactions import (
+    fill_formal_transaction_defaults
+)
 from conflux_web3.method import (
     ConfluxMethod
 )
 
+if TYPE_CHECKING:
+    from conflux_web3 import Web3
+
 class BaseCfx(BaseEth):
     _default_block: BlockIdentifier = "latest_state"
-    _default_account: Union[Base32Address, str, Empty] = empty
-
+    _default_account: Union[AddressParam, Empty] = empty
+    w3: "Web3"
     
     @property
-    def default_account(self) -> Union[Base32Address, str, Empty]:
+    def default_account(self) -> Union[AddressParam, Empty]:
         """default account address rather than a local account with private key
         """
         return self._default_account
+    
 
     @default_account.setter
-    def default_account(self, account: Union[Base32Address, str, LocalAccount, Empty]) -> None:
+    def default_account(self, account: Union[AddressParam, LocalAccount, Empty]) -> None:
         """set default account address
         Args:
             account: an address or a local account (but only address field works)
@@ -117,14 +127,13 @@ class BaseCfx(BaseEth):
             validate_base32_address(account)
             self._default_account = account # type: ignore
     
+    def remove_default_account(self):
+        self._default_account = empty
     
-    def send_transaction_munger(self, transaction: TxParams) -> Tuple[TxParams]:
-        if self.default_account:
-            validate_base32_address(self.default_account)
-        
-        if 'from' not in transaction:
+    def send_transaction_munger(self, transaction: TxParam) -> Tuple[TxParam]:
+        if 'from' not in transaction and self.default_account :
             transaction = assoc(transaction, 'from', self.default_account)
-
+        transaction = fill_formal_transaction_defaults(self.w3, transaction)
         return (transaction,)
     
     _get_status: ConfluxMethod[Callable[[], Dict]] = ConfluxMethod(
@@ -138,8 +147,8 @@ class BaseCfx(BaseEth):
     _estimate_gas: None
     
     def estimate_gas_and_collateral_munger(
-        self, transaction: Union[TxParams, dict[str, Any]], block_identifier: Optional[BlockIdentifier]=None
-    ) -> Sequence[Union[TxParams, dict[str, Any], BlockIdentifier]]:
+        self, transaction: TxParam, block_identifier: Optional[BlockIdentifier]=None
+    ) -> Sequence[Union[TxParam, BlockIdentifier]]:
         if "from" not in transaction and self.default_account:
             transaction = assoc(transaction, "from", self.default_account)
 
@@ -150,12 +159,26 @@ class BaseCfx(BaseEth):
 
         return params
     
+    def default_account_munger(
+        self, address: Optional[Union[AddressParam, LocalAccount, Empty]]=None, block_identifier: Optional[BlockIdentifier]=None
+    ) -> Sequence[Union[AddressParam, Empty, BlockIdentifier]]:
+        if not address:
+            if self.default_account:
+                address = self.default_account
+            else:
+                raise ValueError(
+                    "address parameter is required, set address or set 'web3.cfx.default_account'"
+                )
+
+        return [address, block_identifier] # type: ignore
+    
     _estimate_gas_and_collateral: ConfluxMethod[Callable[..., EstimateResult]] = ConfluxMethod(
         RPC.cfx_estimateGasAndCollateral, mungers=[estimate_gas_and_collateral_munger]
     )
     
     _get_balance: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
         RPC.cfx_getBalance,
+        mungers=[default_account_munger]
     )
     
     _epoch_number: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
@@ -164,16 +187,28 @@ class BaseCfx(BaseEth):
     
     _get_next_nonce: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
         RPC.cfx_getNextNonce,
+        mungers=[default_account_munger]
     )
     
     _send_raw_transaction: ConfluxMethod[Callable[[Union[HexStr, bytes]], HexBytes]] = ConfluxMethod(
-        RPC.cfx_sendRawTransaction,
-        mungers=[default_root_munger],
+        RPC.cfx_sendRawTransaction
     )
     
-    _send_transaction: ConfluxMethod[Callable[[TxParams], HexBytes]] = ConfluxMethod(
+    _send_transaction: ConfluxMethod[Callable[[TxParam], HexBytes]] = ConfluxMethod(
         RPC.cfx_sendTransaction,
         mungers=[send_transaction_munger],
+    )
+    
+    _get_confirmation_risk_by_hash: ConfluxMethod[Callable[[_Hash32], float]] = ConfluxMethod(
+        RPC.cfx_getConfirmationRiskByHash,
+    )
+    
+    _get_transaction_receipt: ConfluxMethod[Callable[[_Hash32], TxReceipt]] = ConfluxMethod(
+        RPC.cfx_getTransactionReceipt
+    )
+    
+    _get_transaction_by_hash: ConfluxMethod[Callable[[_Hash32], TxData]] = ConfluxMethod(
+        RPC.cfx_getTransactionByHash
     )
     
 
@@ -184,7 +219,6 @@ class ConfluxClient(BaseCfx, Eth):
     
     def get_status(self) -> AttributeDict:
         """
-            Returns the node status.
         Returns:
             AttributeDict: node status
             e.g.
@@ -212,22 +246,45 @@ class ConfluxClient(BaseCfx, Eth):
     def epoch_number(self) -> int:
         return self._epoch_number()
     
-    @property
-    def chain_id(self) -> int:
+    @functools.cached_property
+    def cahched_chain_id(self) -> int:
         return self._get_status()["chainId"]
     
-    def get_balance(self, address: Union[str, AddressParam], block_identifier: BlockIdentifier = None) -> Drip:
+    @property
+    def chain_id(self) -> int:
+        """We don't use functools.cached_property here in case provider changes network.
+        Always get status to avoid unexpected circumstances
+        """
+        return self._get_status()["chainId"]
+    
+    def get_balance(self, address: Optional[AddressParam]=None, block_identifier: Optional[BlockIdentifier] = None) -> Drip:
         return Drip(self._get_balance(address, block_identifier))
     
-    def get_next_nonce(self, address: Union[str, AddressParam], block_identifier: BlockIdentifier = None) -> Drip:
+    def get_next_nonce(self, address: Optional[AddressParam]=None, block_identifier: Optional[BlockIdentifier] = None) -> Drip:
         return self._get_next_nonce(address, block_identifier)
 
-    def estimate_gas_and_collateral(self, transaction: Union[TxParams, dict], block_identifier: Optional[BlockIdentifier]=None):
+    def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[BlockIdentifier]=None):
         return self._estimate_gas_and_collateral(transaction, block_identifier)
 
     def send_raw_transaction(self, transaction: Union[HexStr, bytes]) -> HexBytes:
         return self._send_raw_transaction(transaction)
     
-    def send_transaction(self, transaction: TxParams) -> HexBytes:
+    def send_transaction(self, transaction: TxParam) -> HexBytes:
         return self._send_transaction(transaction)
+    
+    def get_transaction_receipt(self, transaction_hash: _Hash32) -> TxReceipt:
+        return self._get_transaction_receipt(transaction_hash)
+    
+    def wait_for_transaction_receipt(self, transaction_hash: _Hash32, timeout: float = 120, poll_latency: float = 0.1) -> TxReceipt:
+        return super().wait_for_transaction_receipt(transaction_hash, timeout, poll_latency) # type: ignore
+    
+    def get_transaction_by_hash(self, transaction_hash: _Hash32) -> TxData:
+        return self._get_transaction_by_hash(transaction_hash)
+    
+    # easier access
+    def get_transaction(self, transaction_hash: _Hash32) -> TxData:
+        return self.get_transaction_by_hash(transaction_hash)
+    
+    def get_confirmation_risk_by_hash(self, block_hash: _Hash32) -> float:
+        return self._get_confirmation_risk_by_hash(block_hash)
     

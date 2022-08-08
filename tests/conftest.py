@@ -1,12 +1,13 @@
 from typing import Iterable
 import os
 import pytest
-from tests._utils.node import LocalNode, BaseNode, RemoteTestnetNode
-from tests._utils.ENV_SETTING import (
+from tests._test_helpers.node import LocalNode, BaseNode, RemoteTestnetNode
+from tests._test_helpers.ENV_SETTING import (
     PORT,
     LOCAL_HOST,
 )
 
+from cfx_account.account import LocalAccount
 from conflux_web3 import (
     Web3
 )
@@ -48,6 +49,10 @@ def w3(node_url: str, node: LocalNode) -> Web3:
     return w3
 
 @pytest.fixture
-def address(w3: Web3, secret_key):
+def address(w3: Web3, secret_key) -> str:
     addr = w3.account.from_key(secret_key).address
+    return addr
 
+@pytest.fixture
+def account(w3: Web3, secret_key) -> LocalAccount:
+    return w3.account.from_key(secret_key)

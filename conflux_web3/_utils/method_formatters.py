@@ -12,7 +12,7 @@ from web3.types import (
     RPCEndpoint,
     RPCResponse,
     TReturn,
-    TxParams,
+    # TxParams,
     _Hash32,
 )
 from web3._utils.method_formatters import (
@@ -152,7 +152,7 @@ PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
 }
 
 STATUS_FORMATTERS = {
-    # "bestHash": "0xe4bf02ad95ad5452c7676d3dfc2e57fde2a70806c2e68231c58c77cdda5b7c6c",
+    "bestHash": to_hexbytes(32), # type: ignore
     "chainId": to_integer_if_hex,
     "networkId": to_integer_if_hex,
     "blockNumber": to_integer_if_hex,

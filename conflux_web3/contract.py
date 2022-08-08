@@ -22,13 +22,17 @@ from web3.types import (
     # EventData,
     FunctionIdentifier,
     # LogReceipt,
-    TxParams,
+    # TxParams,
     # TxReceipt,
 )
 
 from cfx_address import Address as CfxAddress
 
-from conflux_web3.types import Base32Address
+from conflux_web3.types import (
+    Base32Address,
+    TxParam,
+    AddressParam
+)
 from conflux_web3._utils.validation import validate_base32_address
 from conflux_web3._utils.contracts import prepare_transaction
 
@@ -40,13 +44,13 @@ if TYPE_CHECKING:
 class ConfluxContractFunction(ContractFunction):
     w3: "Web3"
     
-    def build_transaction(self, transaction: Optional[TxParams] = None) -> TxParams:
-        built_transaction = self._build_transaction(transaction)
+    def build_transaction(self, transaction: Optional[TxParam] = None) -> TxParam:
+        built_transaction = self._build_transaction(transaction)  # type: ignore
         return build_transaction_for_function(
             self.address,
             self.w3,
             self.function_identifier,
-            built_transaction,
+            built_transaction,  # type: ignore
             self.contract_abi,
             self.abi,
             *self.args,
@@ -59,7 +63,7 @@ class ConfluxContractFunctions(BaseContractFunctions):
         self,
         abi: ABI,
         w3: "Web3",
-        address: Optional[Base32Address] = None,
+        address: Optional[AddressParam] = None,
     ) -> None:
         super().__init__(abi, w3, ConfluxContractFunction, address)  # type: ignore
      
@@ -67,11 +71,11 @@ def build_transaction_for_function(
         address: ChecksumAddress,
         web3: 'Web3',
         function_name: Optional[FunctionIdentifier] = None,
-        transaction: Optional[TxParams] = None,
+        transaction: Optional[TxParam] = None,
         contract_abi: Optional[ABI] = None,
         fn_abi: Optional[ABIFunction] = None,
         *args: Any,
-        **kwargs: Any) -> TxParams:
+        **kwargs: Any) -> TxParam:
     """Builds a dictionary with the fields required to make the given transaction
 
     Don't call this directly, instead use :meth:`Contract.build_transaction`
@@ -83,7 +87,7 @@ def build_transaction_for_function(
         fn_identifier=function_name, # type: ignore
         contract_abi=contract_abi,
         fn_abi=fn_abi,
-        transaction=transaction,
+        transaction=transaction,  # type: ignore
         fn_args=args,
         fn_kwargs=kwargs,
     ) 
@@ -91,16 +95,16 @@ def build_transaction_for_function(
     # TODO
     # prepared_transaction = fill_transaction_defaults(web3, prepared_transaction)
 
-    return prepared_transaction
+    return prepared_transaction  # type: ignore
 
 
 class ConfluxContract(Contract):
-    address: Base32Address
+    address: AddressParam
     w3: 'Web3'
     _hex_address: ChecksumAddress
     functions: ConfluxContractFunctions
     
-    def __init__(self, address: Base32Address) -> None:
+    def __init__(self, address: AddressParam) -> None:
         """Create a new smart contract proxy object.
 
         :param address: Base32 Contract address 
