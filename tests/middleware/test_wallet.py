@@ -1,4 +1,5 @@
 from cfx_account.account import LocalAccount
+import pytest
 from conflux_web3 import Web3
 from conflux_web3.middleware.wallet import WalletMiddleware
 
@@ -58,3 +59,9 @@ def test_wallet_middleware_adding(w3: Web3, account: LocalAccount):
     hash = w3.cfx.send_transaction(tx)
     assert hash
     w3.cfx.wait_for_transaction_receipt(hash)
+
+def test_wallet_duplicate_adding_warning(w3: Web3):
+    with pytest.warns(UserWarning):
+        wallet = WalletMiddleware(w3.cfx.chain_id, random_account:=w3.account.create())
+        wallet.add_account(random_account)
+    

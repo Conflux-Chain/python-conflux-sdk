@@ -1,14 +1,18 @@
 from typing import (
-    Any, 
+    Any,
+    Dict, 
     get_args, 
     get_origin, 
     Union
 )
+import warnings
 from conflux_web3.types import (
     EstimateResult,
-    NodeStatus,
     TxDict,
+    TxData,
+    TxReceipt
 )
+import conflux_web3.types
 
 class TypeValidator:
     """
@@ -36,13 +40,17 @@ class TypeValidator:
         elif type(field_type) is type:
             return isinstance(val, field_type)
         else:
-            raise Exception("unexpected exception")
+            # TODO: do fine grained check
+            warnings.warn("complex type check")
+            # raise Exception("unexpected exception")
+            return True
             
     
     @staticmethod
-    def validate(result, template):
-        for field, field_type in template.items():
+    def validate(result: Dict[str, Any], template: Dict[str, Any]):
+        for field in template:
             assert field in result
+            field_type = template[field]
             if get_origin(field_type) is Union:
                 assert any(TypeValidator.isinstance(result[field], t)
                            for t in get_args(field_type))
@@ -52,8 +60,8 @@ class TypeValidator:
                 assert TypeValidator.isinstance(result[field], field_type)
     
     @staticmethod
-    def validate_status(result):
-        TypeValidator.validate(result, NodeStatus.__annotations__)
+    def validate_typed_dict(result, typed_dict_name):
+        TypeValidator.validate(result, getattr(conflux_web3.types, typed_dict_name).__annotations__)
         
     @staticmethod
     def validate_tx(result):
@@ -62,4 +70,12 @@ class TypeValidator:
     @staticmethod
     def validate_estimate(result):
         TypeValidator.validate(result, EstimateResult.__annotations__)
+        
+    @staticmethod
+    def validate_receipt(result):
+        TypeValidator.validate(result, TxReceipt.__annotations__)
+    
+    @staticmethod
+    def validate_tx_data(result):
+        TypeValidator.validate(result, TxData.__annotations__)
         

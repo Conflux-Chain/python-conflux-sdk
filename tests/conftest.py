@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Sequence
 import os
 import pytest
 from tests._test_helpers.node import LocalNode, BaseNode, RemoteTestnetNode
@@ -11,18 +11,23 @@ from cfx_account.account import LocalAccount
 from conflux_web3 import (
     Web3
 )
-
+from conflux_web3.types import (
+    Base32Address
+)
 
 @pytest.fixture(scope="session")
-def node() -> Iterable[BaseNode]:
-    
-    if os.environ.get("TESTNET_SECRET"):
+def use_remote() -> bool:
+    return bool(os.environ.get("TESTNET_SECRET"))
+
+@pytest.fixture(scope="session")
+def node(use_remote) -> Iterable[BaseNode]:
+    if use_remote:
         node = RemoteTestnetNode()
         yield node
     else:
         node = LocalNode()
         yield node
-        node.exit()
+        # node.exit()
 
 @pytest.fixture(scope="session")
 def node_url(node):
@@ -55,4 +60,12 @@ def address(w3: Web3, secret_key) -> str:
 
 @pytest.fixture
 def account(w3: Web3, secret_key) -> LocalAccount:
+    """external_account, not supported by node
+    """
     return w3.account.from_key(secret_key)
+
+@pytest.fixture
+def embedded_accounts(w3: Web3, use_remote: bool) -> Sequence[Base32Address]:
+    if use_remote:
+        return []
+    return w3.cfx.accounts

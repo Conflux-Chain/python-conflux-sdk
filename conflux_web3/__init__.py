@@ -14,6 +14,9 @@ from web3.providers.base import (
 from web3 import (
     HTTPProvider,
 )
+from web3.types import (
+    RPCEndpoint
+)
 from web3._utils.empty import (
     empty,
 )
@@ -72,6 +75,28 @@ class Web3(OriWeb3):
     @property
     def middleware_onion(self) -> MiddlewareOnion:
         return cast(MiddlewareOnion, self.manager.middleware_onion)
+    
+    @property
+    def clientVersion(self) -> str:
+        return self.client_version
+    
+    @property
+    def client_version(self) -> str:
+        return self.cfx.client_version
+    
+    def isConnected(self) -> bool:
+        return self.is_connected()
+    
+    def is_connected(self) -> bool:
+        try:
+            response = self.provider.make_request(RPCEndpoint("cfx_clientVersion"), [])
+        except OSError:
+            return False
+
+        assert response["jsonrpc"] == "2.0" # type: ignore
+        assert "error" not in response # type: ignore
+
+        return True
     
 __all__ = [
     "Web3",

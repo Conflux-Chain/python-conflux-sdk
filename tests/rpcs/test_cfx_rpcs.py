@@ -8,50 +8,54 @@ from conflux_web3 import Web3
 
 from tests._test_helpers.type_check import  TypeValidator
 
+class TestProperty:
+    def test_get_status(self, w3: Web3):
+        status = w3.cfx.get_status()
+        TypeValidator.validate_typed_dict(status, "NodeStatus")
 
-def test_get_status(w3: Web3):
-    status = w3.cfx.get_status()
-    TypeValidator.validate_status(status)
+    def test_chain_id(self, w3: Web3):
+        assert w3.cfx.chain_id > 0
 
+    def test_gas_price(self, w3: Web3):
+        gas_price = w3.cfx.gas_price
+        assert gas_price >= 10**9
+        assert isinstance(gas_price, int)
 
-def test_chain_id(w3: Web3):
-    assert w3.cfx.chain_id > 0
+    def test_client_version(self, w3: Web3):
+        assert w3.cfx.client_version
 
+class TestBalance:
+    def test_get_balance(self, w3: Web3, address):
+        balance = w3.cfx.get_balance(address)
+        # the balance is supposed to be non-zero
+        assert balance > 0
+        # if default account is set, 
+        # default account is used as address default param
+        w3.cfx.default_account = address
+        default_balance = w3.cfx.get_balance()
+        assert default_balance == balance
 
-def test_gas_price(w3: Web3):
-    gas_price = w3.cfx.gas_price
-    assert gas_price >= 10**9
-    assert isinstance(gas_price, int)
-    
-def test_get_balance(w3: Web3, address):
-    balance = w3.cfx.get_balance(address)
-    # the balance is supposed to be non-zero
-    assert balance > 0
-    # if default account is set, 
-    # default account is used as address default param
-    w3.cfx.default_account = address
-    default_balance = w3.cfx.get_balance()
-    assert default_balance == balance
+    def test_get_balance_empty_param(self, w3: Web3):
+        with pytest.raises(ValueError):
+            w3.cfx.get_balance()
 
-def test_get_balance_empty_param(w3: Web3):
-    with pytest.raises(ValueError):
-        w3.cfx.get_balance()
-    
-    
-def test_get_next_nonce(w3: Web3, address):
-    nonce = w3.cfx.get_next_nonce(address)
-    assert nonce >= 0
-    # if default account is set, 
-    # default account is used as address default param
-    w3.cfx.default_account = address
-    default_nonce = w3.cfx.get_next_nonce()
-    assert default_nonce == nonce
+class TestNonce:
+    def test_get_next_nonce(self, w3: Web3, address):
+        nonce = w3.cfx.get_next_nonce(address)
+        assert nonce >= 0
+        # if default account is set, 
+        # default account is used as address default param
+        w3.cfx.default_account = address
+        default_nonce = w3.cfx.get_next_nonce()
+        assert default_nonce == nonce
 
-def test_get_next_nonce_empty_param(w3: Web3):
-    with pytest.raises(ValueError):
-        w3.cfx.get_next_nonce()
+    def test_get_next_nonce_empty_param(self, w3: Web3):
+        with pytest.raises(ValueError):
+            w3.cfx.get_next_nonce()
 
-def test_get_tx_reciept(w3: Web3, account: LocalAccount):
+def test_get_tx(w3: Web3, account: LocalAccount):
+    """test get_transaction(_by_hash) and get_transaction_receipt
+    """
     status = w3.cfx.get_status()
     
     addr = account.address
@@ -70,6 +74,21 @@ def test_get_tx_reciept(w3: Web3, account: LocalAccount):
     signed = account.sign_transaction(tx)
     rawTx = signed.rawTransaction
     r = w3.cfx.send_raw_transaction(rawTx)
-    w3.cfx.wait_for_transaction_receipt(r)
-    transaction_receipt = w3.cfx.get_transaction_receipt(r)
-    assert transaction_receipt
+    transaction_data = w3.cfx.get_transaction(r)
+    # transaction not added to chain
+    TypeValidator.validate_typed_dict(transaction_data, "TxData")
+    transaction_receipt = w3.cfx.wait_for_transaction_receipt(r)
+    # already added
+    TypeValidator.validate_typed_dict(transaction_data, "TxData")
+    
+    # TODO: check receipt's log format
+    TypeValidator.validate_typed_dict(transaction_receipt, "TxReceipt")
+
+def test_accounts(w3: Web3, use_remote: bool):
+    if use_remote:
+        assert True
+        return
+    
+    local_node_accounts = w3.cfx.accounts
+    assert len(local_node_accounts) == 10
+

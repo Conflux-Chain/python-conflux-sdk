@@ -1,26 +1,3 @@
-"""
-The MIT License (MIT)
-
-Copyright (c) 2016 Piper Merriam
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-"""
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -28,9 +5,11 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
     Union,
     Dict,
-    cast
+    cast,
+    overload
 )
 import functools
 # from eth_typing import Address
@@ -88,7 +67,8 @@ from conflux_web3.types import (
     Base32Address,
     TxParam,
     TxReceipt,
-    TxData
+    TxData,
+    NodeStatus
 )
 from conflux_web3.contract import ConfluxContract
 from conflux_web3._utils.validation import validate_base32_address
@@ -136,16 +116,6 @@ class BaseCfx(BaseEth):
         transaction = fill_formal_transaction_defaults(self.w3, transaction)
         return (transaction,)
     
-    _get_status: ConfluxMethod[Callable[[], Dict]] = ConfluxMethod(
-        RPC.cfx_getStatus,
-    )
-    
-    _gas_price: ConfluxMethod[Callable[[], int]] = ConfluxMethod(
-        RPC.cfx_gasPrice,
-    )
-    
-    _estimate_gas: None
-    
     def estimate_gas_and_collateral_munger(
         self, transaction: TxParam, block_identifier: Optional[BlockIdentifier]=None
     ) -> Sequence[Union[TxParam, BlockIdentifier]]:
@@ -172,8 +142,33 @@ class BaseCfx(BaseEth):
 
         return [address, block_identifier] # type: ignore
     
+    _clientVersion: ConfluxMethod[Callable[[], str]] = ConfluxMethod(
+        RPC.cfx_clientVersion,
+    )
+    
+    _get_status: ConfluxMethod[Callable[[], AttributeDict]] = ConfluxMethod(
+        RPC.cfx_getStatus,
+    )
+    
+    _gas_price: ConfluxMethod[Callable[[], int]] = ConfluxMethod(
+        RPC.cfx_gasPrice,
+    )
+    
+    _estimate_gas: None
+    
+    
+    
     _estimate_gas_and_collateral: ConfluxMethod[Callable[..., EstimateResult]] = ConfluxMethod(
         RPC.cfx_estimateGasAndCollateral, mungers=[estimate_gas_and_collateral_munger]
+    )
+    
+    _accounts: ConfluxMethod[Callable[[], Tuple[Base32Address]]] = ConfluxMethod(
+        RPC.accounts
+    )
+    
+    _call: ConfluxMethod[Callable[[TxParam, BlockIdentifier], Any]] = ConfluxMethod(
+        RPC.cfx_call,
+        mungers=[default_account_munger]
     )
     
     _get_balance: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
@@ -211,13 +206,32 @@ class BaseCfx(BaseEth):
         RPC.cfx_getTransactionByHash
     )
     
+    @overload
+    def contract(
+        self, address: None = None, **kwargs: Any
+    ) -> Type[ConfluxContract]:
+        ...  # noqa: E704,E501
+
+    @overload  # noqa: F811
+    def contract(
+        self, address: AddressParam, **kwargs: Any
+    ) -> ConfluxContract:
+        ...  # noqa: E704,E501
+
+    def contract(  # noqa: F811
+        self,
+        address: Optional[AddressParam] = None,
+        **kwargs: Any,
+    ) -> Union[Type[ConfluxContract], ConfluxContract]:
+        return super().contract(address, **kwargs)  # type: ignore
+    
 
 class ConfluxClient(BaseCfx, Eth):
     account = CfxAccount
     address = CfxAddress
     defaultContractFactory = ConfluxContract
     
-    def get_status(self) -> AttributeDict:
+    def get_status(self) -> NodeStatus:
         """
         Returns:
             AttributeDict: node status
@@ -243,6 +257,10 @@ class ConfluxClient(BaseCfx, Eth):
         return self._gas_price()
     
     @property
+    def accounts(self) -> Tuple[Base32Address]:
+        return self._accounts()
+    
+    @property
     def epoch_number(self) -> int:
         return self._epoch_number()
     
@@ -256,9 +274,32 @@ class ConfluxClient(BaseCfx, Eth):
         Always get status to avoid unexpected circumstances
         """
         return self._get_status()["chainId"]
+
+    @property
+    def client_version(self):
+        return self._clientVersion()
     
-    def get_balance(self, address: Optional[AddressParam]=None, block_identifier: Optional[BlockIdentifier] = None) -> Drip:
+    # def is_connected(self):
+    #     return 
+    
+    def get_balance(self,
+                    address: Optional[AddressParam]=None, 
+                    block_identifier: Optional[BlockIdentifier] = None) -> Drip:
         return Drip(self._get_balance(address, block_identifier))
+    
+    def call(self, 
+             transaction: TxParam, 
+             block_identifier: Optional[BlockIdentifier]=None, 
+             **kwargs):
+        """
+        Args:
+            transaction (TxParam): _description_
+            block_identifier (Optional[BlockIdentifier], optional): _description_. Defaults to None.
+            kwargs is provided for web3 internal api compatiblity, they will be ignored
+        Returns:
+            _type_: _description_
+        """
+        return self._call(transaction, block_identifier)
     
     def get_next_nonce(self, address: Optional[AddressParam]=None, block_identifier: Optional[BlockIdentifier] = None) -> Drip:
         return self._get_next_nonce(address, block_identifier)
@@ -276,6 +317,37 @@ class ConfluxClient(BaseCfx, Eth):
         return self._get_transaction_receipt(transaction_hash)
     
     def wait_for_transaction_receipt(self, transaction_hash: _Hash32, timeout: float = 120, poll_latency: float = 0.1) -> TxReceipt:
+        """_summary_
+
+        Args:
+            transaction_hash (_Hash32): _description_
+            timeout (float, optional): _description_. Defaults to 120.
+            poll_latency (float, optional): _description_. Defaults to 0.1.
+
+        Returns:
+            TxReceipt
+            {
+                "transactionHash": _Hash32,
+                "index": int,
+                "blockHash": _Hash32,
+                "epochNumber": int,
+                "from": AddressParam,
+                "to": AddressParam,
+                "gasUsed": Drip,
+                "gasFee": Drip,
+                "gasCoveredBySponsor": bool,
+                "storageCollateralized": Storage,
+                "storageCoveredBySponsor": bool,
+                "storageReleased": List[Storage],
+                "contractCreated": Union[AddressParam, None],
+                
+                "stateRoot": _Hash32,
+                "outcomeStatus": int,
+                "logsBloom": HexBytes,
+                
+                "logs": List[LogReceipt]
+            },
+        """
         return super().wait_for_transaction_receipt(transaction_hash, timeout, poll_latency) # type: ignore
     
     def get_transaction_by_hash(self, transaction_hash: _Hash32) -> TxData:

@@ -16,4 +16,6 @@ def receives_hash(hash: Union[_Hash32, str]) -> HexBytes:
 
 such style suit for `conflux_web3.types, tests._test_helpers.type_check`
 
-
+Optional or | None
+- for inputs, use Optional
+- for outputs, use | None

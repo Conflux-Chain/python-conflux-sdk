@@ -10,8 +10,8 @@ from web3.contract import (
     ContractFunction,
     Contract,
     ContractCaller,
-    ContractEvents
-    
+    ContractEvents,
+    call_contract_function
 )
 from web3.types import (
     ABI,
@@ -24,6 +24,7 @@ from web3.types import (
     # LogReceipt,
     # TxParams,
     # TxReceipt,
+    CallOverride
 )
 
 from cfx_address import Address as CfxAddress
@@ -31,10 +32,12 @@ from cfx_address import Address as CfxAddress
 from conflux_web3.types import (
     Base32Address,
     TxParam,
-    AddressParam
+    AddressParam,
+    BlockIdentifier
 )
 from conflux_web3._utils.validation import validate_base32_address
 from conflux_web3._utils.contracts import prepare_transaction
+from conflux_web3._utils.transactions import fill_formal_transaction_defaults
 
 
 if TYPE_CHECKING:
@@ -43,6 +46,9 @@ if TYPE_CHECKING:
 
 class ConfluxContractFunction(ContractFunction):
     w3: "Web3"
+    
+    def __call__(self, *args: Any, **kwargs: Any) -> "ConfluxContractFunction":
+        return super().__call__(*args, **kwargs) # type: ignore
     
     def build_transaction(self, transaction: Optional[TxParam] = None) -> TxParam:
         built_transaction = self._build_transaction(transaction)  # type: ignore
@@ -56,6 +62,30 @@ class ConfluxContractFunction(ContractFunction):
             *self.args,
             **self.kwargs,
         )
+    
+    def call(self,
+            transaction: Optional[TxParam] = None,
+            block_identifier: Optional[BlockIdentifier] = "latest_state",
+            state_override: Optional[CallOverride] = None,
+            ccip_read_enabled: Optional[bool] = None) -> Any:
+        call_transaction = self._get_call_txparams(transaction) # type: ignore
+
+        # block_id = parse_block_identifier(self.w3, block_identifier)
+
+        return call_contract_function(
+            self.w3,
+            self.address,
+            self._return_data_normalizers, # type: ignore
+            self.function_identifier,
+            call_transaction,
+            block_identifier, # type: ignore
+            self.contract_abi,
+            self.abi,
+            state_override,
+            ccip_read_enabled,
+            *self.args,
+            **self.kwargs,
+        )
 
 
 class ConfluxContractFunctions(BaseContractFunctions):
@@ -66,6 +96,9 @@ class ConfluxContractFunctions(BaseContractFunctions):
         address: Optional[AddressParam] = None,
     ) -> None:
         super().__init__(abi, w3, ConfluxContractFunction, address)  # type: ignore
+    
+    def __getattr__(self, function_name: str) -> "ConfluxContractFunction":
+        return super().__getattr__(function_name) # type: ignore
      
 def build_transaction_for_function(
         address: ChecksumAddress,
@@ -81,7 +114,7 @@ def build_transaction_for_function(
     Don't call this directly, instead use :meth:`Contract.build_transaction`
     on your contract instance.
     """
-    prepared_transaction = prepare_transaction(
+    prepared_transaction:TxParam = prepare_transaction(
         address,
         web3,
         fn_identifier=function_name, # type: ignore
@@ -92,8 +125,7 @@ def build_transaction_for_function(
         fn_kwargs=kwargs,
     ) 
 
-    # TODO
-    # prepared_transaction = fill_transaction_defaults(web3, prepared_transaction)
+    prepared_transaction = fill_formal_transaction_defaults(web3, prepared_transaction)
 
     return prepared_transaction  # type: ignore
 

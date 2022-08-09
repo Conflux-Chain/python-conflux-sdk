@@ -5,6 +5,7 @@ from typing import (
     Optional,
     Sequence,
 )
+import json
 from hexbytes import HexBytes
 
 from eth_typing.encoding import HexStr
@@ -59,7 +60,7 @@ def cfx_encode_abi(
         argument_types,
         arguments,
     )
-    encoded_arguments = web3.codec.encode_abi(
+    encoded_arguments = web3.codec.encode(
         argument_types,
         normalized_arguments,
     )

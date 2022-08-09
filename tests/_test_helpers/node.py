@@ -37,6 +37,22 @@ def setup_docker_env(client: docker.client.DockerClient, image_name:str, node_na
         time.sleep(10)
     except NotFound:
         pass # do nothing
+    
+def pull_image(client: docker.client.DockerClient, image_name:str):
+    try:
+        client.images.get(image_name)
+    except ImageNotFound:
+        client.images.pull(image_name)
+    
+def get_existed_container(client: docker.client.DockerClient, node_name: str):
+
+    # remove the container if existence
+    try:
+        container = client.containers.get(node_name)
+        # container.remove(force=True)  # type: ignore
+        return container
+    except NotFound:
+        return None
      
 def connect_to_server(url):
     # http = urllib3.PoolManager()
@@ -73,16 +89,16 @@ class BaseNode(ABC):
 class LocalNode(BaseNode):
     """ using docker to start a private local node
     """
-    def __init__(self, image_name = None, already_exist=False):
-        self._image_name = image_name or IMAGE_FULL_NAME
-        self._node_name = LOCAL_NODE_NAME
+    def __init__(self, image_name=IMAGE_FULL_NAME, node_name=LOCAL_NODE_NAME):
+        self._image_name = image_name
+        self._node_name = node_name
         self._url = f"http://{LOCAL_HOST}:{PORT}"
         self._client = docker.from_env()
         
-        if already_exist:
-            self._container = self._client.containers.get(LOCAL_NODE_NAME)
+        if container := get_existed_container(self._client, self._node_name):
+            self._container = container
         else:
-            setup_docker_env(self._client, self._image_name, self._node_name)
+            pull_image(self._client, self._image_name)
             self._container = self._client.containers.run(self._image_name, 
                                                         name=self._node_name, 
                                                         detach=True, 
@@ -108,9 +124,6 @@ class LocalNode(BaseNode):
         for i in range(max_try):
             try:
                 status = connect_to_server(self.url)
-                # w3 = Web3(Web3.HTTPProvider(url))
-                # status = w3.cfx.get_status()
-                
                 if int(status["epochNumber"], 16) >= 1:
                     return self._wait_for_embedded_tx_finished()
                 time.sleep(interval)

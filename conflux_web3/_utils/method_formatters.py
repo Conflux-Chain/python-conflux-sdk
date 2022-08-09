@@ -2,8 +2,9 @@ from typing import (
     Any,
     Callable,
     Dict,
-    Union
+    Union,
 )
+from hexbytes import HexBytes
 
 from web3.datastructures import AttributeDict
 from web3.types import (
@@ -20,7 +21,9 @@ from web3._utils.method_formatters import (
     # STANDARD_NORMALIZERS,
     to_hexbytes,
     to_hex_if_integer,
-    
+    is_not_null,
+    apply_list_to_array_formatter,
+    # log
 )
 
 from web3._utils.normalizers import (
@@ -48,7 +51,7 @@ from eth_utils.toolz import (
     complement, # type: ignore
     compose,  # type: ignore
     # curried,
-    # partial,
+    partial, # type: ignore
 )
 from eth_utils.curried import (
     apply_formatter_at_index, # type: ignore
@@ -87,7 +90,6 @@ ABI_REQUEST_FORMATTERS = abi_request_formatters(STANDARD_NORMALIZERS, RPC_ABIS)
 # }
 
 to_integer_if_hex = apply_formatter_if(is_string, hex_to_integer)
-
 
 
 PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
@@ -171,6 +173,52 @@ ESTIMATE_FORMATTERS = {
     "storageCollateralized": to_integer_if_hex
 }
 
+RECEIPT_FORMATTERS = {
+    "transactionHash": to_hexbytes(32), # type: ignore
+    "index": to_integer_if_hex,
+    "blockHash": apply_formatter_if(is_not_null, to_hexbytes(32)), # type: ignore
+    "epochNumber": to_integer_if_hex,
+    # "from": AddressParam,
+    # "to": AddressParam,
+    "gasUsed": to_integer_if_hex,
+    "gasFee": to_integer_if_hex,
+    # "gasCoveredBySponsor": bool,
+    "storageCollateralized": to_integer_if_hex,
+    # "storageCoveredBySponsor": bool,
+    "storageReleased": apply_list_to_array_formatter(to_hex_if_integer),
+    # "contractAddress": AddressParam,
+    
+    "stateRoot": to_hexbytes(32), # type: ignore
+    "outcomeStatus": to_integer_if_hex,
+    "logsBloom": to_hexbytes(256), # type: ignore
+    # "logs": List[LogReceipt]
+}
+receipt_formatter = apply_formatters_to_dict(RECEIPT_FORMATTERS)
+
+
+TRANSACTION_RESULT_FORMATTERS = {
+    "blockHash": apply_formatter_if(is_not_null, to_hexbytes(32)), # type: ignore
+    "chainId": apply_formatter_if(is_not_null, to_integer_if_hex),
+    # "contractCreated": AddressParam,
+    "data": HexBytes,
+    "epochHeight": apply_formatter_if(is_not_null, to_integer_if_hex),
+    # "from": 
+    "gas": to_integer_if_hex,
+    "gasPrice": to_integer_if_hex,
+    "hash": to_hexbytes(32), # type: ignore
+    "nonce": to_integer_if_hex,
+    "r": apply_formatter_if(is_not_null, to_hexbytes(32, variable_length=True)), # type: ignore
+    "s": apply_formatter_if(is_not_null, to_hexbytes(32, variable_length=True)), # type: ignore
+    "status": to_integer_if_hex,
+    "storageLimit": to_integer_if_hex,
+    # "to"
+    "transactionIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
+    "v": apply_formatter_if(is_not_null, to_integer_if_hex),
+    "value": to_integer_if_hex,
+}
+
+
+transaction_result_formatter = apply_formatters_to_dict(TRANSACTION_RESULT_FORMATTERS)
 
 PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # Eth
@@ -178,7 +226,7 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     RPC.cfx_epochNumber: to_integer_if_hex,
     RPC.cfx_getStatus: apply_formatters_to_dict(STATUS_FORMATTERS),
     # RPC.eth_coinbase: to_checksum_address,
-    # RPC.eth_call: HexBytes,
+    RPC.cfx_call: HexBytes,
     RPC.cfx_estimateGasAndCollateral: apply_formatters_to_dict(ESTIMATE_FORMATTERS),
     # RPC.eth_feeHistory: fee_history_formatter,
     # RPC.eth_maxPriorityFeePerGas: to_integer_if_hex,
@@ -206,12 +254,15 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     #     is_not_null,
     #     transaction_result_formatter,
     # ),
-    # RPC.eth_getTransactionByHash: apply_formatter_if(is_not_null, transaction_result_formatter),
+    RPC.cfx_getTransactionByHash: apply_formatter_if(
+        is_not_null,
+        transaction_result_formatter
+    ),
     # RPC.eth_getTransactionCount: to_integer_if_hex,
-    # RPC.eth_getTransactionReceipt: apply_formatter_if(
-    #     is_not_null,
-    #     receipt_formatter,
-    # ),
+    RPC.cfx_getTransactionReceipt: apply_formatter_if(
+        is_not_null,
+        receipt_formatter,
+    ),
     # RPC.eth_getUncleCountByBlockHash: to_integer_if_hex,
     # RPC.eth_getUncleCountByBlockNumber: to_integer_if_hex,
     # RPC.eth_hashrate: to_integer_if_hex,
