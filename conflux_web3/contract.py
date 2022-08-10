@@ -17,7 +17,6 @@ from web3.types import (
     ABI,
     # ABIEvent,
     ABIFunction,
-    # BlockIdentifier,
     # CallOverrideParams,
     # EventData,
     FunctionIdentifier,
@@ -33,7 +32,7 @@ from conflux_web3.types import (
     Base32Address,
     TxParam,
     AddressParam,
-    BlockIdentifier
+    EpochNumberParam
 )
 from conflux_web3._utils.validation import validate_base32_address
 from conflux_web3._utils.contracts import prepare_transaction
@@ -65,7 +64,7 @@ class ConfluxContractFunction(ContractFunction):
     
     def call(self,
             transaction: Optional[TxParam] = None,
-            block_identifier: Optional[BlockIdentifier] = "latest_state",
+            block_identifier: Optional[EpochNumberParam] = "latest_state",
             state_override: Optional[CallOverride] = None,
             ccip_read_enabled: Optional[bool] = None) -> Any:
         call_transaction = self._get_call_txparams(transaction) # type: ignore

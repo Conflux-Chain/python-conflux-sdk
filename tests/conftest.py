@@ -53,6 +53,17 @@ def w3(node_url: str, node: LocalNode) -> Web3:
     # assert w3.isConnected()
     return w3
 
+@pytest.fixture(scope="module")
+def moduled_w3(node_url: str, node: LocalNode) -> Web3:
+    """
+    Returns:
+        Web3: a web3 instance
+    """
+    provider = Web3.HTTPProvider(node_url)
+    w3 = Web3(provider=provider)
+    # assert w3.isConnected()
+    return w3
+
 @pytest.fixture
 def address(w3: Web3, secret_key) -> str:
     addr = w3.account.from_key(secret_key).address

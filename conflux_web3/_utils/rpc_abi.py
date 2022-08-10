@@ -71,6 +71,7 @@ RPC_ABIS = {
     'cfx_getStorageAt': ['address', 'uint', None],
     'cfx_getTransactionByHash': ['bytes32'],
     'cfx_getTransactionReceipt': ['bytes32'],
+    'cfx_getConfirmationRiskByHash': ['bytes32'],
     'cfx_sendRawTransaction': ['bytes'],
     'cfx_sendTransaction': TRANSACTION_PARAMS_ABIS,
     # 'cfx_getLogs': FILTER_PARAMS_ABIS,

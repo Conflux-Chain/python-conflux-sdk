@@ -13,14 +13,9 @@ from typing import (
 from eth_typing import (
     HexStr
 )
-from eth_utils.functional import (
-    to_dict,
-)
+
 from eth_keys.datatypes import (
     PrivateKey,
-)
-from web3._utils.method_formatters import (
-    to_integer_if_hex
 )
 from cfx_account import Account
 from cfx_account.account import (
@@ -49,7 +44,7 @@ def normalize_private_key_to_account(private_key: _PrivateKey, chain_id: int) ->
         return private_key
     return Account.from_key(private_key, chain_id)
 
-class WalletMiddleware:
+class WalletMiddlewareFactory:
     def __init__(self, 
                 chain_id: int,
                 account_or_accounts: Union[Sequence[_PrivateKey], _PrivateKey]=[]

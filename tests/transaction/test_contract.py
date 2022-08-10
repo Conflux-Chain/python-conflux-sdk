@@ -3,8 +3,9 @@ import pytest
 from cfx_address import Address
 from conflux_web3 import Web3
 from conflux_web3.contract import ConfluxContract
-from conflux_web3.middleware.wallet import WalletMiddleware
+from conflux_web3.middleware.wallet import WalletMiddlewareFactory
 from tests._test_helpers.ENV_SETTING import erc20_metadata
+from tests._test_helpers.type_check import TypeValidator
 
 class TestERC20Contract:
     contract: ConfluxContract
@@ -15,7 +16,7 @@ class TestERC20Contract:
         """
         w3.cfx.default_account = account
         w3.middleware_onion.add(
-            WalletMiddleware(w3.cfx.chain_id, account)
+            WalletMiddlewareFactory(w3.cfx.chain_id, account)
         )
         return w3
 
@@ -31,8 +32,15 @@ class TestERC20Contract:
         # test transfer
         random_account = w3_.account.create()
         hash = self.contract.functions.transfer(random_account.address, 100).transact()
-        w3_.cfx.wait_for_transaction_receipt(hash)
+        transfer_receipt = w3_.cfx.wait_for_transaction_receipt(hash)
         balance = self.contract.functions.balanceOf(random_account.address).call()
         
         assert balance == 100
+        fromEpoch = transfer_receipt["epochNumber"]
+        
+        # test getLogs
+        logs = w3_.cfx.get_logs(fromEpoch=fromEpoch)
+        for log in logs:
+            TypeValidator.validate_typed_dict(log, "LogReceipt")
+        
         

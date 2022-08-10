@@ -50,37 +50,31 @@ CFX = NewType("CFX", int)
 Base32Address = NewType("Base32Address", str)
 AddressParam = Union[Base32Address, str]
 
-BlockParam = Literal["latest_checkpoint", "earliest", "latest_finalized", "latest_confirmed", "latest_state", "latest_mined"]
-BlockIdentifier = Union[BlockParam, BlockNumber, _Hash32, int]
+EpochLiteral = Literal["latest_checkpoint", "earliest", "latest_finalized", "latest_confirmed", "latest_state", "latest_mined"]
+EpochNumberParam = Union[EpochLiteral, _Hash32, int]
 ChainId = Union[int, HexStr]
 Storage = NewType("Storage", int)
 
-NodeStatus = TypedDict(
-    "NodeStatus",
-    {
-        "bestHash": HexBytes,
-        "chainId": int,
-        "networkId": int,
-        "blockNumber": int,
-        "epochNumber": int,
-        "latestCheckpoint": int,
-        "latestConfirmed": int,
-        "latestState": int,
-        "latestFinalized": int,
-        "ethereumSpaceChainId": int,
-        "pendingTxNumber": int,
-    }
-)
+class NodeStatus(TypedDict):
+    bestHash: HexBytes
+    chainId: int
+    networkId: int
+    blockNumber: int
+    epochNumber: int
+    latestCheckpoint: int
+    latestConfirmed: int
+    latestState: int
+    latestFinalized: int
+    ethereumSpaceChainId: int
+    pendingTxNumber: int
 
-EstimateResult = TypedDict(
-    "EstimateResult",
-    {
-        "gasLimit": int,
-        "gasUsed": int,
-        "storageCollateralized": Storage,
-    }
-)
+class EstimateResult(TypedDict):    
+    gasLimit: int
+    gasUsed: int
+    storageCollateralized: Storage
 
+
+# syntax b/c "from" keyword not allowed w/ class construction
 TxDict = TypedDict(
     "TxDict",
     {
@@ -99,20 +93,28 @@ TxDict = TypedDict(
     total=False,
 )
 
+class FilterParams(TypedDict, total=False):
+    fromEpoch: EpochNumberParam
+    toEpoch: EpochNumberParam
+    blockHashes: Sequence[_Hash32]
+    address: Union[Base32Address, List[Base32Address]]
+    topics: Sequence[Optional[Union[_Hash32, Sequence[_Hash32]]]]
+    limit: int
+    offset: int
+
 
 class LogReceipt(TypedDict):
-    address: AddressParam
-    blockHash: HexBytes
-    blockNumber: BlockNumber
-    data: HexStr
-    logIndex: int
-    payload: HexBytes
-    removed: bool
-    topic: HexBytes
+    address: Base32Address
     topics: Sequence[HexBytes]
+    data: HexBytes
+    blockHash: HexBytes
+    epochNumber: int
     transactionHash: HexBytes
     transactionIndex: int
+    logIndex: int
+    transactionLogIndex: int
 
+# syntax b/c "from" keyword not allowed w/ class construction
 TxReceipt = TypedDict(
     "TxReceipt",
     {
@@ -138,9 +140,7 @@ TxReceipt = TypedDict(
     },
 )
 
-# class OutcomStatus(Enum)
-
-
+# syntax b/c "from" keyword not allowed w/ class construction
 TxData = TypedDict(
     "TxData",
     {

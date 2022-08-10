@@ -2,6 +2,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    List,
     Optional,
     Sequence,
     Tuple,
@@ -15,6 +16,9 @@ import functools
 # from eth_typing import Address
 from hexbytes import HexBytes
 
+from eth_utils.toolz import (
+    keyfilter  # type: ignore
+)
 from web3.eth import (
     BaseEth, 
     Eth
@@ -22,6 +26,9 @@ from web3.eth import (
 from web3._utils.empty import (
     Empty,
     empty,
+)
+from web3._utils.threads import (
+    Timeout,
 )
 from web3.method import (
     # DeprecatedMethod,
@@ -49,6 +56,10 @@ from web3.types import (
     # Wei,
     _Hash32,
 )
+from web3.exceptions import (
+    TransactionNotFound,
+    TimeExhausted
+)
 
 from eth_typing.encoding import HexStr
 from eth_utils.toolz import assoc  # type: ignore
@@ -61,14 +72,17 @@ from conflux_web3._utils.rpc_abi import RPC
 from conflux_web3._utils.method_formatters import cfx_request_formatters
 from conflux_web3.types import (
     Drip,
-    BlockIdentifier,
+    EpochLiteral,
+    EpochNumberParam,
     AddressParam,
     EstimateResult,
     Base32Address,
     TxParam,
     TxReceipt,
     TxData,
-    NodeStatus
+    NodeStatus,
+    FilterParams,
+    LogReceipt,
 )
 from conflux_web3.contract import ConfluxContract
 from conflux_web3._utils.validation import validate_base32_address
@@ -78,12 +92,15 @@ from conflux_web3._utils.transactions import (
 from conflux_web3.method import (
     ConfluxMethod
 )
+from conflux_web3.middleware.pending import (
+    TransactionHash
+)
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
 class BaseCfx(BaseEth):
-    _default_block: BlockIdentifier = "latest_state"
+    _default_block: EpochNumberParam = "latest_state"
     _default_account: Union[AddressParam, Empty] = empty
     w3: "Web3"
     
@@ -117,8 +134,8 @@ class BaseCfx(BaseEth):
         return (transaction,)
     
     def estimate_gas_and_collateral_munger(
-        self, transaction: TxParam, block_identifier: Optional[BlockIdentifier]=None
-    ) -> Sequence[Union[TxParam, BlockIdentifier]]:
+        self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None
+    ) -> Sequence[Union[TxParam, EpochNumberParam]]:
         if "from" not in transaction and self.default_account:
             transaction = assoc(transaction, "from", self.default_account)
 
@@ -130,8 +147,8 @@ class BaseCfx(BaseEth):
         return params
     
     def default_account_munger(
-        self, address: Optional[Union[AddressParam, LocalAccount, Empty]]=None, block_identifier: Optional[BlockIdentifier]=None
-    ) -> Sequence[Union[AddressParam, Empty, BlockIdentifier]]:
+        self, address: Optional[Union[AddressParam, LocalAccount, Empty]]=None, block_identifier: Optional[EpochNumberParam]=None
+    ) -> Sequence[Union[AddressParam, Empty, EpochNumberParam]]:
         if not address:
             if self.default_account:
                 address = self.default_account
@@ -166,7 +183,7 @@ class BaseCfx(BaseEth):
         RPC.accounts
     )
     
-    _call: ConfluxMethod[Callable[[TxParam, BlockIdentifier], Any]] = ConfluxMethod(
+    _call: ConfluxMethod[Callable[[TxParam, EpochNumberParam], Any]] = ConfluxMethod(
         RPC.cfx_call,
         mungers=[default_account_munger]
     )
@@ -206,6 +223,10 @@ class BaseCfx(BaseEth):
         RPC.cfx_getTransactionByHash
     )
     
+    _get_logs: ConfluxMethod[Callable[[FilterParams], List[LogReceipt]]] = ConfluxMethod(
+        RPC.cfx_getLogs
+    )
+    
     @overload
     def contract(
         self, address: None = None, **kwargs: Any
@@ -227,6 +248,8 @@ class BaseCfx(BaseEth):
     
 
 class ConfluxClient(BaseCfx, Eth):
+    """RPC entry defined provides friendlier APIs for users
+    """
     account = CfxAccount
     address = CfxAddress
     defaultContractFactory = ConfluxContract
@@ -264,6 +287,9 @@ class ConfluxClient(BaseCfx, Eth):
     def epoch_number(self) -> int:
         return self._epoch_number()
     
+    def epoch_number_by_tag(self, epochTag: EpochLiteral):
+        return self._epoch_number(epochTag)
+    
     @functools.cached_property
     def cahched_chain_id(self) -> int:
         return self._get_status()["chainId"]
@@ -284,45 +310,64 @@ class ConfluxClient(BaseCfx, Eth):
     
     def get_balance(self,
                     address: Optional[AddressParam]=None, 
-                    block_identifier: Optional[BlockIdentifier] = None) -> Drip:
+                    block_identifier: Optional[EpochNumberParam] = None) -> Drip:
         return Drip(self._get_balance(address, block_identifier))
     
     def call(self, 
              transaction: TxParam, 
-             block_identifier: Optional[BlockIdentifier]=None, 
+             block_identifier: Optional[EpochNumberParam]=None, 
              **kwargs):
         """
         Args:
             transaction (TxParam): _description_
-            block_identifier (Optional[BlockIdentifier], optional): _description_. Defaults to None.
+            block_identifier (Optional[EpochNumberParam], optional): _description_. Defaults to None.
             kwargs is provided for web3 internal api compatiblity, they will be ignored
         Returns:
             _type_: _description_
         """
         return self._call(transaction, block_identifier)
     
-    def get_next_nonce(self, address: Optional[AddressParam]=None, block_identifier: Optional[BlockIdentifier] = None) -> Drip:
+    def get_next_nonce(self, address: Optional[AddressParam]=None, block_identifier: Optional[EpochNumberParam] = None) -> Drip:
         return self._get_next_nonce(address, block_identifier)
 
-    def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[BlockIdentifier]=None):
+    def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None):
         return self._estimate_gas_and_collateral(transaction, block_identifier)
 
-    def send_raw_transaction(self, transaction: Union[HexStr, bytes]) -> HexBytes:
-        return self._send_raw_transaction(transaction)
+    def send_raw_transaction(self, rawTransaction: Union[HexStr, bytes]) -> TransactionHash:
+        return self._send_raw_transaction(rawTransaction)
     
-    def send_transaction(self, transaction: TxParam) -> HexBytes:
+    def send_transaction(self, transaction: TxParam) -> TransactionHash:
         return self._send_transaction(transaction)
     
     def get_transaction_receipt(self, transaction_hash: _Hash32) -> TxReceipt:
         return self._get_transaction_receipt(transaction_hash)
     
-    def wait_for_transaction_receipt(self, transaction_hash: _Hash32, timeout: float = 120, poll_latency: float = 0.1) -> TxReceipt:
+    def wait_for_transaction_data(self, transaction_hash: _Hash32, timeout: float = 60, poll_latency: float = 0.5) -> TxData:
+        try:
+            with Timeout(timeout) as _timeout:
+                while True:
+                    try:
+                        tx_data = self.get_transaction_by_hash(transaction_hash)
+                    except TransactionNotFound:
+                        tx_data = None
+                    if tx_data is not None and tx_data["blockHash"]:
+                        break
+                    _timeout.sleep(poll_latency)
+            return tx_data
+
+        except Timeout:
+            raise TimeExhausted(
+                f"Transaction {HexBytes(transaction_hash) !r} is not in the chain "
+                f"after {timeout} seconds"
+            )
+    
+    def wait_for_transaction_receipt(self, transaction_hash: _Hash32, timeout: float = 300, poll_latency: float = 0.5) -> TxReceipt:
         """_summary_
 
         Args:
             transaction_hash (_Hash32): _description_
-            timeout (float, optional): _description_. Defaults to 120.
-            poll_latency (float, optional): _description_. Defaults to 0.1.
+            timeout (float, optional): _description_. Defaults to 300.
+            poll_latency (float, optional): _description_. Defaults to 0.5.
 
         Returns:
             TxReceipt
@@ -348,7 +393,33 @@ class ConfluxClient(BaseCfx, Eth):
                 "logs": List[LogReceipt]
             },
         """
-        return super().wait_for_transaction_receipt(transaction_hash, timeout, poll_latency) # type: ignore
+        receipt = cast(TxReceipt, super().wait_for_transaction_receipt(transaction_hash, timeout, poll_latency))
+        if receipt["outcomeStatus"] != 0:
+            raise RuntimeError(f'transaction "${transaction_hash}" executed failed, outcomeStatus ${receipt["outcomeStatus"]}')
+        return receipt
+        
+    
+    def wait_for_transaction_confirmation(self, transaction_hash: _Hash32, timeout: float = 600, poll_latency: float = 0.5):
+        threshold = 1e-8
+        try:
+            with Timeout(timeout) as _timeout:
+                while True:
+                    try:
+                        tx_receipt = self.wait_for_transaction_receipt(transaction_hash)
+                    except TransactionNotFound:
+                        tx_receipt = None
+                    if tx_receipt is not None and (block_hash := tx_receipt["blockHash"]):
+                        risk = self.get_confirmation_risk_by_hash(block_hash)
+                        if risk <= threshold:
+                            break
+                    _timeout.sleep(poll_latency)
+            return tx_receipt
+
+        except Timeout:
+            raise TimeExhausted(
+                f"Transaction {HexBytes(transaction_hash) !r} is not in the chain "
+                f"after {timeout} seconds"
+            )
     
     def get_transaction_by_hash(self, transaction_hash: _Hash32) -> TxData:
         return self._get_transaction_by_hash(transaction_hash)
@@ -359,4 +430,13 @@ class ConfluxClient(BaseCfx, Eth):
     
     def get_confirmation_risk_by_hash(self, block_hash: _Hash32) -> float:
         return self._get_confirmation_risk_by_hash(block_hash)
+    
+    def get_logs(self, filterParams: Optional[FilterParams]=None, **kwargs):
+        if filterParams is None:
+            filterParams = keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs)
+            return self._get_logs(filterParams)
+        else:
+            if len(kwargs.keys()) != 0:
+                raise ValueError("Redundant Param: FilterParams as get_logs first parameter is already provided")
+            return self._get_logs(filterParams)
     

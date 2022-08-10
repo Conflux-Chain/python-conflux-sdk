@@ -47,35 +47,35 @@ class TypeValidator:
             
     
     @staticmethod
-    def validate(result: Dict[str, Any], template: Dict[str, Any]):
+    def validate(value_to_validate: Dict[str, Any], template: Dict[str, Any]):
         for field in template:
-            assert field in result
+            assert field in value_to_validate
             field_type = template[field]
             if get_origin(field_type) is Union:
-                assert any(TypeValidator.isinstance(result[field], t)
+                assert any(TypeValidator.isinstance(value_to_validate[field], t)
                            for t in get_args(field_type))
                 # for t in get_args(field_type):
-                #     TypeValidator.isinstance(result[field], t)
+                #     TypeValidator.isinstance(value_to_validate[field], t)
             else:
-                assert TypeValidator.isinstance(result[field], field_type)
+                assert TypeValidator.isinstance(value_to_validate[field], field_type)
     
     @staticmethod
-    def validate_typed_dict(result, typed_dict_name):
-        TypeValidator.validate(result, getattr(conflux_web3.types, typed_dict_name).__annotations__)
+    def validate_typed_dict(value_to_validate: Any, typed_dict_name: str):
+        TypeValidator.validate(value_to_validate, getattr(conflux_web3.types, typed_dict_name).__annotations__)
         
     @staticmethod
-    def validate_tx(result):
-        TypeValidator.validate(result, TxDict.__annotations__)
+    def validate_tx(value_to_validate):
+        TypeValidator.validate(value_to_validate, TxDict.__annotations__)
         
     @staticmethod
-    def validate_estimate(result):
-        TypeValidator.validate(result, EstimateResult.__annotations__)
+    def validate_estimate(value_to_validate):
+        TypeValidator.validate(value_to_validate, EstimateResult.__annotations__)
         
     @staticmethod
-    def validate_receipt(result):
-        TypeValidator.validate(result, TxReceipt.__annotations__)
+    def validate_receipt(value_to_validate):
+        TypeValidator.validate(value_to_validate, TxReceipt.__annotations__)
     
     @staticmethod
-    def validate_tx_data(result):
-        TypeValidator.validate(result, TxData.__annotations__)
+    def validate_tx_data(value_to_validate):
+        TypeValidator.validate(value_to_validate, TxData.__annotations__)
         
