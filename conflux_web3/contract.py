@@ -26,7 +26,7 @@ from web3.types import (
     CallOverride
 )
 
-from cfx_address import Address as CfxAddress
+from cfx_address import Base32Address
 
 from conflux_web3.types import (
     Base32Address,
@@ -151,7 +151,7 @@ class ConfluxContract(Contract):
             # TODO: validate chainid matches
             validate_base32_address(address)
             self.address = address
-            self._hex_address = cast(ChecksumAddress, CfxAddress(address).eth_checksum_address)
+            self._hex_address = cast(ChecksumAddress, Base32Address(address).eth_checksum_address)
 
         if not self.address:
             raise TypeError("The address argument is required to instantiate a contract.")

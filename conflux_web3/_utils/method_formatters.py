@@ -78,6 +78,9 @@ STANDARD_NORMALIZERS = [
     # abi_address_to_hex, \
 ]
 
+def to_hash32(val, variable_length=False):
+    return to_hexbytes(32, val, variable_length)
+
 # TRANSACTION_REQUEST_FORMATTERS = {
 #     'maxFeePerGas': to_hex_if_integer,
 #     'maxPriorityFeePerGas': to_hex_if_integer,
@@ -179,7 +182,7 @@ PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
 }
 
 STATUS_FORMATTERS = {
-    "bestHash": to_hexbytes(32), # type: ignore
+    "bestHash": to_hash32,
     "chainId": to_integer_if_hex,
     "networkId": to_integer_if_hex,
     "blockNumber": to_integer_if_hex,
@@ -201,11 +204,11 @@ ESTIMATE_FORMATTERS = {
 
 LOG_ENTRY_FORMATTERS = {
     # "address": pass,
-    "topics": apply_list_to_array_formatter(to_hexbytes(32)), # type: ignore
+    "topics": apply_list_to_array_formatter(to_hash32), 
     "data": HexBytes,
-    "blockHash": apply_formatter_if(is_not_null, to_hexbytes(32)), # type: ignore
+    "blockHash": apply_formatter_if(is_not_null, to_hash32), 
     "epochNumber": apply_formatter_if(is_not_null, to_integer_if_hex),
-    "transactionHash": apply_formatter_if(is_not_null, to_hexbytes(32)), # type: ignore
+    "transactionHash": apply_formatter_if(is_not_null, to_hash32), 
     "transactionIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
     "logIndex": to_integer_if_hex,
     "transactionLogIndex": to_integer_if_hex,
@@ -214,9 +217,9 @@ LOG_ENTRY_FORMATTERS = {
 log_entry_formatter = apply_formatters_to_dict(LOG_ENTRY_FORMATTERS)
 
 RECEIPT_FORMATTERS = {
-    "transactionHash": to_hexbytes(32), # type: ignore
+    "transactionHash": to_hash32, 
     "index": to_integer_if_hex,
-    "blockHash": apply_formatter_if(is_not_null, to_hexbytes(32)), # type: ignore
+    "blockHash": apply_formatter_if(is_not_null, to_hash32), 
     "epochNumber": to_integer_if_hex,
     # "from": AddressParam,
     # "to": AddressParam,
@@ -228,7 +231,7 @@ RECEIPT_FORMATTERS = {
     "storageReleased": apply_list_to_array_formatter(to_hex_if_integer),
     # "contractAddress": AddressParam,
     
-    "stateRoot": to_hexbytes(32), # type: ignore
+    "stateRoot": to_hash32,
     "outcomeStatus": to_integer_if_hex,
     "logsBloom": to_hexbytes(256), # type: ignore
     "logs": apply_list_to_array_formatter(log_entry_formatter),
@@ -237,7 +240,7 @@ receipt_formatter = apply_formatters_to_dict(RECEIPT_FORMATTERS)
 
 
 TRANSACTION_RESULT_FORMATTERS = {
-    "blockHash": apply_formatter_if(is_not_null, to_hexbytes(32)), # type: ignore
+    "blockHash": apply_formatter_if(is_not_null, to_hash32),
     "chainId": apply_formatter_if(is_not_null, to_integer_if_hex),
     # "contractCreated": AddressParam,
     "data": HexBytes,
@@ -245,7 +248,7 @@ TRANSACTION_RESULT_FORMATTERS = {
     # "from": 
     "gas": to_integer_if_hex,
     "gasPrice": to_integer_if_hex,
-    "hash": to_hexbytes(32), # type: ignore
+    "hash": to_hash32, # 
     "nonce": to_integer_if_hex,
     "r": apply_formatter_if(is_not_null, to_hexbytes(32, variable_length=True)), # type: ignore
     "s": apply_formatter_if(is_not_null, to_hexbytes(32, variable_length=True)), # type: ignore
@@ -260,13 +263,49 @@ TRANSACTION_RESULT_FORMATTERS = {
 
 transaction_result_formatter = apply_formatters_to_dict(TRANSACTION_RESULT_FORMATTERS)
 
-
 filter_result_formatter = apply_one_of_formatters(
     (
         (is_array_of_dicts, apply_list_to_array_formatter(log_entry_formatter)),
-        (is_array_of_strings, apply_list_to_array_formatter(to_hexbytes(32))), # type: ignore
+        (is_array_of_strings, apply_list_to_array_formatter(to_hash32)), 
     )
 )
+
+BLOCK_FORMATTERS = {
+    "hash": to_hash32,
+    "parentHash": to_hash32,
+    "height": to_integer_if_hex,
+    # "miner": Base32Address
+    "deferredStateRoot": to_hash32,
+    "deferredReceiptsRoot": to_hash32,
+    "deferredLogsBloomHash": to_hash32,
+    "blame": to_integer_if_hex,
+    "transactionsRoot": to_hash32,
+    "epochNumber": apply_formatter_if(is_not_null, to_integer_if_hex),
+    "blockNumber": apply_formatter_if(is_not_null, to_integer_if_hex),
+    "gasLimit": to_integer_if_hex,
+    "gasUsed": apply_formatter_if(is_not_null, to_integer_if_hex),
+    "timestamp": to_integer_if_hex,
+    "difficulty": to_integer_if_hex,
+    "powQuality": apply_formatter_if(is_not_null, HexBytes),
+    "refereeHashes": apply_list_to_array_formatter(to_hash32),
+    # adaptive: bool
+    "nonce": apply_formatter_if(is_not_null, to_hexbytes(8, variable_length=True)), # type: ignore
+    "size": to_integer_if_hex,
+    "custom": apply_list_to_array_formatter(HexBytes),
+    "posReference": apply_formatter_if(is_not_null, to_hash32), # set for development
+    "transactions": apply_one_of_formatters(
+        (
+            (
+                is_array_of_dicts,
+                apply_list_to_array_formatter(transaction_result_formatter),
+            ),
+            (is_array_of_strings, apply_list_to_array_formatter(to_hash32)),
+        )
+    )
+}
+
+block_formatter = apply_formatters_to_dict(BLOCK_FORMATTERS)
+
 
 def to_transaction_hash(val) -> TransactionHash:
     if isinstance(val, TransactionHash):
@@ -291,7 +330,7 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     RPC.cfx_gasPrice: to_integer_if_hex,
     RPC.cfx_getBalance: to_integer_if_hex,
     RPC.cfx_getNextNonce: to_integer_if_hex,
-    # RPC.eth_getBlockByHash: apply_formatter_if(is_not_null, block_formatter),
+    RPC.cfx_getBlockByHash: apply_formatter_if(is_not_null, block_formatter),
     # RPC.eth_getBlockByNumber: apply_formatter_if(is_not_null, block_formatter),
     # RPC.eth_getBlockTransactionCountByHash: to_integer_if_hex,
     # RPC.eth_getBlockTransactionCountByNumber: to_integer_if_hex,
@@ -341,7 +380,7 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # RPC.personal_listAccounts: apply_list_to_array_formatter(to_checksum_address),
     # RPC.personal_listWallets: apply_list_to_array_formatter(geth_wallets_formatter),
     # RPC.personal_newAccount: to_checksum_address,
-    # RPC.personal_sendTransaction: to_hexbytes(32),
+    # RPC.personal_sendTransaction: to_hash32,
     # RPC.personal_signTypedData: HexBytes,
     # # Transaction Pool
     # RPC.txpool_content: transaction_pool_content_formatter,

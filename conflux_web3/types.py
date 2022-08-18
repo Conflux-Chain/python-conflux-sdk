@@ -39,7 +39,7 @@ from web3.datastructures import (
     NamedElementOnion,
 )
 
-from cfx_address import Address as CfxAddress
+from cfx_address import Base32Address
 from cfx_account import Account as CfxAccount
 
 if TYPE_CHECKING:
@@ -47,7 +47,6 @@ if TYPE_CHECKING:
 
 Drip = NewType("Drip", int)
 CFX = NewType("CFX", int)
-Base32Address = NewType("Base32Address", str)
 AddressParam = Union[Base32Address, str]
 
 EpochLiteral = Literal["latest_checkpoint", "earliest", "latest_finalized", "latest_confirmed", "latest_state", "latest_mined"]
@@ -56,7 +55,7 @@ ChainId = Union[int, HexStr]
 Storage = NewType("Storage", int)
 
 class NodeStatus(TypedDict):
-    bestHash: HexBytes
+    bestHash: _Hash32
     chainId: int
     networkId: int
     blockNumber: int
@@ -167,6 +166,32 @@ TxData = TypedDict(
 )
 
 TxParam = Union[TxDict, dict[str, Any]]
+
+class BlockData(TypedDict):
+    hash: _Hash32
+    parentHash: _Hash32
+    height: int
+    miner: Base32Address
+    deferredStateRoot: _Hash32
+    deferredReceiptsRoot: _Hash32
+    deferredLogsBloomHash: _Hash32
+    blame: int
+    transactionsRoot: _Hash32
+    epochNumber: Union[int, None]
+    blockNumber: Union[int, None]
+    gasLimit: int
+    gasUsed: Union[int, None]
+    timestamp: int
+    difficulty: int
+    powQuality: Union[HexBytes, None]
+    refereeHashes: Sequence[_Hash32]
+    adaptive: bool
+    nonce: HexBytes
+    size: int
+    custom: Sequence[HexBytes]
+    posReference: _Hash32
+    transactions: Sequence[Union[_Hash32, TxData]]
+    
 
 Middleware = Callable[[Callable[[RPCEndpoint, Any], RPCResponse], "Web3"], Any]
 MiddlewareOnion = NamedElementOnion[str, Middleware]

@@ -57,7 +57,7 @@ class TestNonce:
             w3.cfx.get_next_nonce()
 
 @pytest.fixture(scope="module")
-def txHash(moduled_w3: Web3, secret_key) -> HexBytes:
+def tx_hash(moduled_w3: Web3, secret_key) -> HexBytes:
     w3 = moduled_w3
     status = w3.cfx.get_status()
     account = w3.account.from_key(secret_key)
@@ -78,13 +78,13 @@ def txHash(moduled_w3: Web3, secret_key) -> HexBytes:
     rawTx = signed.rawTransaction
     return w3.cfx.send_raw_transaction(rawTx)
 
-def test_get_tx(w3: Web3, txHash: HexBytes):
+def test_get_tx(w3: Web3, tx_hash: HexBytes):
     """test get_transaction(_by_hash) and get_transaction_receipt
     """
-    transaction_data = w3.cfx.get_transaction(txHash)
+    transaction_data = w3.cfx.get_transaction(tx_hash)
     # transaction not added to chain
     TypeValidator.validate_typed_dict(transaction_data, "TxData")
-    transaction_receipt = w3.cfx.wait_for_transaction_receipt(txHash)
+    transaction_receipt = w3.cfx.wait_for_transaction_receipt(tx_hash)
     # already added
     TypeValidator.validate_typed_dict(transaction_data, "TxData")
     
@@ -104,7 +104,20 @@ def test_get_logs(w3: Web3):
     """
     pass
 
-def test_get_confirmation_risk(w3: Web3, txHash):
-    blockHash = w3.cfx.wait_for_transaction_receipt(txHash)['blockHash']
+def test_get_confirmation_risk(w3: Web3, tx_hash):
+    blockHash = w3.cfx.wait_for_transaction_receipt(tx_hash)['blockHash']
     risk = w3.cfx.get_confirmation_risk_by_hash(blockHash)
     assert risk < 1
+
+@pytest.fixture
+def block_hash(w3: Web3, tx_hash):
+    return w3.cfx.wait_for_transaction_receipt(tx_hash)['blockHash']
+
+class TestBlock:
+    def test_get_block_by_hash(self, w3:Web3, block_hash, use_remote):
+        block_data = w3.cfx.get_block_by_hash(block_hash, True)
+        if not use_remote:
+            # local node may not run pos chain
+            block_data = dict(block_data)
+            block_data['posReference'] = HexBytes("0x0")
+        TypeValidator.validate_typed_dict(block_data, "BlockData")

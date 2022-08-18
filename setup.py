@@ -14,8 +14,8 @@ LONG_DESCRIPTION = 'A Python SDK for interacting with Conflux network, check det
 
 extras_require = {
     'tester': [
-        "docker>=5.0.0",
-        "pytest>=7.0.0",
+        "docker>=5.0.0,<6",
+        "pytest>=6.2.5,<7",
         # "py-geth>=3.8.0,<4",
     ],
     'linter': [
@@ -36,7 +36,7 @@ extras_require = {
         # "py-geth>=3.8.0,<4",
         # "py-solc>=0.4.0",
         # "pytest>=6.2.5,<7",
-        # "sphinx>=4.2.0,<5",
+        "sphinx>=4.2.0,<5",
         # "sphinx_rtd_theme>=0.1.9",
         # "toposort>=1.4",
         # "towncrier==18.5.0",
@@ -82,9 +82,9 @@ setup(
     packages=find_packages(),
     install_requires=[
         "web3>=6.0.0b4",
-        "cfx-address>=0.0.4",
-        "cfx-account>=0.1.0b2",
-        "eth-account>=0.6.0,<0.7.0"
+        "cfx-address>=1.0.0b1",
+        "cfx-account>=0.1.0b3",
+        # "eth-account>=0.6.0,<0.7.0"
     ],  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'
     extras_require=extras_require,

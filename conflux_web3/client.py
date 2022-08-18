@@ -38,22 +38,6 @@ from web3.datastructures import (
     AttributeDict,
 )
 from web3.types import (
-    # ENS,
-    # BlockData,
-    # CallOverrideParams,
-    # FeeHistory,
-    # FilterParams,
-    # GasPriceStrategy,
-    # LogReceipt,
-    # MerkleProof,
-    # Nonce,
-    # SignedTx,
-    # SyncStatus,
-    # TxData,
-    # TxParams,
-    # TxReceipt,
-    # Uncle,
-    # Wei,
     _Hash32,
 )
 from web3.exceptions import (
@@ -64,7 +48,7 @@ from web3.exceptions import (
 from eth_typing.encoding import HexStr
 from eth_utils.toolz import assoc  # type: ignore
 
-from cfx_address import Address as CfxAddress
+from cfx_address import Base32Address as CfxAddress
 from cfx_account import Account as CfxAccount
 from cfx_account.account import LocalAccount
 
@@ -83,6 +67,7 @@ from conflux_web3.types import (
     NodeStatus,
     FilterParams,
     LogReceipt,
+    BlockData
 )
 from conflux_web3.contract import ConfluxContract
 from conflux_web3._utils.validation import validate_base32_address
@@ -94,6 +79,10 @@ from conflux_web3.method import (
 )
 from conflux_web3.middleware.pending import (
     TransactionHash
+)
+from conflux_web3.exceptions import (
+    disabled_api,
+    use_instead
 )
 
 if TYPE_CHECKING:
@@ -171,9 +160,6 @@ class BaseCfx(BaseEth):
         RPC.cfx_gasPrice,
     )
     
-    _estimate_gas: None
-    
-    
     
     _estimate_gas_and_collateral: ConfluxMethod[Callable[..., EstimateResult]] = ConfluxMethod(
         RPC.cfx_estimateGasAndCollateral, mungers=[estimate_gas_and_collateral_munger]
@@ -221,6 +207,10 @@ class BaseCfx(BaseEth):
     
     _get_transaction_by_hash: ConfluxMethod[Callable[[_Hash32], TxData]] = ConfluxMethod(
         RPC.cfx_getTransactionByHash
+    )
+    
+    _get_block_by_hash: ConfluxMethod[Callable[[_Hash32, bool], BlockData]] = ConfluxMethod(
+        RPC.cfx_getBlockByHash
     )
     
     _get_logs: ConfluxMethod[Callable[[FilterParams], List[LogReceipt]]] = ConfluxMethod(
@@ -342,7 +332,9 @@ class ConfluxClient(BaseCfx, Eth):
     def get_transaction_receipt(self, transaction_hash: _Hash32) -> TxReceipt:
         return self._get_transaction_receipt(transaction_hash)
     
-    def wait_for_transaction_data(self, transaction_hash: _Hash32, timeout: float = 60, poll_latency: float = 0.5) -> TxData:
+    def wait_for_transaction_data(
+        self, transaction_hash: _Hash32, timeout: float = 60, poll_latency: float = 0.5
+    ) -> TxData:
         try:
             with Timeout(timeout) as _timeout:
                 while True:
@@ -361,7 +353,9 @@ class ConfluxClient(BaseCfx, Eth):
                 f"after {timeout} seconds"
             )
     
-    def wait_for_transaction_receipt(self, transaction_hash: _Hash32, timeout: float = 300, poll_latency: float = 0.5) -> TxReceipt:
+    def wait_for_transaction_receipt(
+        self, transaction_hash: _Hash32, timeout: float = 300, poll_latency: float = 0.5
+    ) -> TxReceipt:
         """_summary_
 
         Args:
@@ -393,40 +387,80 @@ class ConfluxClient(BaseCfx, Eth):
                 "logs": List[LogReceipt]
             },
         """
-        receipt = cast(TxReceipt, super().wait_for_transaction_receipt(transaction_hash, timeout, poll_latency))
+        try:
+            receipt = cast(TxReceipt, super().wait_for_transaction_receipt(transaction_hash, timeout, poll_latency))
+        except TimeExhausted:
+            raise TimeExhausted(
+                f"Transaction {HexBytes(transaction_hash) !r} is not executed"
+                f"after {timeout} seconds"
+            )
         if receipt["outcomeStatus"] != 0:
-            raise RuntimeError(f'transaction "${transaction_hash}" executed failed, outcomeStatus ${receipt["outcomeStatus"]}')
+            raise RuntimeError(f'transaction "${transaction_hash}" execution failed, outcomeStatus ${receipt["outcomeStatus"]}')
         return receipt
+    
+    def wait_for_transaction_execution(
+        self, transaction_hash: _Hash32, timeout: float = 300, poll_latency: float = 0.5
+    ) -> TxReceipt:
+        return self.wait_for_transaction_receipt(transaction_hash, timeout, poll_latency)
         
     
-    def wait_for_transaction_confirmation(self, transaction_hash: _Hash32, timeout: float = 600, poll_latency: float = 0.5):
-        threshold = 1e-8
+    def wait_for_transaction_confirmation(
+        self, transaction_hash: _Hash32, timeout: float = 600, poll_latency: float = 0.5
+    ) -> TxReceipt:
         try:
             with Timeout(timeout) as _timeout:
                 while True:
                     try:
-                        tx_receipt = self.wait_for_transaction_receipt(transaction_hash)
+                        tx_receipt = self.wait_for_transaction_execution(transaction_hash)
                     except TransactionNotFound:
                         tx_receipt = None
-                    if tx_receipt is not None and (block_hash := tx_receipt["blockHash"]):
-                        risk = self.get_confirmation_risk_by_hash(block_hash)
-                        if risk <= threshold:
+                    if tx_receipt is not None:
+                        tx_epoch = tx_receipt["epochNumber"]
+                        confirmed_epoch = self.epoch_number_by_tag("latest_confirmed")
+                        if tx_epoch <= confirmed_epoch:
                             break
                     _timeout.sleep(poll_latency)
             return tx_receipt
-
         except Timeout:
             raise TimeExhausted(
-                f"Transaction {HexBytes(transaction_hash) !r} is not in the chain "
+                f"Transaction {HexBytes(transaction_hash) !r} is not confirmed "
+                f"after {timeout} seconds"
+            )
+    
+    def wait_for_transaction_finalization(
+        self, transaction_hash: _Hash32, timeout: float = 1200, poll_latency: float = 0.5
+    ) -> TxReceipt:
+        try:
+            with Timeout(timeout) as _timeout:
+                while True:
+                    try:
+                        tx_receipt = self.wait_for_transaction_execution(transaction_hash)
+                    except TransactionNotFound:
+                        tx_receipt = None
+                    if tx_receipt is not None:
+                        tx_epoch = tx_receipt["epochNumber"]
+                        finalized_epoch = self.epoch_number_by_tag("latest_finalized")
+                        if tx_epoch <= finalized_epoch:
+                            break
+                    _timeout.sleep(poll_latency)
+            return tx_receipt
+        except Timeout:
+            raise TimeExhausted(
+                f"Transaction {HexBytes(transaction_hash) !r} is not finalized "
                 f"after {timeout} seconds"
             )
     
     def get_transaction_by_hash(self, transaction_hash: _Hash32) -> TxData:
         return self._get_transaction_by_hash(transaction_hash)
     
-    # easier access
+    # same as web3.py
     def get_transaction(self, transaction_hash: _Hash32) -> TxData:
         return self.get_transaction_by_hash(transaction_hash)
+    
+    def get_block_by_hash(
+        self, block_hash: _Hash32, full_transactions: bool=False
+    ) -> BlockData:
+        return self._get_block_by_hash(block_hash, full_transactions)
     
     def get_confirmation_risk_by_hash(self, block_hash: _Hash32) -> float:
         return self._get_confirmation_risk_by_hash(block_hash)
@@ -440,3 +474,13 @@ class ConfluxClient(BaseCfx, Eth):
                 raise ValueError("Redundant Param: FilterParams as get_logs first parameter is already provided")
             return self._get_logs(filterParams)
     
+    
+    
+    @use_instead("estimate_gas_and_collateral")
+    def estimate_gas(self, *args, **kwargs):
+        """disabled in conflux network. use "estimate_gas_and_collateral" instead
+        """
+        pass
+    
+    # @disabled_api
+    # def _get

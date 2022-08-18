@@ -87,7 +87,9 @@ class BaseNode(ABC):
         pass
 
 class LocalNode(BaseNode):
-    """ using docker to start a private local node
+    """ using docker to start a private local node.
+    if container with node_name (default as "python-sdk-env") already exists, no extra work needs be done
+    else pull image and create environment
     """
     def __init__(self, image_name=IMAGE_FULL_NAME, node_name=LOCAL_NODE_NAME):
         self._image_name = image_name

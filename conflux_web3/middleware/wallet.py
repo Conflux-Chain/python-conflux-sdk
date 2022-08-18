@@ -1,13 +1,9 @@
 from typing import (
     TYPE_CHECKING,
-    Collection,
     Dict,
-    Iterable,
+    Optional,
     Sequence,
-    Tuple,
-    TypeVar,
     Union,
-    Any
 )
 
 from eth_typing import (
@@ -21,9 +17,7 @@ from cfx_account import Account
 from cfx_account.account import (
     LocalAccount
 )
-from cfx_account._utils.validation import (
-    validate_chain_id
-)
+from cfx_address.utils import validate_network_id as validate_chain_id
 from conflux_web3._utils.rpc_abi import (
     RPC
 )
@@ -37,9 +31,9 @@ _PrivateKey = Union[LocalAccount, PrivateKey, HexStr, bytes]
 
 def normalize_private_key_to_account(private_key: _PrivateKey, chain_id: int) -> LocalAccount:
     if isinstance(private_key, LocalAccount):
-        if private_key.chain_id is None:
-            private_key.chain_id = chain_id
-        elif private_key.chain_id != chain_id:
+        if private_key.network_id is None:
+            private_key.network_id = chain_id
+        elif private_key.network_id != chain_id:
             raise ValueError("chain_id and localAccount's chain_id is supposed to be consistent")
         return private_key
     return Account.from_key(private_key, chain_id)
@@ -49,15 +43,15 @@ class WalletMiddlewareFactory:
                 chain_id: int,
                 account_or_accounts: Union[Sequence[_PrivateKey], _PrivateKey]=[]
                 ):
-        """generate a wallet middleware object 
+        """
+        generate a wallet middleware object 
         with specific chain_id and accounts to use
 
-        Args:
-            chain_id (int, required): the network wallet to be used
-            account_or_accounts (Union[Sequence[_PrivateKey], _PrivateKey], optional): 
-                Any param could be private key source. 
-                Both [account] and account can be served as "accounts" param.
-                For LocalAccount type param, ensure chain_id and LocalAccount is consistent
+        :param int chain_id: the network id of the wallet, all account will be set at the specified network
+        :param Union[Sequence[_PrivateKey], _PrivateKey] account_or_accounts: Any param could be private key source. 
+            Both [account] and account can be served as "accounts" param.
+            For LocalAccount type param, ensure chain_id and LocalAccount is consistent. 
+            Defaults to []
         """
         validate_chain_id(chain_id)
         self._chain_id = chain_id

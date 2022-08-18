@@ -6,6 +6,8 @@ from typing import (
     Union
 )
 import warnings
+from cfx_address import Base32Address
+
 from conflux_web3.types import (
     EstimateResult,
     TxDict,
@@ -38,26 +40,29 @@ class TypeValidator:
         if type(field_type).__name__ == "function":
             return isinstance(val, field_type.__supertype__)
         elif type(field_type) is type:
+            if field_type == Base32Address:
+                return Base32Address.is_valid_base32(val)
             return isinstance(val, field_type)
         else:
             # TODO: do fine grained check
             warnings.warn("complex type check")
             # raise Exception("unexpected exception")
             return True
-            
+    
+    @staticmethod
+    def _validate_type(val, typ):
+        if get_origin(typ) is Union:
+            assert any(TypeValidator.isinstance(val, t)
+                        for t in get_args(typ))
+        else:
+            assert TypeValidator.isinstance(val, typ)
     
     @staticmethod
     def validate(value_to_validate: Dict[str, Any], template: Dict[str, Any]):
         for field in template:
             assert field in value_to_validate
             field_type = template[field]
-            if get_origin(field_type) is Union:
-                assert any(TypeValidator.isinstance(value_to_validate[field], t)
-                           for t in get_args(field_type))
-                # for t in get_args(field_type):
-                #     TypeValidator.isinstance(value_to_validate[field], t)
-            else:
-                assert TypeValidator.isinstance(value_to_validate[field], field_type)
+            TypeValidator._validate_type(value_to_validate[field], field_type)
     
     @staticmethod
     def validate_typed_dict(value_to_validate: Any, typed_dict_name: str):

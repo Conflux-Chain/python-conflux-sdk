@@ -1,6 +1,6 @@
 from typing import cast
 import pytest
-from cfx_address import Address
+from cfx_address import Base32Address
 from conflux_web3 import Web3
 from conflux_web3.contract import ConfluxContract
 from conflux_web3.middleware.wallet import WalletMiddlewareFactory
@@ -42,5 +42,3 @@ class TestERC20Contract:
         logs = w3_.cfx.get_logs(fromEpoch=fromEpoch)
         for log in logs:
             TypeValidator.validate_typed_dict(log, "LogReceipt")
-        
-        
