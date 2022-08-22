@@ -333,7 +333,7 @@ class ConfluxClient(BaseCfx, Eth):
     def get_transaction_receipt(self, transaction_hash: _Hash32) -> TxReceipt:
         return self._get_transaction_receipt(transaction_hash)
     
-    def wait_for_transaction_data(
+    def wait_till_transaction_mined(
         self, transaction_hash: _Hash32, timeout: float = 60, poll_latency: float = 0.5
     ) -> TxData:
         try:
@@ -399,20 +399,20 @@ class ConfluxClient(BaseCfx, Eth):
             raise RuntimeError(f'transaction "${transaction_hash}" execution failed, outcomeStatus ${receipt["outcomeStatus"]}')
         return receipt
     
-    def wait_for_transaction_execution(
+    def wait_till_transaction_executed(
         self, transaction_hash: _Hash32, timeout: float = 300, poll_latency: float = 0.5
     ) -> TxReceipt:
         return self.wait_for_transaction_receipt(transaction_hash, timeout, poll_latency)
         
     
-    def wait_for_transaction_confirmation(
+    def wait_till_transaction_confirmed(
         self, transaction_hash: _Hash32, timeout: float = 600, poll_latency: float = 0.5
     ) -> TxReceipt:
         try:
             with Timeout(timeout) as _timeout:
                 while True:
                     try:
-                        tx_receipt = self.wait_for_transaction_execution(transaction_hash)
+                        tx_receipt = self.wait_till_transaction_executed(transaction_hash)
                     except TransactionNotFound:
                         tx_receipt = None
                     if tx_receipt is not None:
@@ -428,14 +428,14 @@ class ConfluxClient(BaseCfx, Eth):
                 f"after {timeout} seconds"
             )
     
-    def wait_for_transaction_finalization(
+    def wait_till_transaction_finalized(
         self, transaction_hash: _Hash32, timeout: float = 1200, poll_latency: float = 0.5
     ) -> TxReceipt:
         try:
             with Timeout(timeout) as _timeout:
                 while True:
                     try:
-                        tx_receipt = self.wait_for_transaction_execution(transaction_hash)
+                        tx_receipt = self.wait_till_transaction_executed(transaction_hash)
                     except TransactionNotFound:
                         tx_receipt = None
                     if tx_receipt is not None:
