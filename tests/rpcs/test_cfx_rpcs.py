@@ -44,7 +44,7 @@ class TestBalance:
 
 class TestNonce:
     def test_get_next_nonce(self, w3: Web3, address):
-        nonce = w3.cfx.get_next_nonce(address, w3.cfx.epoch_number-5)
+        nonce = w3.cfx.get_next_nonce(address)
         assert nonce >= 0
         # if default account is set, 
         # default account is used as address default param

@@ -3,7 +3,7 @@ import pytest
 from cfx_address import Base32Address
 from conflux_web3 import Web3
 from conflux_web3.contract import ConfluxContract
-from conflux_web3.middleware.wallet import WalletMiddlewareFactory
+from conflux_web3.middleware.wallet import WalletMiddleware
 from tests._test_helpers.ENV_SETTING import erc20_metadata
 from tests._test_helpers.type_check import TypeValidator
 
@@ -16,7 +16,7 @@ class TestERC20Contract:
         """
         w3.cfx.default_account = account
         w3.middleware_onion.add(
-            WalletMiddlewareFactory(w3.cfx.chain_id, account)
+            WalletMiddleware(account)
         )
         return w3
 

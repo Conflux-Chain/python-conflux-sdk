@@ -240,7 +240,8 @@ class BaseCfx(BaseEth):
 class ConfluxClient(BaseCfx, Eth):
     """RPC entry defined provides friendlier APIs for users
     """
-    account = CfxAccount
+    # an instance of CfxAccount, which means the class variable won't be changed
+    account = CfxAccount()
     address = CfxAddress
     defaultContractFactory = ConfluxContract
     

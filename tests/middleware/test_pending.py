@@ -31,6 +31,7 @@ def test_pending(w3: "Web3", account: LocalAccount):
     rawTx = signed.rawTransaction
     pending = w3.cfx.send_raw_transaction(rawTx)
     # hash = cast(PendingTransaction, hash)
-    pending.wait_till_mined()
-    pending.wait_till_executed()
-    pending.wait_till_confirmed()
+    pending.mined()
+    pending.executed()
+    pending.confirmed()
+    # TODO: finalized testing
