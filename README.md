@@ -3,6 +3,17 @@ Python SDK for interacting with Conflux network.
 
 Note: this SDK still is in developing, and the API may change in the future.
 
+- [python-conflux-sdk](#python-conflux-sdk)
+  - [Quick start](#quick-start)
+  - [Overview](#overview)
+    - [Code Examples](#code-examples)
+      - [initialization with providers](#initialization-with-providers)
+      - [Send a transaction](#send-a-transaction)
+      - [Contract Interaction](#contract-interaction)
+      - [RPC support](#rpc-support)
+      - [Base32 Address Operation](#base32-address-operation)
+    - [APIs to support in the near future](#apis-to-support-in-the-near-future)
+
 ## Quick start
 
 ```shell
@@ -29,10 +40,6 @@ w3.cfx.send_transaction({
 ## Overview
 
 Python-conflux-sdk is a wrapping layer over [web3.py](https://github.com/ethereum/web3.py), and we are trying to make most of its APIs consistent with web3.py. 
-
-### Differences
-
-#### Package Import 
 
 ### Code Examples
 
@@ -143,5 +150,5 @@ address
 
 ### APIs to support in the near future
 
-- [] contract caller and contract events are not fully supported
-- [] support for all RPCs
+- [ ] contract caller and contract events are not fully supported
+- [ ] support for all RPCs
