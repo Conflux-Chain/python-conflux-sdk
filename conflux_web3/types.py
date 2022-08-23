@@ -2,57 +2,40 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     List,
     NewType,
     Optional,
     Sequence,
-    Type,
-    TypeVar,
     TypedDict,
     Union,
-    Literal
 )
-import cfx_account
-import cfx_address
-# from eth_typing import AnyAddress
 from hexbytes import HexBytes
 
-from eth_typing.evm import (
-    Address,
-    HexAddress,
-    ChecksumAddress,
-    BlockNumber,
-    ChecksumAddress,
-)
-from eth_typing.encoding import (
-    HexStr,
-)
-
 from web3.types import (
-    Nonce,
     RPCEndpoint,
     RPCResponse,
-    _Hash32,
 )
 from web3.datastructures import (
     NamedElementOnion,
 )
 
 from cfx_address import Base32Address
-from cfx_account import Account as CfxAccount
+from cfx_utils.types import (
+    TxDict,
+    TxParam,
+    HexAddress,
+    _Hash32,
+    Nonce,
+    Drip,
+    CFX,
+    AddressParam,
+    Storage,
+    EpochNumberParam,
+    EpochLiteral,
+)
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
-
-Drip = NewType("Drip", int)
-CFX = NewType("CFX", int)
-AddressParam = Union[Base32Address, str]
-
-EpochLiteral = Literal["latest_checkpoint", "earliest", "latest_finalized", "latest_confirmed", "latest_state", "latest_mined"]
-EpochNumberParam = Union[EpochLiteral, _Hash32, int]
-ChainId = Union[int, HexStr]
-Storage = NewType("Storage", int)
 
 class NodeStatus(TypedDict):
     bestHash: _Hash32
@@ -73,33 +56,12 @@ class EstimateResult(TypedDict):
     storageCollateralized: Storage
 
 
-# syntax b/c "from" keyword not allowed w/ class construction
-TxDict = TypedDict(
-    "TxDict",
-    {
-        "chainId": int,
-        "data": Union[bytes, HexStr],
-        # addr or ens
-        "from": AddressParam,
-        "gas": int,
-        "gasPrice": Drip,
-        "nonce": Nonce,
-        "to": AddressParam,
-        "value": Drip,
-        "epochHeight": int,
-        "storageLimit": Storage
-    },
-    total=False,
-)
-
 class FilterParams(TypedDict, total=False):
     fromEpoch: EpochNumberParam
     toEpoch: EpochNumberParam
     blockHashes: Sequence[_Hash32]
     address: Union[Base32Address, List[Base32Address]]
     topics: Sequence[Optional[Union[_Hash32, Sequence[_Hash32]]]]
-    limit: int
-    offset: int
 
 
 class LogReceipt(TypedDict):
@@ -112,6 +74,7 @@ class LogReceipt(TypedDict):
     transactionIndex: int
     logIndex: int
     transactionLogIndex: int
+
 
 # syntax b/c "from" keyword not allowed w/ class construction
 TxReceipt = TypedDict(
@@ -130,14 +93,14 @@ TxReceipt = TypedDict(
         "storageCoveredBySponsor": bool,
         "storageReleased": List[Storage],
         "contractCreated": Union[AddressParam, None],
-        
         "stateRoot": _Hash32,
         "outcomeStatus": int,
         "logsBloom": HexBytes,
-        
-        "logs": List[LogReceipt]
+        "logs": List[LogReceipt],
+        "txExecErrorMsg": Union[str, None]
     },
 )
+
 
 # syntax b/c "from" keyword not allowed w/ class construction
 TxData = TypedDict(
@@ -165,7 +128,6 @@ TxData = TypedDict(
     total=False,
 )
 
-TxParam = Union[TxDict, dict[str, Any]]
 
 class BlockData(TypedDict):
     hash: _Hash32
