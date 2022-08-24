@@ -1,4 +1,7 @@
-from typing import Any, Callable
+from typing import (
+    Any,
+    Callable
+)
 
 
 def temp_alter_module_variable(module: Any, varname: str, new_var: Any, condition: Callable[..., bool]):
@@ -22,21 +25,21 @@ def temp_alter_module_variable(module: Any, varname: str, new_var: Any, conditio
         return wrapper
     return inner
 
-def conditional_func(real_func: Callable, condition: Callable[..., bool]):
+def conditional_func(target_func: Callable, condition: Callable[..., bool]) -> Callable:
     """decorate a function to optionally execute another one
     if condition:
-        real_func
+        target_func
     else:
         original_func
 
     Args:
-        real_func (Callable): function to be executed if condition
+        target_func (Callable): function to be executed if condition
         condition (Callable[..., bool]): receives func arguments, returns a bool
     """
-    def inner(func):
+    def inner(func) :
         def wrapper(*args, **kwargs):
             if condition(*args, **kwargs):
-                return real_func(*args, **kwargs)
+                return target_func(*args, **kwargs)
             return func(*args, **kwargs)
         return wrapper
     return inner

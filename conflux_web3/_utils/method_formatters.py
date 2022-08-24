@@ -210,8 +210,8 @@ LOG_ENTRY_FORMATTERS = {
     "epochNumber": apply_formatter_if(is_not_null, to_integer_if_hex),
     "transactionHash": apply_formatter_if(is_not_null, to_hash32), 
     "transactionIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
-    "logIndex": to_integer_if_hex,
-    "transactionLogIndex": to_integer_if_hex,
+    "logIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
+    "transactionLogIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
 }
 
 log_entry_formatter = apply_formatters_to_dict(LOG_ENTRY_FORMATTERS)

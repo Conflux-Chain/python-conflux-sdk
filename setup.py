@@ -7,10 +7,12 @@ from setuptools import (
 
 VERSION = '0.2.0b1'
 DESCRIPTION = 'python SDK for Conflux network'
-LONG_DESCRIPTION = 'A Python SDK for interacting with Conflux network, check details here https://github.com/conflux-chain/python-conflux-sdk'
+# LONG_DESCRIPTION = 'A Python SDK for interacting with Conflux network, check details here https://github.com/conflux-chain/python-conflux-sdk'
 
 # with open("readme.md", "r") as fh:
 #     long_description = fh.read()
+with open('./README.md') as readme:
+    long_description = readme.read()
 
 extras_require = {
     'tester': [
@@ -41,7 +43,7 @@ extras_require = {
         # "toposort>=1.4",
         # "towncrier==18.5.0",
         # "urllib3",
-        # "wheel"
+        "wheel"
     ],
     'dev': [
         # "bumpversion",
@@ -76,9 +78,9 @@ setup(
     name="conflux",
     version=VERSION,
     author="Conflux-Dev",
-    author_email="wangpan@conflux-chain.org",
+    author_email="wenda.zhang@confluxnetwork.org",
     description=DESCRIPTION,
-    long_description=LONG_DESCRIPTION,
+    long_description=long_description,
     packages=find_packages(),
     install_requires=[
         "web3>=6.0.0b4",

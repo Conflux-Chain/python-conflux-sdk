@@ -2,6 +2,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Dict,
     List,
     NewType,
     Optional,
@@ -128,6 +129,15 @@ TxData = TypedDict(
     total=False,
 )
 
+class EventData(TypedDict, total=False):
+    address: Base32Address
+    args: Dict[str, Any]
+    blockHash: HexBytes
+    epochNumber: int
+    event: str
+    logIndex: int
+    transactionHash: HexBytes
+    transactionIndex: int
 
 class BlockData(TypedDict):
     hash: _Hash32
