@@ -7,10 +7,6 @@ from setuptools import (
 
 VERSION = '0.2.0b1'
 DESCRIPTION = 'python SDK for Conflux network'
-# LONG_DESCRIPTION = 'A Python SDK for interacting with Conflux network, check details here https://github.com/conflux-chain/python-conflux-sdk'
-
-# with open("readme.md", "r") as fh:
-#     long_description = fh.read()
 with open('./README.md') as readme:
     long_description = readme.read()
 
@@ -80,20 +76,25 @@ setup(
     author="Conflux-Dev",
     author_email="wenda.zhang@confluxnetwork.org",
     description=DESCRIPTION,
+    long_description_content_type="text/markdown",
     long_description=long_description,
     packages=find_packages(),
+    url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
         "web3>=6.0.0b4",
-        "cfx-address>=1.0.0b1",
+        "cfx-address>=1.0.0b6",
         "cfx-account>=0.1.0b3",
-        "cfx-utils>=1.0.0b3"
+        "cfx-utils>=1.0.0b5"
         # "eth-account>=0.6.0,<0.7.0"
     ],  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'
     extras_require=extras_require,
     keywords=['python', 'conflux', 'blockchain'],
     classifiers=[
-        "Programming Language :: Python :: 3",
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
     ]
