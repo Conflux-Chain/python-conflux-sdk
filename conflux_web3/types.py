@@ -2,13 +2,13 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     List,
     NewType,
     Optional,
     Sequence,
     TypedDict,
     Union,
+    Dict
 )
 from hexbytes import HexBytes
 
@@ -129,6 +129,7 @@ TxData = TypedDict(
     total=False,
 )
 
+
 class RequiredEventData(TypedDict):
     address: Base32Address
     args: Dict[str, Any]
@@ -140,6 +141,7 @@ class EventData(RequiredEventData, total=False):
     logIndex: int
     transactionHash: HexBytes
     transactionIndex: int
+
 
 class BlockData(TypedDict):
     hash: _Hash32
