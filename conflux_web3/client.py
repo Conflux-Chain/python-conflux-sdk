@@ -69,8 +69,12 @@ from conflux_web3.types import (
     LogReceipt,
     BlockData
 )
-from conflux_web3.contract import ConfluxContract
-from conflux_web3._utils.validation import validate_base32_address
+from conflux_web3.contract import (
+    ConfluxContract
+)
+from conflux_web3._utils.validation import (
+    validate_base32
+)
 from conflux_web3._utils.transactions import (
     fill_formal_transaction_defaults
 )
@@ -80,7 +84,7 @@ from conflux_web3.method import (
 from conflux_web3.middleware.pending import (
     TransactionHash
 )
-from conflux_web3.exceptions import (
+from conflux_web3._utils.decorators import (
     disabled_api,
     use_instead
 )
@@ -107,10 +111,10 @@ class BaseCfx(BaseEth):
             account: an address or a local account (but only address field works)
         """
         if getattr(account, "address", None):
-            validate_base32_address(account.address) # type: ignore
+            validate_base32(account.address) # type: ignore
             self._default_account = account.address # type: ignore
         else:
-            validate_base32_address(account)
+            validate_base32(account)
             self._default_account = account # type: ignore
     
     def remove_default_account(self):
@@ -155,7 +159,7 @@ class BaseCfx(BaseEth):
     _get_status: ConfluxMethod[Callable[[], AttributeDict]] = ConfluxMethod(
         RPC.cfx_getStatus,
     )
-    
+
     _gas_price: ConfluxMethod[Callable[[], int]] = ConfluxMethod(
         RPC.cfx_gasPrice,
     )
@@ -466,14 +470,14 @@ class ConfluxClient(BaseCfx, Eth):
     def get_confirmation_risk_by_hash(self, block_hash: _Hash32) -> float:
         return self._get_confirmation_risk_by_hash(block_hash)
     
-    def get_logs(self, filterParams: Optional[FilterParams]=None, **kwargs):
-        if filterParams is None:
-            filterParams = keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs)
-            return self._get_logs(filterParams)
+    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs):
+        if filter_params is None:
+            filter_params = keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs)
+            return self._get_logs(filter_params)
         else:
             if len(kwargs.keys()) != 0:
                 raise ValueError("Redundant Param: FilterParams as get_logs first parameter is already provided")
-            return self._get_logs(filterParams)
+            return self._get_logs(filter_params)
     
     
     

@@ -3,6 +3,10 @@ from typing import (
     Callable
 )
 
+from conflux_web3.exceptions import (
+    DisabledException
+)
+
 
 def temp_alter_module_variable(module: Any, varname: str, new_var: Any, condition: Callable[..., bool]):
     """temporarily alters module.varname to new_var before func is called, and recover the change afterwards
@@ -55,3 +59,22 @@ def cfx_web3_condition(*args, **kwargs) -> bool:
         if isinstance(arg, Web3):
             return True
     return False
+
+def disabled_api(func):
+    def inner(*args, **kwargs):
+        raise DisabledException("This ethereum api is not valid in Conflux Network."
+                               "Check https://developer.confluxnetwork.org/conflux-doc/docs/json_rpc/#migrating-from-ethereum-json-rpc for more information")
+
+    return inner
+
+def use_instead(sub):
+    def disabled_api(func):
+        def inner(*args, **kwargs):
+            if sub is None:
+                raise DisabledException("This ethereum api is not valid in Conflux Network."
+                                "Check https://developer.confluxnetwork.org/conflux-doc/docs/json_rpc/#migrating-from-ethereum-json-rpc for more information")
+            else:
+                raise DisabledException("This ethereum api is not valid in Conflux Network."
+                                f"use {sub} instead")
+        return inner
+    return disabled_api

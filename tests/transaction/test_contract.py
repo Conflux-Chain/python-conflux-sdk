@@ -47,10 +47,29 @@ class TestERC20Contract:
             TypeValidator.validate_typed_dict(log, "LogReceipt")
             
         # test contract event
-        processed_log = contract.events.Transfer().processReceipt(transfer_receipt)[0]
-        assert processed_log.args["from"] == w3_.cfx.default_account
-        assert processed_log.args["to"] == random_account.address
-        assert processed_log.args["value"] == 100
+        processed_log = contract.events.Transfer.processReceipt(transfer_receipt)[0]
+        assert processed_log["args"]["from"] == w3_.cfx.default_account
+        assert processed_log["args"]["to"] == random_account.address
+        assert processed_log["args"]["value"] == 100
+        
+        # test event filters
+        filter_topics = contract.events.Transfer.get_filter_topics(
+            value=100,
+            to=random_account.address
+        )
+        assert filter_topics
+        new_logs = w3_.cfx.get_logs(fromEpoch=fromEpoch, topics=filter_topics)
+        assert new_logs == logs
+        
+        # test event get_logs
+        new_processed_logs = contract.events.Transfer.get_logs(
+            argument_filters={
+                "value": 100,
+                "to": random_account.address
+            },
+            fromEpoch=fromEpoch
+        )
+        assert new_processed_logs[0]["args"] == processed_log["args"]
         
         
             

@@ -37,7 +37,7 @@ from conflux_web3.types import (
     EpochLiteral,
 )
 from conflux_web3._utils.validation import (
-    validate_base32_address,
+    validate_base32,
 )
 from conflux_web3._utils.decorators import (
     conditional_func,
@@ -102,7 +102,7 @@ class ConfluxContract(Contract):
         if address:
             # TODO: validate is a contract address
             # TODO: validate chainid matches
-            validate_base32_address(address)
+            validate_base32(address)
             self.address = address
             self._hex_address = cast(ChecksumAddress, Base32Address(address).eth_checksum_address)
 

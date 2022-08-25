@@ -129,12 +129,14 @@ TxData = TypedDict(
     total=False,
 )
 
-class EventData(TypedDict, total=False):
+class RequiredEventData(TypedDict):
     address: Base32Address
     args: Dict[str, Any]
+    event: str
+
+class EventData(RequiredEventData, total=False):
     blockHash: HexBytes
     epochNumber: int
-    event: str
     logIndex: int
     transactionHash: HexBytes
     transactionIndex: int
