@@ -1,14 +1,13 @@
-from audioop import add
-from threading import local
-import time
-import cfx_account
 from hexbytes import HexBytes
 import pytest
 
-from cfx_account.account import LocalAccount
 from conflux_web3 import Web3
+from conflux_web3.types import BlockData
 
 from tests._test_helpers.type_check import  TypeValidator
+
+# Note that we only test if SDK works as expected, especially for request and result formatting.
+# We don't test if RPC works as expected
 
 class TestProperty:
     def test_get_status(self, w3: Web3):
@@ -109,15 +108,79 @@ def test_get_confirmation_risk(w3: Web3, tx_hash):
     risk = w3.cfx.get_confirmation_risk_by_hash(blockHash)
     assert risk < 1
 
-@pytest.fixture
-def block_hash(w3: Web3, tx_hash):
-    return w3.cfx.wait_for_transaction_receipt(tx_hash)['blockHash']
+
+
+def preprocess_block_data(block_data, use_remote):
+    if not use_remote:
+        # local node may not run pos chain
+        block_data = dict(block_data)
+        block_data['posReference'] = HexBytes("0x0")
+    return block_data
 
 class TestBlock:
-    def test_get_block_by_hash(self, w3:Web3, block_hash, use_remote):
+    @pytest.fixture
+    def block_hash(self, w3: Web3, tx_hash):
+        return w3.cfx.wait_for_transaction_receipt(tx_hash)['blockHash']
+    
+    @pytest.fixture
+    def block_data(self, w3:Web3, block_hash, use_remote):
         block_data = w3.cfx.get_block_by_hash(block_hash, True)
-        if not use_remote:
-            # local node may not run pos chain
-            block_data = dict(block_data)
-            block_data['posReference'] = HexBytes("0x0")
+        # if not use_remote:
+        #     # local node may not run pos chain
+        #     block_data = dict(block_data)
+        #     block_data['posReference'] = HexBytes("0x0")
+        block_data = preprocess_block_data(block_data, use_remote)
+        return block_data
+    
+    @pytest.fixture
+    def no_full_block_data(self, w3:Web3, block_hash, use_remote):
+        block_data = w3.cfx.get_block_by_hash(block_hash, False)
+        # if not use_remote:
+        #     # local node may not run pos chain
+        #     block_data = dict(block_data)
+        #     block_data['posReference'] = HexBytes("0x0")
+        block_data = preprocess_block_data(block_data, use_remote)
+        return block_data
+    
+    def test_get_block_by_hash(self, block_data, no_full_block_data):
+        # block_data is retrieved by get_block_by_hash
+        TypeValidator.validate_typed_dict(block_data, "BlockData")
+        TypeValidator.validate_typed_dict(no_full_block_data, "BlockData")
+        return block_data
+
+    def test_get_block_by_epoch_number(self, w3:Web3, block_data: BlockData, use_remote):
+        assert block_data['epochNumber'] is not None
+        data_ = w3.cfx.get_block_by_epoch_number(block_data['epochNumber'], True)
+        TypeValidator.validate_typed_dict(data_, "BlockData")
+        
+    def test_get_block_by_block_number(self, w3:Web3, block_data: BlockData, use_remote):
+        assert block_data['blockNumber'] is not None
+        data_ = w3.cfx.get_block_by_block_number(block_data['blockNumber'], True)
+        data_ = preprocess_block_data(data_, use_remote)
+        assert dict(data_) == dict(block_data)
+
+    def test_get_best_block_hash(self, w3:Web3):
+        best_block_hash = w3.cfx.get_best_block_hash()
+        assert isinstance(best_block_hash, HexBytes)
+        
+    def test_get_blocks_by_epoch(self, w3: Web3):
+        blocks = w3.cfx.get_blocks_by_epoch("latest_state")
+        for block_hash in blocks:
+            assert isinstance(block_hash, bytes)
+            
+    def test_get_skipped_blocks(self, w3: Web3):
+        # TODO: do check if blocks is not empty
+        blocks = w3.cfx.get_skipped_blocks_by_epoch("latest_state")
+        for block_hash in blocks:
+            assert isinstance(block_hash, bytes)
+            
+    def test_get_blocks_by_hash_with_pivot_assumptions(self, w3: Web3, use_remote):
+        epoch_number = w3.cfx.epoch_number_by_tag("latest_confirmed")
+        blocks = w3.cfx.get_blocks_by_epoch(epoch_number)
+        block_data = w3.cfx.get_block_by_hash_with_pivot_assumptions(
+            blocks[0],
+            blocks[-1],
+            epoch_number,
+        )
+        block_data = preprocess_block_data(block_data, use_remote)
         TypeValidator.validate_typed_dict(block_data, "BlockData")

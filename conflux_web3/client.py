@@ -183,7 +183,7 @@ class BaseCfx(BaseEth):
         mungers=[default_account_munger]
     )
     
-    _epoch_number: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
+    _epoch_number: ConfluxMethod[Callable[..., EpochLiteral]] = ConfluxMethod(
         RPC.cfx_epochNumber,
     )
     
@@ -215,6 +215,30 @@ class BaseCfx(BaseEth):
     
     _get_block_by_hash: ConfluxMethod[Callable[[_Hash32, bool], BlockData]] = ConfluxMethod(
         RPC.cfx_getBlockByHash
+    )
+    
+    _get_block_by_epoch_number: ConfluxMethod[Callable[[EpochNumberParam, bool], BlockData]] = ConfluxMethod(
+        RPC.cfx_getBlockByEpochNumber
+    )
+    
+    _get_block_by_block_number: ConfluxMethod[Callable[[int, bool], BlockData]] = ConfluxMethod(
+        RPC.cfx_getBlockByBlockNumber
+    )
+    
+    _get_best_block_hash: ConfluxMethod[Callable[[None], HexBytes]] = ConfluxMethod(
+        RPC.cfx_getBestBlockHash
+    )
+    
+    _get_blocks_by_epoch: ConfluxMethod[Callable[[EpochNumberParam], Sequence[HexBytes]]] = ConfluxMethod(
+        RPC.cfx_getBlocksByEpoch
+    )
+    
+    _get_skipped_blocks_by_epoch: ConfluxMethod[Callable[[EpochNumberParam], Sequence[HexBytes]]] = ConfluxMethod(
+        RPC.cfx_getSkippedBlocksByEpoch
+    )
+    
+    _get_block_by_hash_with_pivot_assumptions: ConfluxMethod[Callable[[_Hash32, _Hash32, int], BlockData]] = ConfluxMethod(
+        RPC.cfx_getBlockByHashWithPivotAssumption
     )
     
     _get_logs: ConfluxMethod[Callable[[FilterParams], List[LogReceipt]]] = ConfluxMethod(
@@ -328,8 +352,8 @@ class ConfluxClient(BaseCfx, Eth):
     def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None):
         return self._estimate_gas_and_collateral(transaction, block_identifier)
 
-    def send_raw_transaction(self, rawTransaction: Union[HexStr, bytes]) -> TransactionHash:
-        return self._send_raw_transaction(rawTransaction)
+    def send_raw_transaction(self, raw_transaction: Union[HexStr, bytes]) -> TransactionHash:
+        return self._send_raw_transaction(raw_transaction)
     
     def send_transaction(self, transaction: TxParam) -> TransactionHash:
         return self._send_transaction(transaction)
@@ -466,6 +490,28 @@ class ConfluxClient(BaseCfx, Eth):
         self, block_hash: _Hash32, full_transactions: bool=False
     ) -> BlockData:
         return self._get_block_by_hash(block_hash, full_transactions)
+    
+    def get_block_by_epoch_number(
+        self, epoch_number_param: EpochNumberParam, full_transactions: bool=False
+    ) -> BlockData:
+        return self._get_block_by_epoch_number(epoch_number_param, full_transactions)
+    
+    def get_block_by_block_number(
+        self, block_number: int, full_transactions: bool=False
+    ) -> BlockData:
+        return self._get_block_by_block_number(block_number, full_transactions)
+    
+    def get_best_block_hash(self) -> HexBytes:
+        return self._get_best_block_hash()
+    
+    def get_blocks_by_epoch(self, epoch_number_param: EpochNumberParam) -> Sequence[HexBytes]:
+        return self._get_blocks_by_epoch(epoch_number_param)
+    
+    def get_skipped_blocks_by_epoch(self, epoch_number_param: EpochNumberParam) -> Sequence[HexBytes]:
+        return self._get_skipped_blocks_by_epoch(epoch_number_param)
+
+    def get_block_by_hash_with_pivot_assumptions(self, block_hash: _Hash32, assumed_pivot_hash: _Hash32, epoch_number: int) -> BlockData:
+        return self._get_block_by_hash_with_pivot_assumptions(block_hash, assumed_pivot_hash, epoch_number)
     
     def get_confirmation_risk_by_hash(self, block_hash: _Hash32) -> float:
         return self._get_confirmation_risk_by_hash(block_hash)
