@@ -25,7 +25,7 @@ class TestProperty:
     def test_client_version(self, w3: Web3):
         assert w3.cfx.client_version
 
-class TestBalance:
+class TestAccountQuery:
     def test_get_balance(self, w3: Web3, address):
         balance = w3.cfx.get_balance(address, w3.cfx.epoch_number-5)
         # the balance is supposed to be non-zero
@@ -47,9 +47,9 @@ class TestNonce:
         assert nonce >= 0
         # if default account is set, 
         # default account is used as address default param
-        w3.cfx.default_account = address
-        default_nonce = w3.cfx.get_next_nonce()
-        assert default_nonce == nonce
+        # w3.cfx.default_account = address
+        # default_nonce = w3.cfx.get_next_nonce()
+        # assert default_nonce == nonce
 
     def test_get_next_nonce_empty_param(self, w3: Web3):
         with pytest.raises(ValueError):
@@ -151,6 +151,7 @@ class TestBlock:
     def test_get_block_by_epoch_number(self, w3:Web3, block_data: BlockData, use_remote):
         assert block_data['epochNumber'] is not None
         data_ = w3.cfx.get_block_by_epoch_number(block_data['epochNumber'], True)
+        data_ = preprocess_block_data(data_, use_remote)
         TypeValidator.validate_typed_dict(data_, "BlockData")
         
     def test_get_block_by_block_number(self, w3:Web3, block_data: BlockData, use_remote):

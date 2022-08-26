@@ -63,22 +63,36 @@ TRANSACTION_PARAMS_ABIS = {
     "epochHeight": "uint",
 }
 
-# simple RPC request formatters
-# the complex ones (None parameter) are implemented in _utils.method_formatters.py
+# RPC request formatters, parses abi types 
+# the complex ones (None parameter, such as EpochNumberParam) are implemented in _utils.method_formatters.py
+
+EPOCH_NUMBER_PARAM = None
+
 RPC_ABIS = {
     RPC.cfx_call: TRANSACTION_PARAMS_ABIS,
     RPC.cfx_estimateGasAndCollateral: TRANSACTION_PARAMS_ABIS,
-    # "cfx_getBalance": ["address", None],
     RPC.cfx_getBlockByHash: ["bytes32", "bool"],
-    RPC.cfx_getBlockByEpochNumber: [None, "bool"],
-    RPC.cfx_getBlockByBlockNumber: [None, "bool"],
+    RPC.cfx_getBlockByEpochNumber: [EPOCH_NUMBER_PARAM, "bool"],
+    RPC.cfx_getBlockByBlockNumber: [EPOCH_NUMBER_PARAM, "bool"],
     RPC.cfx_getBestBlockHash: [],
-    RPC.cfx_getBlocksByEpoch: [None],
-    RPC.cfx_getSkippedBlocksByEpoch: [None],
-    RPC.cfx_getBlockByHashWithPivotAssumption: ["bytes32", "bytes32", None],
-    # "cfx_getBlockByE"
-    RPC.cfx_getCode: ["address", None],
-    RPC.cfx_getStorageAt: ["address", "uint", None],
+    RPC.cfx_getBlocksByEpoch: [EPOCH_NUMBER_PARAM],
+    RPC.cfx_getSkippedBlocksByEpoch: [EPOCH_NUMBER_PARAM],
+    RPC.cfx_getBlockByHashWithPivotAssumption: ["bytes32", "bytes32", "uint"],
+
+    RPC.cfx_getBalance: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getStakingBalance: ["address", EPOCH_NUMBER_PARAM],
+    
+    RPC.cfx_getCode: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getStorageAt: ["address", "uint", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getStorageRoot: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getCollateralForStorage: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getAdmin: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getSponsorInfo: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getAccount: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getDepositList: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getVoteList: ["address", EPOCH_NUMBER_PARAM],
+    
+    
     RPC.cfx_getTransactionByHash: ["bytes32"],
     RPC.cfx_getTransactionReceipt: ["bytes32"],
     RPC.cfx_getConfirmationRiskByHash: ["bytes32"],
@@ -86,7 +100,7 @@ RPC_ABIS = {
     RPC.cfx_sendRawTransaction: ["bytes"],
     # "cfx_sendTransaction": TRANSACTION_PARAMS_ABIS,
     RPC.cfx_sendTransaction: TRANSACTION_PARAMS_ABIS,
-    
+
     # "cfx_getLogs": FILTER_PARAMS_ABIS,
     # "cfx_signTransaction": TRANSACTION_PARAMS_ABIS,
     # "cfx_sign": ["address", "bytes"],

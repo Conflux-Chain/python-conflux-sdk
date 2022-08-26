@@ -1,3 +1,4 @@
+from curses import ALL_MOUSE_EVENTS
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -25,7 +26,8 @@ from cfx_utils.types import (
     TxDict,
     TxParam,
     HexAddress,
-    _Hash32,
+    Hash32, # Hash32 as specific output data type
+    _Hash32, # _Hash32 as robust input data type
     Nonce,
     Drip,
     CFX,
@@ -39,7 +41,7 @@ if TYPE_CHECKING:
     from conflux_web3 import Web3
 
 class NodeStatus(TypedDict):
-    bestHash: _Hash32
+    bestHash: Hash32
     chainId: int
     networkId: int
     blockNumber: int
@@ -81,9 +83,9 @@ class LogReceipt(TypedDict):
 TxReceipt = TypedDict(
     "TxReceipt",
     {
-        "transactionHash": _Hash32,
+        "transactionHash": Hash32,
         "index": int,
-        "blockHash": _Hash32,
+        "blockHash": Hash32,
         "epochNumber": int,
         "from": AddressParam,
         "to": AddressParam,
@@ -94,7 +96,7 @@ TxReceipt = TypedDict(
         "storageCoveredBySponsor": bool,
         "storageReleased": List[Storage],
         "contractCreated": Union[AddressParam, None],
-        "stateRoot": _Hash32,
+        "stateRoot": Hash32,
         "outcomeStatus": int,
         "logsBloom": HexBytes,
         "logs": List[LogReceipt],
@@ -115,7 +117,7 @@ TxData = TypedDict(
         "from": AddressParam,
         "gas": int,
         "gasPrice": Drip,
-        "hash": _Hash32,
+        "hash": Hash32,
         "nonce": Nonce,
         "r": HexBytes,
         "s": HexBytes,
@@ -144,15 +146,15 @@ class EventData(RequiredEventData, total=False):
 
 
 class BlockData(TypedDict):
-    hash: _Hash32
-    parentHash: _Hash32
+    hash: Hash32
+    parentHash: Hash32
     height: int
     miner: Base32Address
-    deferredStateRoot: _Hash32
-    deferredReceiptsRoot: _Hash32
-    deferredLogsBloomHash: _Hash32
+    deferredStateRoot: Hash32
+    deferredReceiptsRoot: Hash32
+    deferredLogsBloomHash: Hash32
     blame: int
-    transactionsRoot: _Hash32
+    transactionsRoot: Hash32
     epochNumber: Union[int, None]
     blockNumber: Union[int, None]
     gasLimit: int
@@ -160,14 +162,42 @@ class BlockData(TypedDict):
     timestamp: int
     difficulty: int
     powQuality: Union[HexBytes, None]
-    refereeHashes: Sequence[_Hash32]
+    refereeHashes: Sequence[Hash32]
     adaptive: bool
-    nonce: HexBytes
+    nonce: HexBytes # block nonce put by miner rather than the nonce in the transaction
     size: int
     custom: Sequence[HexBytes]
-    posReference: _Hash32
-    transactions: Sequence[Union[_Hash32, TxData]]
+    posReference: Hash32
+    transactions: Sequence[Union[Hash32, TxData]]
     
 
 Middleware = Callable[[Callable[[RPCEndpoint, Any], RPCResponse], "Web3"], Any]
 MiddlewareOnion = NamedElementOnion[str, Middleware]
+
+
+class SponsorInfo(TypedDict):
+    sponsorBalanceForCollateral: Drip
+    sponsorBalanceForGas: Drip
+    sponsorForCollateral: Base32Address
+    sponsorForGas: Base32Address
+    sponsorGasBound: Drip
+    
+class AccountInfo(TypedDict):
+    address: Base32Address
+    balance: Drip
+    nonce: Nonce
+    codeHash: Hash32
+    stakingBalance: Drip
+    collateralForStrorage: Storage
+    accumulatedInterestReturn: Drip
+    admin: Base32Address
+    
+class DepositInfo(TypedDict):
+    accumulatedInterestRate: Drip
+    amount: Drip
+    depositTime: int # assumed blockNumber
+    
+class VoteInfo(TypedDict):
+    amount: Drip
+    unlockBlockNumber: int
+    

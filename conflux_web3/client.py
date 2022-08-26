@@ -67,7 +67,12 @@ from conflux_web3.types import (
     NodeStatus,
     FilterParams,
     LogReceipt,
-    BlockData
+    BlockData,
+    SponsorInfo,
+    AccountInfo,
+    DepositInfo,
+    VoteInfo,
+    Storage,
 )
 from conflux_web3.contract import (
     ConfluxContract
@@ -180,7 +185,11 @@ class BaseCfx(BaseEth):
     
     _get_balance: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
         RPC.cfx_getBalance,
-        mungers=[default_account_munger]
+        # mungers=[default_account_munger]
+    )
+    
+    _get_staking_balance: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Drip]] = ConfluxMethod(
+        RPC.cfx_getStakingBalance
     )
     
     _epoch_number: ConfluxMethod[Callable[..., EpochLiteral]] = ConfluxMethod(
@@ -189,7 +198,7 @@ class BaseCfx(BaseEth):
     
     _get_next_nonce: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
         RPC.cfx_getNextNonce,
-        mungers=[default_account_munger]
+        # mungers=[default_account_munger]
     )
     
     _send_raw_transaction: ConfluxMethod[Callable[[Union[HexStr, bytes]], HexBytes]] = ConfluxMethod(
@@ -239,6 +248,43 @@ class BaseCfx(BaseEth):
     
     _get_block_by_hash_with_pivot_assumptions: ConfluxMethod[Callable[[_Hash32, _Hash32, int], BlockData]] = ConfluxMethod(
         RPC.cfx_getBlockByHashWithPivotAssumption
+    )
+    
+    
+    _get_code: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], HexBytes]] = ConfluxMethod(
+        RPC.cfx_getCode
+    )
+    
+    _get_storage_at: ConfluxMethod[Callable[[AddressParam, int, EpochNumberParam], Union[HexBytes, None]]] = ConfluxMethod(
+        RPC.cfx_getStorageAt
+    )
+    
+    _get_storage_root: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Union[HexBytes, None]]] = ConfluxMethod(
+        RPC.cfx_getStorageRoot
+    )
+    
+    _get_collateral_for_storage: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Storage]] = ConfluxMethod(
+        RPC.cfx_getCollateralForStorage
+    )
+    
+    _get_admin: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Union[Base32Address, None]]] = ConfluxMethod(
+        RPC.cfx_getAdmin
+    )
+    
+    _get_sponsor_info: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], SponsorInfo]] = ConfluxMethod(
+        RPC.cfx_getSponsorInfo
+    )
+    
+    _get_account: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], AccountInfo]] = ConfluxMethod(
+        RPC.cfx_getAccount
+    )
+    
+    _get_deposit_list: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Sequence[DepositInfo]]] = ConfluxMethod(
+        RPC.cfx_getAccount
+    )
+    
+    _get_vote_list: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Sequence[VoteInfo]]] = ConfluxMethod(
+        RPC.cfx_getAccount
     )
     
     _get_logs: ConfluxMethod[Callable[[FilterParams], List[LogReceipt]]] = ConfluxMethod(
@@ -330,7 +376,13 @@ class ConfluxClient(BaseCfx, Eth):
     def get_balance(self,
                     address: Optional[AddressParam]=None, 
                     block_identifier: Optional[EpochNumberParam] = None) -> Drip:
-        return Drip(self._get_balance(address, block_identifier))
+        return cast(Drip, self._get_balance(address, block_identifier))
+    
+    def get_staking_balance(self,
+                    address: Optional[AddressParam]=None, 
+                    block_identifier: Optional[EpochNumberParam] = None) -> Drip:
+        return Drip(self._get_staking_balance(address, block_identifier))
+    
     
     def call(self, 
              transaction: TxParam, 
@@ -515,6 +567,47 @@ class ConfluxClient(BaseCfx, Eth):
     
     def get_confirmation_risk_by_hash(self, block_hash: _Hash32) -> float:
         return self._get_confirmation_risk_by_hash(block_hash)
+    
+    
+    def get_code(
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
+    ) -> HexBytes:
+        return self._get_code(address, block_identifier)
+    
+    def get_storage_at(
+        self, address: AddressParam, storage_position: int, block_identifier: Optional[EpochNumberParam]
+    ) -> HexBytes:
+        return self._get_storage_at(address, storage_position, block_identifier)
+    
+    def get_storage_root(
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
+    ) -> HexBytes:
+        return self._get_storage_root(address, block_identifier)
+    
+    def get_collateral_for_storage(
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
+    ) -> Storage:
+        return self._get_collateral_for_storage(address, block_identifier)
+    
+    def get_sponsor_info(
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
+    ) -> SponsorInfo:
+        return self._get_sponsor_info(address, block_identifier)
+    
+    def get_account(
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
+    ) -> SponsorInfo:
+        return self._get_account(address, block_identifier)
+    
+    def get_deposit_list(
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
+    ) -> Sequence[DepositInfo]:
+        return self._get_deposit_list(address, block_identifier)
+    
+    def get_vote_list(
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
+    ) -> Sequence[VoteInfo]:
+        return self._get_vote_list(address, block_identifier)
     
     def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs):
         if filter_params is None:
