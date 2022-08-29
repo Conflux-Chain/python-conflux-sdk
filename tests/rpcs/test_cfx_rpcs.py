@@ -3,11 +3,42 @@ import pytest
 
 from conflux_web3 import Web3
 from conflux_web3.types import BlockData
-
+from tests._test_helpers.ENV_SETTING import erc20_metadata
 from tests._test_helpers.type_check import  TypeValidator
 
 # Note that we only test if SDK works as expected, especially for request and result formatting.
 # We don't test if RPC works as expected
+
+@pytest.fixture(scope="module")
+def tx_hash(moduled_w3: Web3, secret_key) -> HexBytes:
+    w3 = moduled_w3
+    status = w3.cfx.get_status()
+    account = w3.account.from_key(secret_key)
+    addr = account.address
+    
+    tx = {
+        'from': addr,
+        'nonce': w3.cfx.get_next_nonce(addr),
+        'gas': 21000,
+        'to': "cfxtest:aamd4myx7f3en2yu95xye7zb78gws09gj2ykmv9p58",
+        'value': 100,
+        'gasPrice': 10**9,
+        'chainId': w3.cfx.chain_id,
+        'storageLimit': 0,
+        'epochHeight': status['epochNumber']
+    }
+    signed = account.sign_transaction(tx)
+    rawTx = signed.rawTransaction
+    h = w3.cfx.send_raw_transaction(rawTx)
+    h.executed()
+    return h
+
+@pytest.fixture(scope="module")
+def contract_address(moduled_w3: Web3):
+    erc20 = moduled_w3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
+    hash = erc20.constructor(name_="ERC20", symbol_="C", totalSupply=10**18).transact()
+    contract_address = hash.executed()["contractCreated"]
+    return contract_address
 
 class TestProperty:
     def test_get_status(self, w3: Web3):
@@ -40,7 +71,61 @@ class TestAccountQuery:
     def test_get_balance_empty_param(self, w3: Web3):
         with pytest.raises(ValueError):
             w3.cfx.get_balance()
-
+            
+    def test_get_staking_balance(self, w3: Web3, address):
+        staking_balance = w3.cfx.get_staking_balance(address, w3.cfx.epoch_number-5)
+        assert staking_balance == 0
+        # TODO: use staking balance contract
+        
+    def test_get_code(self, w3: Web3, contract_address):
+        # test different cases
+        # contract address / user address
+        contract_code = w3.cfx.get_code(contract_address, w3.cfx.epoch_number_by_tag("latest_state"))
+        assert contract_code
+        
+        user_code = w3.cfx.get_code(w3.cfx.account.create().address)
+        assert not user_code
+        
+    def test_get_storage_at(self, w3: Web3, contract_address, use_remote):
+        # TODO: a potential bug in RPC, at present we ignore the testing in local node
+        if use_remote:
+            storage = w3.cfx.get_storage_at(contract_address, 100, w3.cfx.epoch_number)
+            assert isinstance(storage, bytes)
+        else:
+            pass
+        
+    def test_get_storage_root(self, w3: Web3, contract_address):
+        root = w3.cfx.get_storage_root(contract_address, w3.cfx.epoch_number_by_tag("latest_state"))
+        TypeValidator.validate_typed_dict(root, "StorageRoot")
+        
+        # TODO: check RPC work pattern
+        # root = w3.cfx.get_storage_root(w3.account.create().address)
+        # assert not root
+        
+    def test_get_collateral_for_storage(self, w3: Web3, address):
+        storage = w3.cfx.get_collateral_for_storage(address, w3.cfx.epoch_number_by_tag("latest_state"))
+        
+        assert isinstance(storage, int)
+    
+    def test_get_sponsor_info(self, w3: Web3, contract_address):
+        sponsor_info = w3.cfx.get_sponsor_info(contract_address, w3.cfx.epoch_number_by_tag("latest_state"))
+        # assert sponsor_info
+        TypeValidator.validate_typed_dict(sponsor_info, "SponsorInfo")
+            
+    def test_get_account(self, w3: Web3, address):
+        account_info = w3.cfx.get_account(address, w3.cfx.epoch_number_by_tag("latest_state"))
+        TypeValidator.validate_typed_dict(account_info, "AccountInfo")
+    
+    def test_get_deposit_list(self, w3:Web3, address):
+        deposit_list = w3.cfx.get_deposit_list(address, w3.cfx.epoch_number_by_tag("latest_state"))
+        for deposit_info in deposit_list:
+            TypeValidator.validate_typed_dict(deposit_info, "DepositInfo")
+    
+    def test_get_vote_list(self, w3:Web3, address):
+        vote_list = w3.cfx.get_vote_list(address, w3.cfx.epoch_number_by_tag("latest_state"))
+        for vote_info in vote_list:
+            TypeValidator.validate_typed_dict(vote_info, "VoteInfo")
+    
 class TestNonce:
     def test_get_next_nonce(self, w3: Web3, address):
         nonce = w3.cfx.get_next_nonce(address)
@@ -54,28 +139,6 @@ class TestNonce:
     def test_get_next_nonce_empty_param(self, w3: Web3):
         with pytest.raises(ValueError):
             w3.cfx.get_next_nonce()
-
-@pytest.fixture(scope="module")
-def tx_hash(moduled_w3: Web3, secret_key) -> HexBytes:
-    w3 = moduled_w3
-    status = w3.cfx.get_status()
-    account = w3.account.from_key(secret_key)
-    addr = account.address
-    
-    tx = {
-        'from': addr,
-        'nonce': w3.cfx.get_next_nonce(addr),
-        'gas': 21000,
-        'to': "cfxtest:aamd4myx7f3en2yu95xye7zb78gws09gj2ykmv9p58",
-        'value': 100,
-        'gasPrice': 10**9,
-        'chainId': w3.cfx.chain_id,
-        'storageLimit': 0,
-        'epochHeight': status['epochNumber']
-    }
-    signed = account.sign_transaction(tx)
-    rawTx = signed.rawTransaction
-    return w3.cfx.send_raw_transaction(rawTx)
 
 def test_get_tx(w3: Web3, tx_hash: HexBytes):
     """test get_transaction(_by_hash) and get_transaction_receipt

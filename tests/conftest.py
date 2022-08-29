@@ -8,11 +8,15 @@ from tests._test_helpers.ENV_SETTING import (
 )
 
 from cfx_account.account import LocalAccount
+from cfx_account import Account
 from conflux_web3 import (
     Web3
 )
 from conflux_web3.types import (
     Base32Address
+)
+from conflux_web3.middleware import (
+    WalletMiddleware
 )
 
 @pytest.fixture(scope="session")
@@ -54,19 +58,26 @@ def w3(node_url: str, node: LocalNode) -> Web3:
     return w3
 
 @pytest.fixture(scope="module")
-def moduled_w3(node_url: str, node: LocalNode) -> Web3:
+def moduled_w3(node_url: str, node: LocalNode, secret_key) -> Web3:
     """
-    Returns:
-        Web3: a web3 instance
+    a web3 instance for the convenience to create module shared objects
+    e.g. a transaction or a contract which is required for the module
+    NOTE: DON'T CHANGE PROPERTY OF THIS W3
     """
+    account = Account.from_key(secret_key, )
     provider = Web3.HTTPProvider(node_url)
     w3 = Web3(provider=provider)
     # assert w3.isConnected()
+    w3.cfx.default_account = account.get_base32_address(w3.cfx.chain_id)
+    w3.middleware_onion.add(
+        WalletMiddleware(account)
+    )
     return w3
 
-@pytest.fixture
-def address(w3: Web3, secret_key) -> str:
-    addr = w3.account.from_key(secret_key).address
+@pytest.fixture(scope="session")
+def address(node_url, secret_key) -> str:
+    chain_id = Web3(Web3.HTTPProvider(node_url)).cfx.chain_id
+    addr = Account.from_key(secret_key, chain_id).address
     return addr
 
 @pytest.fixture
@@ -74,6 +85,7 @@ def account(w3: Web3, secret_key) -> LocalAccount:
     """external_account, not supported by node
     """
     return w3.account.from_key(secret_key)
+
 
 @pytest.fixture
 def embedded_accounts(w3: Web3, use_remote: bool) -> Sequence[Base32Address]:

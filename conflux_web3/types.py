@@ -1,10 +1,9 @@
-from curses import ALL_MOUSE_EVENTS
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
     List,
-    NewType,
+    Literal,
     Optional,
     Sequence,
     TypedDict,
@@ -174,6 +173,10 @@ class BlockData(TypedDict):
 Middleware = Callable[[Callable[[RPCEndpoint, Any], RPCResponse], "Web3"], Any]
 MiddlewareOnion = NamedElementOnion[str, Middleware]
 
+class StorageRoot(TypedDict):
+    delta: Union[Hash32, Literal["TOMBSTONE", None]]
+    intermediate: Union[Hash32, Literal["TOMBSTONE", None]]
+    snapshot: Union[Hash32, Literal["TOMBSTONE", None]]
 
 class SponsorInfo(TypedDict):
     sponsorBalanceForCollateral: Drip
@@ -188,7 +191,7 @@ class AccountInfo(TypedDict):
     nonce: Nonce
     codeHash: Hash32
     stakingBalance: Drip
-    collateralForStrorage: Storage
+    collateralForStorage: Storage
     accumulatedInterestReturn: Drip
     admin: Base32Address
     

@@ -23,6 +23,7 @@ from web3.eth import (
     BaseEth, 
     Eth
 )
+# empty means a empty address but is not None
 from web3._utils.empty import (
     Empty,
     empty,
@@ -73,6 +74,7 @@ from conflux_web3.types import (
     DepositInfo,
     VoteInfo,
     Storage,
+    StorageRoot
 )
 from conflux_web3.contract import (
     ConfluxContract
@@ -103,10 +105,10 @@ class BaseCfx(BaseEth):
     w3: "Web3"
     
     @property
-    def default_account(self) -> Union[AddressParam, Empty]:
-        """default account address rather than a local account with private key
+    def default_account(self) -> Base32Address:
+        """default account ADDRESS rather than a local account with private key
         """
-        return self._default_account
+        return self._default_account # type: ignore
     
 
     @default_account.setter
@@ -280,11 +282,11 @@ class BaseCfx(BaseEth):
     )
     
     _get_deposit_list: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Sequence[DepositInfo]]] = ConfluxMethod(
-        RPC.cfx_getAccount
+        RPC.cfx_getDepositList
     )
     
     _get_vote_list: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Sequence[VoteInfo]]] = ConfluxMethod(
-        RPC.cfx_getAccount
+        RPC.cfx_getVoteList
     )
     
     _get_logs: ConfluxMethod[Callable[[FilterParams], List[LogReceipt]]] = ConfluxMethod(
@@ -570,42 +572,42 @@ class ConfluxClient(BaseCfx, Eth):
     
     
     def get_code(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
     ) -> HexBytes:
         return self._get_code(address, block_identifier)
     
     def get_storage_at(
-        self, address: AddressParam, storage_position: int, block_identifier: Optional[EpochNumberParam]
-    ) -> HexBytes:
+        self, address: AddressParam, storage_position: int, block_identifier: Optional[EpochNumberParam] = None
+    ) -> Union[HexBytes, None]:
         return self._get_storage_at(address, storage_position, block_identifier)
     
     def get_storage_root(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
-    ) -> HexBytes:
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+    ) -> StorageRoot:
         return self._get_storage_root(address, block_identifier)
     
     def get_collateral_for_storage(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
     ) -> Storage:
         return self._get_collateral_for_storage(address, block_identifier)
     
     def get_sponsor_info(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
     ) -> SponsorInfo:
         return self._get_sponsor_info(address, block_identifier)
     
     def get_account(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
-    ) -> SponsorInfo:
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+    ) -> AccountInfo:
         return self._get_account(address, block_identifier)
     
     def get_deposit_list(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
     ) -> Sequence[DepositInfo]:
         return self._get_deposit_list(address, block_identifier)
     
     def get_vote_list(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam]
+        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
     ) -> Sequence[VoteInfo]:
         return self._get_vote_list(address, block_identifier)
     

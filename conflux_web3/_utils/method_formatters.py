@@ -61,6 +61,7 @@ from eth_utils.curried import (
     apply_formatter_if,
     apply_one_of_formatters,
 )
+from web3._utils.blocks import is_hex_encoded_block_hash as is_hash32
 
 from conflux_web3._utils.rpc_abi import (
     RPC_ABIS,
@@ -113,15 +114,23 @@ PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # Eth
 
     RPC.cfx_getBalance: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getStakingBalance: apply_formatter_at_index(to_hex_if_integer, 1),
     RPC.cfx_getNextNonce: apply_formatter_at_index(to_hex_if_integer, 1),
+    
     RPC.cfx_getBlockByEpochNumber: apply_formatter_at_index(to_hex_if_integer, 0),
     RPC.cfx_getBlockByBlockNumber: apply_formatter_at_index(to_hex_if_integer, 0),
     RPC.cfx_getBlocksByEpoch: apply_formatter_at_index(to_hex_if_integer, 0),
     RPC.cfx_getSkippedBlocksByEpoch: apply_formatter_at_index(to_hex_if_integer, 0),
     RPC.cfx_getBlockByHashWithPivotAssumption: apply_formatter_at_index(to_hex_if_integer, 2),
     
-    # RPC.eth_getCode: apply_formatter_at_index(to_hex_if_integer, 1),
-    # RPC.eth_getStorageAt: apply_formatter_at_index(to_hex_if_integer, 2),
+    RPC.cfx_getCode: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getStorageAt: apply_formatter_at_index(to_hex_if_integer, 2),
+    RPC.cfx_getStorageRoot: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getCollateralForStorage: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getSponsorInfo: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getAccount: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getDepositList: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getVoteList: apply_formatter_at_index(to_hex_if_integer, 1),
     # RPC.eth_getTransactionByBlockNumberAndIndex: compose(
     #     apply_formatter_at_index(to_hex_if_integer, 0),
     #     apply_formatter_at_index(to_hex_if_integer, 1),
@@ -211,7 +220,6 @@ LOG_ENTRY_FORMATTERS = {
     "logIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
     "transactionLogIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
 }
-
 log_entry_formatter = apply_formatters_to_dict(LOG_ENTRY_FORMATTERS)
 
 RECEIPT_FORMATTERS = {
@@ -234,7 +242,7 @@ RECEIPT_FORMATTERS = {
     "logsBloom": to_hexbytes(256), # type: ignore
     "logs": apply_list_to_array_formatter(log_entry_formatter),
 }
-receipt_formatter = apply_formatters_to_dict(RECEIPT_FORMATTERS)
+# receipt_formatter = apply_formatters_to_dict(RECEIPT_FORMATTERS)
 
 
 TRANSACTION_RESULT_FORMATTERS = {
@@ -257,8 +265,6 @@ TRANSACTION_RESULT_FORMATTERS = {
     "v": apply_formatter_if(is_not_null, to_integer_if_hex),
     "value": to_integer_if_hex,
 }
-
-
 transaction_result_formatter = apply_formatters_to_dict(TRANSACTION_RESULT_FORMATTERS)
 
 filter_result_formatter = apply_one_of_formatters(
@@ -301,7 +307,6 @@ BLOCK_FORMATTERS = {
         )
     )
 }
-
 block_formatter = apply_formatters_to_dict(BLOCK_FORMATTERS)
 
 
@@ -313,6 +318,42 @@ def to_transaction_hash(val) -> TransactionHash:
 def fixed64_to_float(val: str) -> float:
     MAX = 2**256 - 1
     return int(val, 16) / MAX
+
+STORAGE_ROOT_FORMATTERS = {
+    # "delta": apply_formatter_if(is_not_null, to_hash32),
+    "delta": apply_formatter_if(is_hash32, to_hash32),
+    "intermediate": apply_formatter_if(is_hash32, to_hash32),
+    "snapshot": apply_formatter_if(is_hash32, to_hash32),
+}
+storage_root_formatter = apply_formatters_to_dict(STORAGE_ROOT_FORMATTERS)
+
+SPONSOR_INFO_FORMATTERS = {
+    "sponsorBalanceForCollateral": to_integer_if_hex,
+    "sponsorBalanceForGas": to_integer_if_hex,
+    "sponsorGasBound": to_integer_if_hex,
+}
+
+ACCOUNT_INFO_FORMATTERS = {
+    "accumulatedInterestReturn": to_integer_if_hex,
+    # "address": Base32Address,
+    # "admin": Base32Address,
+    "balance": to_integer_if_hex,
+    "codeHash": to_hash32,
+    "collateralForStorage": to_integer_if_hex,
+    "nonce": to_integer_if_hex,
+    "stakingBalance": to_integer_if_hex
+}
+
+DEPOSIT_INFO_FORMATTERS = {
+    "accumulatedInterestRate": to_integer_if_hex,
+    "amount": to_integer_if_hex,
+    "depositTime": to_integer_if_hex,
+}
+
+VOTE_INFO_FORMATTERS = {
+    "amount": to_integer_if_hex,
+    "unlockBlockNumber": to_integer_if_hex,
+}
 
 PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # Eth
@@ -327,6 +368,7 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # RPC.eth_maxPriorityFeePerGas: to_integer_if_hex,
     RPC.cfx_gasPrice: to_integer_if_hex,
     RPC.cfx_getBalance: to_integer_if_hex,
+    RPC.cfx_getStakingBalance: to_integer_if_hex,
     RPC.cfx_getNextNonce: to_integer_if_hex,
     RPC.cfx_getBlockByHash: apply_formatter_if(is_not_null, block_formatter),
     RPC.cfx_getBlockByEpochNumber: apply_formatter_if(is_not_null, block_formatter),
@@ -337,7 +379,6 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     RPC.cfx_getBlockByHashWithPivotAssumption: apply_formatter_if(is_not_null, block_formatter),
     # RPC.eth_getBlockTransactionCountByHash: to_integer_if_hex,
     # RPC.eth_getBlockTransactionCountByNumber: to_integer_if_hex,
-    # RPC.eth_getCode: HexBytes,
     # RPC.eth_getFilterChanges: filter_result_formatter,
     # RPC.eth_getFilterLogs: filter_result_formatter,
     RPC.cfx_getLogs: filter_result_formatter,
@@ -345,7 +386,19 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # RPC.eth_getRawTransactionByBlockHashAndIndex: HexBytes,
     # RPC.eth_getRawTransactionByBlockNumberAndIndex: HexBytes,
     # RPC.eth_getRawTransactionByHash: HexBytes,
-    # RPC.eth_getStorageAt: HexBytes,
+    
+    RPC.cfx_getCode: HexBytes,
+    RPC.cfx_getStorageAt: apply_formatter_if(is_not_null, to_hash32),
+    RPC.cfx_getStorageRoot: apply_formatter_if(is_not_null, storage_root_formatter),
+    RPC.cfx_getCollateralForStorage: to_integer_if_hex,
+    RPC.cfx_getSponsorInfo: apply_formatters_to_dict(SPONSOR_INFO_FORMATTERS),
+    RPC.cfx_getAccount: apply_formatters_to_dict(ACCOUNT_INFO_FORMATTERS),
+    RPC.cfx_getDepositList: apply_list_to_array_formatter(
+        apply_formatters_to_dict(DEPOSIT_INFO_FORMATTERS)
+    ),
+    RPC.cfx_getVoteList: apply_list_to_array_formatter(
+        apply_formatters_to_dict(VOTE_INFO_FORMATTERS)
+    ),
     # RPC.eth_getTransactionByBlockHashAndIndex: apply_formatter_if(
     #     is_not_null,
     #     transaction_result_formatter,
@@ -361,7 +414,7 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # RPC.eth_getTransactionCount: to_integer_if_hex,
     RPC.cfx_getTransactionReceipt: apply_formatter_if(
         is_not_null,
-        receipt_formatter,
+        apply_formatters_to_dict(RECEIPT_FORMATTERS),
     ),
     # RPC.eth_getUncleCountByBlockHash: to_integer_if_hex,
     # RPC.eth_getUncleCountByBlockNumber: to_integer_if_hex,

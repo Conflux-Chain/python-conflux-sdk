@@ -1,6 +1,8 @@
 from typing import (
     Any,
-    Dict, 
+    Dict,
+    Type,
+    TypedDict, 
     get_args, 
     get_origin, 
     Union
@@ -8,12 +10,6 @@ from typing import (
 import warnings
 from cfx_address import Base32Address
 
-from conflux_web3.types import (
-    EstimateResult,
-    TxDict,
-    TxData,
-    TxReceipt
-)
 import conflux_web3.types
 
 class TypeValidator:
@@ -65,22 +61,8 @@ class TypeValidator:
             TypeValidator._validate_type(value_to_validate[field], field_type)
     
     @staticmethod
-    def validate_typed_dict(value_to_validate: Any, typed_dict_name: str):
-        TypeValidator.validate(value_to_validate, getattr(conflux_web3.types, typed_dict_name).__annotations__)
-        
-    @staticmethod
-    def validate_tx(value_to_validate):
-        TypeValidator.validate(value_to_validate, TxDict.__annotations__)
-        
-    @staticmethod
-    def validate_estimate(value_to_validate):
-        TypeValidator.validate(value_to_validate, EstimateResult.__annotations__)
-        
-    @staticmethod
-    def validate_receipt(value_to_validate):
-        TypeValidator.validate(value_to_validate, TxReceipt.__annotations__)
-    
-    @staticmethod
-    def validate_tx_data(value_to_validate):
-        TypeValidator.validate(value_to_validate, TxData.__annotations__)
-        
+    def validate_typed_dict(value_to_validate: Any, typed_dict_class: Union[str, Type[TypedDict]]):
+        if isinstance(typed_dict_class, str):
+            typed_dict_class = getattr(conflux_web3.types, typed_dict_class)
+        TypeValidator.validate(value_to_validate, typed_dict_class.__annotations__)
+        return True
