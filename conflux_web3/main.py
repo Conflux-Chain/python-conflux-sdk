@@ -27,13 +27,20 @@ from conflux_web3.middleware import (
     conflux_default_middlewares
 )
 
-
-from conflux_web3.client import ConfluxClient
-from conflux_web3._utils.abi import build_cfx_default_registry
+from conflux_web3.client import (
+    ConfluxClient
+)
+from conflux_web3.txpool import (
+    Txpool
+)
+from conflux_web3._utils.abi import (
+    build_cfx_default_registry
+)
 
 # The module name __name__ should be Web3 
 class Web3(OriWeb3):
     cfx: ConfluxClient
+    txpool: Txpool
     
     def __init__(
         self,
@@ -57,7 +64,8 @@ class Web3(OriWeb3):
         # if modules is None:
         #     modules = get_default_modules()
         modules = {
-            "eth": ConfluxClient
+            "eth": ConfluxClient,
+            "txpool": Txpool,
         }
 
         self.attach_modules(modules)  # type: ignore

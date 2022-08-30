@@ -492,9 +492,8 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # RPC.personal_newAccount: to_checksum_address,
     # RPC.personal_sendTransaction: to_hash32,
     # RPC.personal_signTypedData: HexBytes,
-    # # Transaction Pool
-    # RPC.txpool_content: transaction_pool_content_formatter,
-    # RPC.txpool_inspect: transaction_pool_inspect_formatter,
+    # Transaction Pool
+    RPC.txpool_nextNonce: to_integer_if_hex,
     # # Snapshot and Revert
     # RPC.evm_snapshot: hex_to_integer,
     # # Net

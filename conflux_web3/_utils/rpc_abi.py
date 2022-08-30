@@ -55,9 +55,12 @@ class RPC:
 
     # debug
     accounts = RPCEndpoint("accounts")
+    
+    # txpool
+    txpool_nextNonce = RPCEndpoint("txpool_nextNonce")
 
     # other
-    cfx_method = RPCEndpoint("cfx_method")
+    # cfx_method = RPCEndpoint("cfx_method")
 
 TRANSACTION_PARAMS_ABIS = {
     "from": "address",
