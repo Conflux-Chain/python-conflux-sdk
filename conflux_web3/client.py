@@ -205,7 +205,7 @@ class BaseCfx(BaseEth):
         RPC.cfx_getStakingBalance
     )
     
-    _epoch_number: ConfluxMethod[Callable[..., EpochLiteral]] = ConfluxMethod(
+    _epoch_number: ConfluxMethod[Callable[[EpochLiteral], EpochNumber]] = ConfluxMethod(
         RPC.cfx_epochNumber,
     )
     
