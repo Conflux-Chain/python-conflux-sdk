@@ -8,35 +8,27 @@ from hexbytes import HexBytes
 
 from web3.datastructures import AttributeDict
 from web3.types import (
-    CallOverrideParams,
     RPCEndpoint,
-    RPCResponse,
-    TReturn,
-    # TxParams,
-    _Hash32,
 )
 from web3._utils.method_formatters import (
     combine_formatters,
     # STANDARD_NORMALIZERS,
     to_hexbytes,
     to_hex_if_integer,
+    to_integer_if_hex,
     is_not_null,
     apply_list_to_array_formatter,
-    # log
 )
 from web3._utils.abi import (
     is_length
 )
 from web3._utils.normalizers import (
-    # abi_address_to_hex,
     abi_bytes_to_hex,
     abi_int_to_hex,
     abi_string_to_hex,
 )
 from web3.module import Module
 from web3._utils.formatters import (
-    hex_to_integer,
-    # integer_to_hex,
     is_array_of_dicts,
     is_array_of_strings,
     remove_key_if,
@@ -44,7 +36,6 @@ from web3._utils.formatters import (
 from web3._utils.rpc_abi import abi_request_formatters
 
 from eth_utils.types import (
-    is_string,
     is_dict
 )
 
@@ -82,11 +73,6 @@ STANDARD_NORMALIZERS = [
 def to_hash32(val, variable_length=False):
     return to_hexbytes(32, val, variable_length)
 
-# TRANSACTION_REQUEST_FORMATTERS = {
-#     'maxFeePerGas': to_hex_if_integer,
-#     'maxPriorityFeePerGas': to_hex_if_integer,
-# }
-# transaction_request_formatter = apply_formatters_to_dict(TRANSACTION_REQUEST_FORMATTERS)
 transaction_param_formatter = compose(
     remove_key_if('to', lambda txn: txn['to'] in {'', b'', None}),  # type: ignore
     remove_key_if('gasPrice', lambda txn: txn['gasPrice'] in {'', b'', None}),  # type: ignore
@@ -94,24 +80,14 @@ transaction_param_formatter = compose(
 )
 
 ABI_REQUEST_FORMATTERS = abi_request_formatters(STANDARD_NORMALIZERS, RPC_ABIS)
-# METHOD_NORMALIZERS: Dict[RPCEndpoint, Callable[..., Any]] = {
-#     RPC.cfx_getLogs: apply_formatter_at_index(FILTER_PARAM_NORMALIZERS, 0),
-#     # RPC.eth_newFilter: apply_formatter_at_index(FILTER_PARAM_NORMALIZERS, 0)
-# }
-
-to_integer_if_hex = apply_formatter_if(is_string, hex_to_integer)
 
 FILTER_PARAMS_FORMATTERS = {
     "fromEpoch": to_hex_if_integer,
     "toEpoch": to_hex_if_integer,
-    "limit": to_hex_if_integer,
-    "offset": to_hex_if_integer,
 }
 
-filter_params_formatter = apply_formatters_to_dict(FILTER_PARAMS_FORMATTERS)
-
 PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
-    # Eth
+    # Cfx
 
     RPC.cfx_getBalance: apply_formatter_at_index(to_hex_if_integer, 1),
     RPC.cfx_getStakingBalance: apply_formatter_at_index(to_hex_if_integer, 1),
@@ -151,7 +127,7 @@ PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
         apply_formatter_at_index(to_hex_if_integer, 5),
     ),
 
-    RPC.cfx_getLogs: apply_formatter_at_index(filter_params_formatter, 0),
+    RPC.cfx_getLogs: apply_formatter_at_index(apply_formatters_to_dict(FILTER_PARAMS_FORMATTERS), 0),
     RPC.cfx_call: apply_one_of_formatters((
         (is_length(1), apply_formatter_at_index(transaction_param_formatter, 0)), # type: ignore
         (is_length(2), apply_formatters_to_sequence( # type: ignore
@@ -323,7 +299,6 @@ def fixed64_to_float(val: str) -> float:
     return int(val, 16) / MAX
 
 STORAGE_ROOT_FORMATTERS = {
-    # "delta": apply_formatter_if(is_not_null, to_hash32),
     "delta": apply_formatter_if(is_hash32, to_hash32),
     "intermediate": apply_formatter_if(is_hash32, to_hash32),
     "snapshot": apply_formatter_if(is_hash32, to_hash32),
@@ -432,7 +407,6 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     RPC.cfx_getSkippedBlocksByEpoch: apply_list_to_array_formatter(to_hash32),
     RPC.cfx_getBlockByHashWithPivotAssumption: apply_formatter_if(is_not_null, block_formatter),
     RPC.cfx_getLogs: filter_result_formatter,
-
     
     RPC.cfx_getCode: HexBytes,
     RPC.cfx_getStorageAt: apply_formatter_if(is_not_null, to_hash32),
@@ -476,9 +450,7 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
         is_not_null,
         apply_formatters_to_dict(RECEIPT_FORMATTERS),
     ),
-
     
-    # add is_string condition for the sake of pending middleware
     RPC.cfx_sendRawTransaction: to_transaction_hash,  
     RPC.cfx_sendTransaction: to_transaction_hash,  
     # RPC.eth_sign: HexBytes,
@@ -492,12 +464,9 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # RPC.personal_newAccount: to_checksum_address,
     # RPC.personal_sendTransaction: to_hash32,
     # RPC.personal_signTypedData: HexBytes,
+    
     # Transaction Pool
     RPC.txpool_nextNonce: to_integer_if_hex,
-    # # Snapshot and Revert
-    # RPC.evm_snapshot: hex_to_integer,
-    # # Net
-    # RPC.net_peerCount: to_integer_if_hex,
 }
 
 
