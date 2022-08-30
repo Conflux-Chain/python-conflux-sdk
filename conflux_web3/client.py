@@ -3,6 +3,7 @@ from typing import (
     Any,
     Callable,
     List,
+    Literal,
     Optional,
     Sequence,
     Tuple,
@@ -74,7 +75,17 @@ from conflux_web3.types import (
     DepositInfo,
     VoteInfo,
     Storage,
-    StorageRoot
+    StorageRoot,
+    EpochNumber,
+    BlockRewardInfo,
+    PendingInfo,
+    PoSEconomicsInfo,
+    PoSEpochRewardInfo,
+    DAOVoteInfo,
+    SupplyInfo,
+    PendingInfo,
+    PendingTransactionsInfo,
+    TransactionPaymentInfo,
 )
 from conflux_web3.contract import (
     ConfluxContract
@@ -289,6 +300,46 @@ class BaseCfx(BaseEth):
         RPC.cfx_getVoteList
     )
     
+    _get_interest_rate = ConfluxMethod(
+        RPC.cfx_getInterestRate
+    )
+    
+    _get_accumulate_interest_rate = ConfluxMethod(
+        RPC.cfx_getAccumulateInterestRate
+    )
+    
+    _get_block_reward_info = ConfluxMethod(
+        RPC.cfx_getBlockRewardInfo
+    )
+    
+    _get_pos_economics = ConfluxMethod(
+        RPC.cfx_getPoSEconomics
+    )
+    
+    _get_pos_reward_by_epoch = ConfluxMethod(
+        RPC.cfx_getPoSRewardByEpoch
+    )
+    
+    _get_params_from_vote = ConfluxMethod(
+        RPC.cfx_getParamsFromVote
+    )
+    
+    _get_supply_info = ConfluxMethod(
+        RPC.cfx_getSupplyInfo
+    )
+    
+    _get_account_pending_info = ConfluxMethod(
+        RPC.cfx_getAccountPendingInfo
+    )
+    
+    _get_account_pending_transactions = ConfluxMethod(
+        RPC.cfx_getAccountPendingTransactions
+    )
+    
+    _check_balance_against_transaction = ConfluxMethod(
+        RPC.cfx_checkBalanceAgainstTransaction
+    )
+    
     _get_logs: ConfluxMethod[Callable[[FilterParams], List[LogReceipt]]] = ConfluxMethod(
         RPC.cfx_getLogs
     )
@@ -351,10 +402,10 @@ class ConfluxClient(BaseCfx, Eth):
         return self._accounts()
     
     @property
-    def epoch_number(self) -> int:
+    def epoch_number(self) -> EpochNumber:
         return self._epoch_number()
     
-    def epoch_number_by_tag(self, epochTag: EpochLiteral):
+    def epoch_number_by_tag(self, epochTag: EpochLiteral) -> EpochNumber:
         return self._epoch_number(epochTag)
     
     @functools.cached_property
@@ -610,6 +661,58 @@ class ConfluxClient(BaseCfx, Eth):
         self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
     ) -> Sequence[VoteInfo]:
         return self._get_vote_list(address, block_identifier)
+    
+    def get_interst_rate(
+        self, block_identifier: Optional[EpochNumberParam] = None
+    ) -> int:
+        return self._get_interest_rate(block_identifier)
+    
+    def get_accumulate_interst_rate(
+        self, block_identifier: Optional[EpochNumberParam] = None
+    ) -> int:
+        return self._get_accumulate_interest_rate(block_identifier)
+    
+    def get_block_reward_info(
+        self, block_identifier: Union[EpochNumber, int, Literal["latest_checkpoint"] ]
+    ) -> Sequence[BlockRewardInfo]:
+        return self._get_block_reward_info(block_identifier)
+    
+    def get_pos_economics(
+        self, block_identifier: Optional[EpochNumberParam] = None
+    ) -> PoSEconomicsInfo:
+        return self._get_pos_economics(block_identifier)
+    
+    def get_pos_reward_by_epoch(
+        self, epoch_number: Union[EpochNumber, int]
+    ) -> Union[PoSEpochRewardInfo, None]:
+        return self._get_pos_reward_by_epoch(epoch_number)
+    
+    def get_params_from_vote(
+        self, block_identifier: Optional[EpochNumberParam] = None
+    ) -> DAOVoteInfo:
+        return self._get_params_from_vote(block_identifier)
+    
+    def get_supply_info(self) -> SupplyInfo:
+        return self._get_supply_info()
+    
+    def get_account_pending_info(
+        self, address: AddressParam
+    ) -> PendingInfo:
+        return self._get_account_pending_info(address)
+    
+    def get_account_pending_transactions(
+        self, address: AddressParam, start_nonce: Optional[int]=None, limit: Optional[int]=None
+    ) -> PendingTransactionsInfo:
+        return self._get_account_pending_transactions(address, start_nonce, limit)
+    
+    def check_balance_against_transaction(
+        self, account_address: AddressParam, contract_address: AddressParam, 
+        gas_limit: int, gas_price: Union[Drip, int], storage_limit: Union[Storage, int],
+        block_identifier: Optional[EpochNumberParam] = None
+    ) -> TransactionPaymentInfo:
+        return self._check_balance_against_transaction(
+            account_address, contract_address, gas_limit, gas_price, storage_limit, block_identifier
+        )
     
     def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs):
         if filter_params is None:

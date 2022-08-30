@@ -40,7 +40,7 @@ def contract_address(moduled_w3: Web3):
     contract_address = hash.executed()["contractCreated"]
     return contract_address
 
-class TestProperty:
+class TestStatusQuery:
     def test_get_status(self, w3: Web3):
         status = w3.cfx.get_status()
         TypeValidator.validate_typed_dict(status, "NodeStatus")
@@ -55,6 +55,42 @@ class TestProperty:
 
     def test_client_version(self, w3: Web3):
         assert w3.cfx.client_version
+        
+    def test_get_interest_rate(self, w3: Web3):
+        interest_rate = w3.cfx.get_interst_rate(w3.cfx.epoch_number_by_tag("latest_state"))
+        assert isinstance(interest_rate, int)
+    
+    def test_get_accumulate_interest_rate(self, w3: Web3):
+        assert isinstance(
+            w3.cfx.get_accumulate_interst_rate(w3.cfx.epoch_number_by_tag("latest_state")),
+            int
+        )
+    
+    def test_get_block_reward_info(self, w3: Web3):
+        info_sequence = w3.cfx.get_block_reward_info(w3.cfx.epoch_number_by_tag("latest_checkpoint"))
+        for info in info_sequence:
+            TypeValidator.validate_typed_dict(info, "BlockRewardInfo")
+
+    def test_get_pos_economics(self, w3: Web3):
+        info = w3.cfx.get_pos_economics(w3.cfx.epoch_number_by_tag("latest_state"))
+        TypeValidator.validate_typed_dict(info, "PoSEconomicsInfo")
+
+    # TODO: finish this test after pos RPC finished
+    # def test_get_pos_reward_by_epoch(self, w3: Web3, use_remote: bool):
+    #     if use_remote:
+    #         info = w3.cfx.get_pos_reward_by_epoch("100")
+    #         TypeValidator.validate_typed_dict(info, "PoSEpochRewardInfo")
+
+    def test_get_params_from_vote(self, w3: Web3):
+        info = w3.cfx.get_params_from_vote(w3.cfx.epoch_number_by_tag("latest_state"))
+        TypeValidator.validate_typed_dict(info, "DAOVoteInfo")
+    
+    def test_get_supply_info(self, w3: Web3):
+        info = w3.cfx.get_supply_info()
+        TypeValidator.validate_typed_dict(info, "SupplyInfo")
+    
+    # def test_get_account_pending_transactions(self, w3: Web3):
+    #     info = 
 
 class TestAccountQuery:
     def test_get_balance(self, w3: Web3, address):
@@ -171,8 +207,6 @@ def test_get_confirmation_risk(w3: Web3, tx_hash):
     risk = w3.cfx.get_confirmation_risk_by_hash(blockHash)
     assert risk < 1
 
-
-
 def preprocess_block_data(block_data, use_remote):
     if not use_remote:
         # local node may not run pos chain
@@ -248,3 +282,41 @@ class TestBlock:
         )
         block_data = preprocess_block_data(block_data, use_remote)
         TypeValidator.validate_typed_dict(block_data, "BlockData")
+
+
+class TestPending:
+    @pytest.fixture(scope="class")
+    def future_tx(self, moduled_w3: Web3):
+        nonce = moduled_w3.cfx.get_next_nonce(moduled_w3.cfx.default_account)
+        hash = moduled_w3.cfx.send_transaction({
+            "to": moduled_w3.account.create().address,
+            "value": 100,
+            "nonce": nonce + 1
+        })
+        yield hash
+        moduled_w3.cfx.send_transaction({
+            "to": moduled_w3.account.create().address,
+            "value": 100,
+            "nonce": nonce
+        })
+        hash.executed()
+        
+    
+    def test_get_account_pending_info(self, w3: Web3, address, future_tx):
+        account_pending_info = w3.cfx.get_account_pending_info(address)
+        TypeValidator.validate_typed_dict(account_pending_info, "PendingInfo")
+    
+    def test_get_account_pending_transactions(self, w3: Web3, address, future_tx):
+        nonce = w3.cfx.get_next_nonce(address)
+        info = w3.cfx.get_account_pending_transactions(address, nonce, 1)
+        assert info["firstTxStatus"]["pending"] == "futureNonce"
+        assert info["pendingCount"] == 1
+        for tx in info["pendingTransactions"]:
+            TypeValidator.validate_typed_dict(tx, "TxData")
+
+def test_check_balance_against_transaction(w3: Web3, address, contract_address):
+    payment_info = w3.cfx.check_balance_against_transaction(
+        address, contract_address, 10000, 10**9, 0, w3.cfx.epoch_number_by_tag("latest_state")
+    )
+    TypeValidator.validate_typed_dict(payment_info, "TransactionPaymentInfo")
+    

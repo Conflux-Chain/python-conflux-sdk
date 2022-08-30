@@ -39,7 +39,16 @@ class RPC:
     cfx_getVoteList = RPCEndpoint("cfx_getVoteList")
     cfx_sendRawTransaction = RPCEndpoint("cfx_sendRawTransaction")
     cfx_sendTransaction = RPCEndpoint("cfx_sendTransaction")
-
+    
+    cfx_getPoSEconomics = RPCEndpoint("cfx_getPoSEconomics")
+    cfx_getPoSRewardByEpoch = RPCEndpoint("cfx_getPoSRewardByEpoch")
+    cfx_getParamsFromVote = RPCEndpoint("cfx_getParamsFromVote")
+    cfx_getSupplyInfo = RPCEndpoint("cfx_getSupplyInfo")
+    
+    cfx_getAccountPendingInfo = RPCEndpoint("cfx_getAccountPendingInfo")
+    cfx_getAccountPendingTransactions = RPCEndpoint("cfx_getAccountPendingTransactions")
+    cfx_checkBalanceAgainstTransaction = RPCEndpoint("cfx_checkBalanceAgainstTransaction")
+    
     # trace
     trace_block = RPCEndpoint("trace_block")
     trace_transaction = RPCEndpoint("trace_transaction")
@@ -92,6 +101,17 @@ RPC_ABIS = {
     RPC.cfx_getDepositList: ["address", EPOCH_NUMBER_PARAM],
     RPC.cfx_getVoteList: ["address", EPOCH_NUMBER_PARAM],
     
+    RPC.cfx_getInterestRate: [EPOCH_NUMBER_PARAM],
+    RPC.cfx_getAccumulateInterestRate: [EPOCH_NUMBER_PARAM],
+    RPC.cfx_getBlockRewardInfo: [None], # integer epoch number, or the string "latest_checkpoint"
+    RPC.cfx_getPoSEconomics: [EPOCH_NUMBER_PARAM],
+    RPC.cfx_getPoSRewardByEpoch: ["uint"],
+    RPC.cfx_getParamsFromVote: [EPOCH_NUMBER_PARAM],
+    RPC.cfx_getSupplyInfo: [],
+    
+    RPC.cfx_getAccountPendingInfo: ["addresss"],
+    RPC.cfx_getAccountPendingTransactions: ["address", "uint", "uint"],
+    RPC.cfx_checkBalanceAgainstTransaction: ["address", "address", "uint", "uint", "uint", EPOCH_NUMBER_PARAM],
     
     RPC.cfx_getTransactionByHash: ["bytes32"],
     RPC.cfx_getTransactionReceipt: ["bytes32"],

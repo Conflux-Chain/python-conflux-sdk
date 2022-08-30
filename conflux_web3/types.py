@@ -4,6 +4,7 @@ from typing import (
     Callable,
     List,
     Literal,
+    NewType,
     Optional,
     Sequence,
     TypedDict,
@@ -34,6 +35,7 @@ from cfx_utils.types import (
     Storage,
     EpochNumberParam,
     EpochLiteral,
+    EpochNumber
 )
 
 if TYPE_CHECKING:
@@ -203,4 +205,57 @@ class DepositInfo(TypedDict):
 class VoteInfo(TypedDict):
     amount: Drip
     unlockBlockNumber: int
+
+class BlockRewardInfo(TypedDict):
+    blockHash: Hash32
+    author: Base32Address
+    totalReward: Drip
+    baseReward: Drip
+    txFee: Drip
+
+PoSBlockNumber = NewType("PoSBlockNumber", int)
+PoSEpochNumber = NewType("PoSEpochNumber", int)
+
+class PoSEconomicsInfo(TypedDict):
+    distributablePosInterest: Drip
+    lastDistributeBlock: PoSBlockNumber
+    totalPosStakingTokens: Drip
     
+class PoSAccountRewardsInfo(TypedDict):
+    posAddress: Base32Address
+    powAddress: Base32Address
+    reward: Drip
+
+class PoSEpochRewardInfo(TypedDict):
+    accountRewards: Sequence[PoSAccountRewardsInfo]
+    powEpochHash: Hash32
+
+class DAOVoteInfo(TypedDict):
+    powBaseReward: Drip
+    interestRate: int
+
+class SupplyInfo(TypedDict):
+    totalIssued: Drip
+    totalCollateral: Drip
+    totalStaking: Drip
+    totalCirculating: Drip
+    totalEspaceTokens: Drip
+
+class PendingInfo(TypedDict):
+    localNonce: Nonce
+    pendingNonce: Nonce
+    pendingCount: int
+    nextPendingTx: Hash32
+
+class PendingTransactionStatus(TypedDict):
+    pending: Literal["futureNonce", "notEnoughCash", "ready"]
+
+class PendingTransactionsInfo(TypedDict):
+    firstTxStatus: PendingTransactionStatus
+    pendingCount: int
+    pendingTransactions: Sequence[TxData]
+
+class TransactionPaymentInfo(TypedDict):
+    isBalanceEnough: bool
+    willPayCollateral: bool
+    willPayTxFee: bool
