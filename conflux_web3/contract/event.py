@@ -53,9 +53,6 @@ from cfx_address import (
 from cfx_utils.decorators import (
     combomethod
 )
-from conflux_web3._utils.decorators import (
-    disabled_api
-)
 from conflux_web3.types import (
     AddressParam,
     TxReceipt,
@@ -66,7 +63,9 @@ from conflux_web3.types import (
 from conflux_web3._utils.events import (
     cfx_get_event_data,
 )
-
+from conflux_web3._utils.decorators import (
+    use_instead
+)
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
@@ -134,12 +133,12 @@ class ConfluxContractEvent(BaseContractEvent):
         return self.process_log(self.w3.codec, self.abi, log)
 
     @combomethod
-    @disabled_api
+    @use_instead
     def createFilter(*args, **kwargs):
         pass
     
     @combomethod
-    @disabled_api
+    @use_instead
     def build_filter(*args, **kwargs):
         pass
 

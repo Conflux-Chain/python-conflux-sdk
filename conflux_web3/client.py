@@ -14,12 +14,18 @@ from typing import (
     overload
 )
 import functools
-# from eth_typing import Address
 from hexbytes import HexBytes
 
 from eth_utils.toolz import (
     keyfilter  # type: ignore
 )
+from eth_typing.encoding import (
+    HexStr
+)
+from eth_utils.toolz import (
+    assoc  # type: ignore
+)
+
 from web3.eth import (
     BaseEth, 
     Eth
@@ -32,10 +38,6 @@ from web3._utils.empty import (
 from web3._utils.threads import (
     Timeout,
 )
-from web3.method import (
-    # DeprecatedMethod,
-    default_root_munger,
-)
 from web3.datastructures import (
     AttributeDict,
 )
@@ -47,15 +49,17 @@ from web3.exceptions import (
     TimeExhausted
 )
 
-from eth_typing.encoding import HexStr
-from eth_utils.toolz import assoc  # type: ignore
 
 from cfx_address import Base32Address as CfxAddress
 from cfx_account import Account as CfxAccount
 from cfx_account.account import LocalAccount
 
-from conflux_web3._utils.rpc_abi import RPC
-from conflux_web3._utils.method_formatters import cfx_request_formatters
+from conflux_web3._utils.rpc_abi import (
+    RPC
+)
+from conflux_web3._utils.disabled_eth_apis import (
+    disabled_method_list,
+)
 from conflux_web3.types import (
     Drip,
     EpochLiteral,
@@ -103,8 +107,7 @@ from conflux_web3.middleware.pending import (
     TransactionHash
 )
 from conflux_web3._utils.decorators import (
-    disabled_api,
-    use_instead
+    use_instead,
 )
 
 if TYPE_CHECKING:
@@ -371,6 +374,54 @@ class ConfluxClient(BaseCfx, Eth):
     account = CfxAccount()
     address = CfxAddress
     defaultContractFactory = ConfluxContract
+    
+    def __init__(self, w3: "Web3") -> None:
+        super().__init__(w3)
+        self.disable_eth_methods(disabled_method_list)
+        
+    def disable_eth_methods(self, disabled_method_list: Sequence[str]):
+        for api in disabled_method_list:
+            self.__setattr__(
+                api,
+                use_instead(origin=api)(
+                    lambda *args, **kwargs: 0    
+                ),
+            )
+    
+    @use_instead
+    @property
+    def syncing(self):
+        pass
+    
+    @use_instead
+    @property
+    def coinbase(self):
+        pass
+    
+    @use_instead
+    @property
+    def mining(self):
+        pass
+    
+    @use_instead
+    @property
+    def hashrate(self):
+        pass
+    
+    @use_instead(origin="web3.eth.block_number", substitute="web3.cfx.epoch_number")
+    @property
+    def block_number(self):
+        pass
+    
+    @use_instead
+    @property
+    def max_priority_fee(self):
+        pass
+    
+    @use_instead
+    @property
+    def get_work(self):
+        pass
     
     def get_status(self) -> NodeStatus:
         """
@@ -722,14 +773,4 @@ class ConfluxClient(BaseCfx, Eth):
             if len(kwargs.keys()) != 0:
                 raise ValueError("Redundant Param: FilterParams as get_logs first parameter is already provided")
             return self._get_logs(filter_params)
-    
-    
-    
-    @use_instead("estimate_gas_and_collateral")
-    def estimate_gas(self, *args, **kwargs):
-        """disabled in conflux network. use "estimate_gas_and_collateral" instead
-        """
-        pass
-    
-    # @disabled_api
-    # def _get
+

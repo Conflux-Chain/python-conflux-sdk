@@ -1,3 +1,4 @@
+import functools
 from typing import (
     Any,
     Callable
@@ -60,21 +61,16 @@ def cfx_web3_condition(*args, **kwargs) -> bool:
             return True
     return False
 
-def disabled_api(func):
+def use_instead(func=None, *, origin="This web3.eth api", substitute=None):
+    if func is None:
+        return functools.partial(use_instead, substitute=substitute)
+    
+    @functools.wraps(func)
     def inner(*args, **kwargs):
-        raise DisabledException("This ethereum api is not valid in Conflux Network."
-                               "Check https://developer.confluxnetwork.org/conflux-doc/docs/json_rpc/#migrating-from-ethereum-json-rpc for more information")
-
+        if substitute is None:
+            raise DisabledException(f"{origin} is not valid in Conflux Network."
+                            "Check https://developer.confluxnetwork.org/conflux-doc/docs/json_rpc/#migrating-from-ethereum-json-rpc for more information")
+        else:
+            raise DisabledException(f"{origin} is not valid in Conflux Network, "
+                            f"use {substitute} instead")
     return inner
-
-def use_instead(sub):
-    def disabled_api(func):
-        def inner(*args, **kwargs):
-            if sub is None:
-                raise DisabledException("This ethereum api is not valid in Conflux Network."
-                                "Check https://developer.confluxnetwork.org/conflux-doc/docs/json_rpc/#migrating-from-ethereum-json-rpc for more information")
-            else:
-                raise DisabledException("This ethereum api is not valid in Conflux Network."
-                                f"use {sub} instead")
-        return inner
-    return disabled_api

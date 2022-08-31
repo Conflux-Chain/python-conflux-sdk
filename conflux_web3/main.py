@@ -64,7 +64,7 @@ class Web3(OriWeb3):
         # if modules is None:
         #     modules = get_default_modules()
         modules = {
-            "eth": ConfluxClient,
+            "cfx": ConfluxClient,
             "txpool": Txpool,
         }
 
@@ -76,7 +76,7 @@ class Web3(OriWeb3):
         self.ens = empty  # type: ignore
         
         # use __setattr__ to avoid language server type hint
-        self.__setattr__("cfx", self.eth)
+        self.__setattr__("eth", self.cfx)
         
         # provide easy access
         Web3.account = self.cfx.account
