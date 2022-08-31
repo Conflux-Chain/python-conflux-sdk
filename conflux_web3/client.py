@@ -48,11 +48,13 @@ from web3.exceptions import (
     TransactionNotFound,
     TimeExhausted
 )
-
+from web3._utils.blocks import is_hex_encoded_block_hash as is_hash32_str
 
 from cfx_address import Base32Address as CfxAddress
 from cfx_account import Account as CfxAccount
-from cfx_account.account import LocalAccount
+from cfx_account.account import (
+    LocalAccount
+)
 
 from conflux_web3._utils.rpc_abi import (
     RPC
@@ -505,6 +507,9 @@ class ConfluxClient(BaseCfx, Eth):
     def get_next_nonce(self, address: Optional[AddressParam]=None, block_identifier: Optional[EpochNumberParam] = None) -> Drip:
         return self._get_next_nonce(address, block_identifier)
 
+    def get_transaction_count(self, address: Optional[AddressParam]=None, block_identifier: Optional[EpochNumberParam] = None) -> Drip:
+        return self.get_next_nonce(address, block_identifier)
+
     def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None):
         return self._estimate_gas_and_collateral(transaction, block_identifier)
 
@@ -672,6 +677,54 @@ class ConfluxClient(BaseCfx, Eth):
     def get_confirmation_risk_by_hash(self, block_hash: _Hash32) -> float:
         return self._get_confirmation_risk_by_hash(block_hash)
     
+    def get_block(self, block_identifier: Union[_Hash32, EpochNumberParam], full_transactions: bool = False) -> BlockData:
+        """
+        a simple wrapper combining web3.cfx.get_block_by_hash and web3.cfx.get_block_by_epoch_number
+
+        Parameters
+        ----------
+        block_identifier : Union[_Hash32, EpochNumberParam]
+            block hash or epoch number parameter(e.g. string "latest_state" or epoch number)
+            # note: DON'T USE BLOCK NUMBER as the parameter #
+        full_transactions : bool, optional
+            whether the return block data contains full transaction info or just transaction hash, by default False
+
+        Returns
+        -------
+        BlockData
+            e.g.
+            {
+                "adaptive": false,
+                "blame": 0,
+                "deferredLogsBloomHash": "0xd397b3b043d87fcd6fad1291ff0bfd16401c274896d8c63a923727f077b8e0b5",
+                "deferredReceiptsRoot": "0x522717233b96e0a03d85f02f8127aa0e23ef2e0865c95bb7ac577ee3754875e4",
+                "deferredStateRoot": "0xd449df4ba49f5ab02abf261e976197beecf93c5198a6f0b6bd2713d84115c4ec",
+                "difficulty": "0xeee440",
+                "epochNumber": "0x1394cb",
+                "gasLimit": "0xb2d05e00",
+                "gasUsed": "0xad5ae8",
+                "hash": "0x692373025c7315fa18b2d02139d08e987cd7016025920f59ada4969c24e44e06",
+                "height": "0x1394c9",
+                "miner": "CFX:TYPE.USER:AARC9ABYCUE0HHZGYRR53M6CXEDGCCRMMYYBJGH4XG",
+                "nonce": "0x329243b1063c6773",
+                "parentHash": "0xd1c2ff79834f86eb4bc98e0e526de475144a13719afba6385cf62a4023c02ae3",
+                "powQuality": "0x2ab0c3513",
+                "refereeHashes": [
+                "0xcc103077ede14825a5667bddad79482d7bbf1f1a658fed6894fa0e9287fc6be1"
+                ],
+                "size": "0x180",
+                "timestamp": "0x5e8d32a1",
+                "transactions": [
+                "0xedfa5b9c38ba51e791cc72b8f75ff758533c8c38f426eddee3fd95d984dd59ff"
+                ],
+                "custom": ["0x12"],
+                "transactionsRoot": "0xfb245dae4539ea49812e822adbffa9dd2ee9b3de8f3d9a7d186d351dcc9a6ed4",
+                "posReference": "0xd1c2ff79834f86eb4bc98e0e526de475144a13719afba6385cf62a4023c02ae3",
+            } 
+        """        
+        if isinstance(block_identifier, bytes) or is_hash32_str(block_identifier):
+            return self.get_block_by_hash(block_identifier, full_transactions) # type: ignore
+        return self.get_block_by_epoch_number(block_identifier, full_transactions) # type: ignore
     
     def get_code(
         self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None

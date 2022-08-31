@@ -52,7 +52,7 @@ from eth_utils.curried import (
     apply_formatter_if,
     apply_one_of_formatters,
 )
-from web3._utils.blocks import is_hex_encoded_block_hash as is_hash32
+from web3._utils.blocks import is_hex_encoded_block_hash as is_hash32_str
 
 from conflux_web3._utils.rpc_abi import (
     RPC_ABIS,
@@ -299,9 +299,9 @@ def fixed64_to_float(val: str) -> float:
     return int(val, 16) / MAX
 
 STORAGE_ROOT_FORMATTERS = {
-    "delta": apply_formatter_if(is_hash32, to_hash32),
-    "intermediate": apply_formatter_if(is_hash32, to_hash32),
-    "snapshot": apply_formatter_if(is_hash32, to_hash32),
+    "delta": apply_formatter_if(is_hash32_str, to_hash32),
+    "intermediate": apply_formatter_if(is_hash32_str, to_hash32),
+    "snapshot": apply_formatter_if(is_hash32_str, to_hash32),
 }
 storage_root_formatter = apply_formatters_to_dict(STORAGE_ROOT_FORMATTERS)
 

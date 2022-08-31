@@ -171,6 +171,10 @@ class TestNonce:
         # w3.cfx.default_account = address
         # default_nonce = w3.cfx.get_next_nonce()
         # assert default_nonce == nonce
+    
+    def test_get_transaction_count(self, w3: Web3, address):
+        nonce = w3.cfx.get_transaction_count(address)
+        assert nonce >= 0
 
     def test_get_next_nonce_empty_param(self, w3: Web3):
         with pytest.raises(ValueError):
@@ -207,11 +211,14 @@ def test_get_confirmation_risk(w3: Web3, tx_hash):
     risk = w3.cfx.get_confirmation_risk_by_hash(blockHash)
     assert risk < 1
 
-def preprocess_block_data(block_data, use_remote):
+def preprocess_block_data(block_data: BlockData, use_remote: bool) -> BlockData:
+    """
+    preprocess block in local testnet
+    """    
     if not use_remote:
         # local node may not run pos chain
-        block_data = dict(block_data)
-        block_data['posReference'] = HexBytes("0x0")
+        block_data = dict(block_data) # type: ignore
+        block_data['posReference'] = HexBytes("0x0") # type: ignore
     return block_data
 
 class TestBlock:
@@ -283,6 +290,15 @@ class TestBlock:
         block_data = preprocess_block_data(block_data, use_remote)
         TypeValidator.validate_typed_dict(block_data, "BlockData")
 
+    def test_get_block(self, w3: Web3, block_data: BlockData, use_remote):
+        epoch_number = block_data["epochNumber"]
+        assert epoch_number is not None
+        hash = block_data["hash"]
+        str_hash = hash.hex()
+        for block_identifier in [epoch_number, str_hash, hash, "latest_state"]:
+            block = w3.cfx.get_block(block_identifier)
+            block = preprocess_block_data(block, use_remote)
+            TypeValidator.validate_typed_dict(block, "BlockData")
 
 class TestPending:
     @pytest.fixture(scope="class")
