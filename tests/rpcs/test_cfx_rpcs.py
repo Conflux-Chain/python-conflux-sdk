@@ -40,6 +40,15 @@ def contract_address(moduled_w3: Web3):
     contract_address = hash.executed()["contractCreated"]
     return contract_address
 
+@pytest.fixture(scope="module")
+def tx_with_log(moduled_w3: Web3, contract_address) -> HexBytes:
+    w3 = moduled_w3
+    erc20 = w3.cfx.contract(address=contract_address, abi=erc20_metadata["abi"])
+
+    hash = erc20.functions.transfer(w3.account.create().address, 100).transact()
+    hash.executed()
+    return hash
+
 class TestStatusQuery:
     def test_get_status(self, w3: Web3):
         status = w3.cfx.get_status()
@@ -97,12 +106,6 @@ class TestAccountQuery:
         balance = w3.cfx.get_balance(address, w3.cfx.epoch_number-5)
         # the balance is supposed to be non-zero
         assert balance > 0
-        # TODO: remove this part
-        # if default account is set, 
-        # default account is used as address default param
-        # w3.cfx.default_account = address
-        # default_balance = w3.cfx.get_balance()
-        # assert default_balance == balance
 
     def test_get_balance_empty_param(self, w3: Web3):
         with pytest.raises(ValueError):
@@ -180,17 +183,20 @@ class TestNonce:
         with pytest.raises(ValueError):
             w3.cfx.get_next_nonce()
 
-def test_get_tx(w3: Web3, tx_hash: HexBytes):
+def test_get_tx(moduled_w3: Web3, contract_address):
     """test get_transaction(_by_hash) and get_transaction_receipt
     """
+    w3 = moduled_w3
+    erc20 = w3.cfx.contract(address=contract_address, abi=erc20_metadata["abi"])
+
+    tx_hash = erc20.functions.transfer(w3.account.create().address, 100).transact()
     transaction_data = w3.cfx.get_transaction(tx_hash)
     # transaction not added to chain
     TypeValidator.validate_typed_dict(transaction_data, "TxData")
     transaction_receipt = w3.cfx.wait_for_transaction_receipt(tx_hash)
     # already added
     TypeValidator.validate_typed_dict(transaction_data, "TxData")
-    
-    # TODO: check receipt's log format
+
     TypeValidator.validate_typed_dict(transaction_receipt, "TxReceipt")
 
 def test_accounts(w3: Web3, use_remote: bool):

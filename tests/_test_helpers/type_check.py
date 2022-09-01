@@ -1,12 +1,15 @@
 from typing import (
     Any,
-    Dict,
     Type,
     TypedDict, 
     get_args, 
     get_origin, 
     Union
 )
+from typing_extensions import (
+    is_typeddict,
+)
+import collections.abc
 import warnings
 from cfx_address import Base32Address
 
@@ -32,8 +35,33 @@ class TypeValidator:
     False
     """
     @staticmethod
+    def _is_list_like_type(typ):
+        return any(
+            [
+                get_origin(typ) == collections.abc.Sequence,
+                get_origin(typ) == list
+            ]
+        )
+    
+    @staticmethod
     def isinstance(val, field_type):
-        if type(field_type).__name__ == "function":
+        if is_typeddict(field_type):
+            annotations = field_type.__annotations__
+            for key, sub_field_type in annotations.items():
+                if key not in val:
+                    return False
+                if not TypeValidator.isinstance(val[key], sub_field_type):
+                    return False
+            return True
+        if get_origin(field_type) is Union:
+            return any(TypeValidator.isinstance(val, t)
+                        for t in get_args(field_type))
+        elif TypeValidator._is_list_like_type(field_type):
+            return all(
+                TypeValidator.isinstance(v, get_args(field_type)[0])
+                for v in val
+            )
+        elif type(field_type).__name__ == "function":
             return isinstance(val, field_type.__supertype__)
         elif type(field_type) is type:
             if field_type == Base32Address:
@@ -44,25 +72,10 @@ class TypeValidator:
             warnings.warn("complex type check")
             # raise Exception("unexpected exception")
             return True
-    
-    @staticmethod
-    def _validate_type(val, typ):
-        if get_origin(typ) is Union:
-            assert any(TypeValidator.isinstance(val, t)
-                        for t in get_args(typ))
-        else:
-            assert TypeValidator.isinstance(val, typ)
-    
-    @staticmethod
-    def validate(value_to_validate: Dict[str, Any], template: Dict[str, Any]):
-        for field in template:
-            assert field in value_to_validate
-            field_type = template[field]
-            TypeValidator._validate_type(value_to_validate[field], field_type)
-    
+
     @staticmethod
     def validate_typed_dict(value_to_validate: Any, typed_dict_class: Union[str, Type[TypedDict]]):
         if isinstance(typed_dict_class, str):
             typed_dict_class = getattr(conflux_web3.types, typed_dict_class)
-        TypeValidator.validate(value_to_validate, typed_dict_class.__annotations__)
+        assert TypeValidator.isinstance(value_to_validate, typed_dict_class)
         return True

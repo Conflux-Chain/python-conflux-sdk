@@ -68,6 +68,12 @@ class FilterParams(TypedDict, total=False):
     topics: Sequence[Optional[Union[_Hash32, Sequence[_Hash32]]]]
 
 
+class TransactionLogReceipt(TypedDict):
+    address: Base32Address
+    topics: Sequence[HexBytes]
+    data: HexBytes
+
+
 class LogReceipt(TypedDict):
     address: Base32Address
     topics: Sequence[HexBytes]
@@ -100,7 +106,7 @@ TxReceipt = TypedDict(
         "stateRoot": Hash32,
         "outcomeStatus": int,
         "logsBloom": HexBytes,
-        "logs": List[LogReceipt],
+        "logs": List[TransactionLogReceipt],
         "txExecErrorMsg": Union[str, None]
     },
 )

@@ -130,8 +130,7 @@ class Wallet:
             transaction = params[0]
             if "from" not in transaction:
                 return make_request(method, params)
-            # TODO: change to """transaction.get("from") not in self"""
-            elif normalize_to(transaction.get("from"), self._chain_id) not in self._accounts_map:
+            elif transaction.get("from") not in self:
                 return make_request(method, params)
             
             account = self[transaction["from"]]
@@ -160,7 +159,11 @@ class Wallet:
             return self._accounts_map[address]
     
     def __contains__(self, address: str):
-        return address in self._accounts_map
+        try:
+            self[address]
+            return True
+        except KeyError:
+            return False
 
 
 def construct_sign_and_send_raw_middleware(

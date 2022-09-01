@@ -33,6 +33,7 @@ from conflux_web3._utils.transactions import (
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
+    from conflux_web3.transaction_hash import TransactionHash
 
 def build_transaction_for_function(
         address: ChecksumAddress,
@@ -105,6 +106,9 @@ class ConfluxContractFunction(ContractFunction):
             *self.args,
             **self.kwargs,
         )
+
+    def transact(self, transaction: Optional[TxParam] = None) -> "TransactionHash":
+        return super().transact(transaction) # type: ignore
 
 
 class ConfluxContractFunctions(BaseContractFunctions):
