@@ -16,7 +16,7 @@ from conflux_web3.types import (
     Base32Address
 )
 from conflux_web3.middleware import (
-    WalletMiddleware
+    Wallet
 )
 
 @pytest.fixture(scope="session")
@@ -70,7 +70,7 @@ def moduled_w3(node_url: str, node: LocalNode, secret_key) -> Web3:
     # assert w3.isConnected()
     w3.cfx.default_account = account.get_base32_address(w3.cfx.chain_id)
     w3.middleware_onion.add(
-        WalletMiddleware(account)
+        Wallet(account)
     )
     return w3
 

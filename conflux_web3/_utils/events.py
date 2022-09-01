@@ -16,9 +16,6 @@ from eth_utils.conversions import (
 from eth_utils.toolz import (
     curry, # type: ignore
 )
-from web3._utils.normalizers import (
-    BASE_RETURN_NORMALIZERS,
-)
 from web3._utils import events
 from web3._utils.events import (
     get_event_abi_types_for_decoding
@@ -27,7 +24,6 @@ from web3._utils.abi import (
     exclude_indexed_event_inputs,
     get_abi_input_names,
     get_indexed_event_inputs,
-    get_normalized_abi_arg_type,
     map_abi_data,
     normalize_event_input_types,
 )
@@ -43,12 +39,12 @@ from web3.exceptions import (
     MismatchedABI,
 )
 from web3._utils.encoding import (
-    encode_single_packed,
     hexstr_if_str,
 )
 
-from cfx_address.utils import normalize_to
-
+from cfx_address.utils import (
+    normalize_to
+)
 from conflux_web3.types import (
     EventData
 )

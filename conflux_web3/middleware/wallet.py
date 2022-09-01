@@ -1,53 +1,61 @@
 from typing import (
     TYPE_CHECKING,
     Dict,
+    Iterable,
     Optional,
     Sequence,
     Union,
 )
-
-from eth_typing import (
-    HexStr
-)
+import warnings
 
 from eth_keys.datatypes import (
     PrivateKey,
 )
-from cfx_account import Account
-from cfx_account.account import (
-    LocalAccount
+
+from cfx_utils.types import (
+    HexAddress
 )
-from cfx_address import Base32Address
+from cfx_account.account import (
+    LocalAccount,
+    Account,
+)
+from cfx_address import (
+    Base32Address
+)
 from cfx_address.utils import validate_network_id as validate_chain_id
-from cfx_address.utils import normalize_to
+from cfx_address.utils import (
+    normalize_to
+)
 from conflux_web3._utils.rpc_abi import (
     RPC
 )
-import warnings
-
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
-_PrivateKey = Union[LocalAccount, PrivateKey, HexStr, bytes]
-    
+_PrivateKey = Union[LocalAccount, PrivateKey, str, bytes]
 
-class WalletMiddleware:
+
+class Wallet:
     def __init__(self, 
-                account_or_accounts: Union[Sequence[_PrivateKey], _PrivateKey]=[],
+                account_or_accounts: Union[Iterable[_PrivateKey], _PrivateKey]=[],
                 forced_chain_id: Optional[int]=None,
                 ):
         """
-        generate a wallet middleware object 
-        with specific chain_id and accounts to use
+        generate a wallet middleware object with specific chain_id and accounts to use.
+        Note: this CLASS is not a web3.middleware. 
+        A Wallet-type INSTANCE is the actual middleware
 
-        :param Union[Sequence[_PrivateKey], _PrivateKey] account_or_accounts: Any param could be private key source. 
+        Parameters
+        ----------
+        account_or_accounts : Union[Sequence[_PrivateKey], _PrivateKey], optional, by default []
+            Any param could be private key source. 
             Both [account] and account can be served as "accounts" param.
             For LocalAccount type param, ensure chain_id and LocalAccount is consistent. 
-            Defaults to []
-        :param int forced_chain_id: the network id of the wallet, all account will be set at the specified network, 
+        forced_chain_id : Optional[int], optional, by default None
+            The network id of the wallet, all account will be set at the specified network, 
             and network checking will be applied to every added account. 
-            If is None, then no default network id is set, and
+            If is None, then no default network id is set, and this wallet can be used in any network.
         """
         if forced_chain_id is not None:
             validate_chain_id(forced_chain_id)
@@ -55,7 +63,7 @@ class WalletMiddleware:
         self._chain_id = forced_chain_id
         self._accounts_map: Dict[str, LocalAccount] = {}
         
-        if isinstance(account_or_accounts, Sequence):
+        if isinstance(account_or_accounts, Iterable):
             for account in account_or_accounts:
                 self.add_account(account)
         else:
@@ -65,6 +73,44 @@ class WalletMiddleware:
     def chain_id(self):
         return self._chain_id
     
+    @property
+    def forced_chain_id(self):
+        return self._chain_id
+    
+    @forced_chain_id.setter
+    def forced_chain_id(self, new_chain_id: Union[None, int]):
+        """
+        the forced chain id of the wallet.
+        if set to not None, all account in the wallet will be converted to the corresponding network.
+        After that, accounts from incompatible network cannot be added to this wallet,
+        and signing requests from network other than forced_chain_id will be ignored 
+
+        Parameters
+        ----------
+        new_chain_id : Union[None, int] 
+            _description_
+        """        
+        self._chain_id = new_chain_id
+        for old_address, account in self._accounts_map.copy().items():
+            account.network_id = new_chain_id
+            self._accounts_map.pop(old_address)
+            self.add_account(account)
+        self._chain_id = new_chain_id
+    
+    @property
+    def accounts(self) -> Sequence[Union[Base32Address, HexAddress]]:
+        """
+        returns all accounts address in the wallet
+
+        Returns
+        -------
+        Sequence[Union[Base32Address, HexAddress]]
+            a sequence of Base32Address if wallet.forced_chain_id is not None
+            or HexAddress if wallet.forced_chain_id is None
+        """            
+        return self._accounts_map.keys() # type: ignore
+    
+    
     def normalize_private_key_to_account(self, private_key: _PrivateKey) -> LocalAccount:
         if isinstance(private_key, LocalAccount):
             local_account = private_key
@@ -73,7 +119,7 @@ class WalletMiddleware:
                 if local_account.network_id and local_account.network_id != self._chain_id:
                     raise ValueError("wallet's chain_id and local_account's chain_id is supposed to be consistent")
             private_key = local_account._private_key
-            
+        # any account added to wallet is a brand new object
         return Account.from_key(private_key, self._chain_id)
     
     def __call__(self, make_request, w3: "Web3"):
@@ -95,15 +141,15 @@ class WalletMiddleware:
             response = make_request(RPC.cfx_sendRawTransaction, [raw_tx.hex()])
             return response
         return inner
-    
-    def add_account(self, account):
+
+    def add_account(self, account: _PrivateKey):
         local_account = self.normalize_private_key_to_account(account)
         # assert Address.has_network_prefix
         if local_account.address in self._accounts_map:
             warnings.warn(f"Duplicate account: {local_account.address} is already in the wallet, this operation overwrites the existed old account")
         self._accounts_map[local_account.address] = local_account
 
-    def add_accounts(self, accounts):
+    def add_accounts(self, accounts: Iterable[_PrivateKey]):
         for account in accounts:
             self.add_account(account)
     
@@ -112,10 +158,13 @@ class WalletMiddleware:
             return self._accounts_map[normalize_to(address, None)]
         else:
             return self._accounts_map[address]
+    
+    def __contains__(self, address: str):
+        return address in self._accounts_map
 
 
 def construct_sign_and_send_raw_middleware(
     account_or_accounts: Union[Sequence[_PrivateKey], _PrivateKey], 
     forced_chain_id: Optional[int]=None
-) -> WalletMiddleware:
-    return WalletMiddleware(account_or_accounts, forced_chain_id)
+) -> Wallet:
+    return Wallet(account_or_accounts, forced_chain_id)
