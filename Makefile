@@ -9,7 +9,7 @@ build: clean
 	python3 setup.py sdist bdist_wheel
 
 publish: 
-	twine upload dist/* --repository conflux
+	twine upload dist/* --repository conflux-web3
 
 # gen-docs:
 # 	cd ./docs && \

@@ -38,9 +38,9 @@ w3.cfx.send_transaction({
 
 ## Overview
 
-Python-conflux-sdk helps to interact with Conflux network using python, and most of its APIs are consistent with [web3.py](https://github.com/ethereum/web3.py). 
+conflux-web3 helps to interact with Conflux network using python, and most of its APIs are consistent with [web3.py](https://github.com/ethereum/web3.py). 
 
-> Python-conflux-sdk is a wrapping layer over [web3.py](https://github.com/ethereum/web3.py).
+> conflux-web3 is a wrapping layer over [web3.py](https://github.com/ethereum/web3.py).
 
 ### Code Examples
 
@@ -105,7 +105,7 @@ erc20_metadata = json.load(open("path/to/metadata/ERC20.json"))
 
 # deploy contract
 erc20 = w3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
-hash = erc20.constructor(name_="ERC20", symbol_="C", totalSupply=10**18).transact()
+hash = erc20.constructor(name="ERC20", symbol="C", initialSupply=10**18).transact()
 contract_address = w3.cfx.wait_for_transaction_receipt(hash)["contractCreated"]
 assert contract_address is not None
 contract = w3.cfx.contract(contract_address, abi=erc20_metadata["abi"])

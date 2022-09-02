@@ -22,7 +22,7 @@ class TestERC20Contract:
     def test_contract_deploy_and_transfer(self, w3_: Web3):
         # test deployment
         erc20 = w3_.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
-        hash = erc20.constructor(name_="ERC20", symbol_="C", totalSupply=10**18).transact()
+        hash = erc20.constructor(name="ERC20", symbol="C", initialSupply=10**18).transact()
         contract_address = w3_.cfx.wait_for_transaction_receipt(hash)["contractCreated"]
         assert contract_address is not None
         contract = w3_.cfx.contract(contract_address, abi=erc20_metadata["abi"])
