@@ -4,9 +4,6 @@ from typing import (
     Optional,
 )
 
-from eth_typing.evm import (
-    ChecksumAddress
-)
 from web3.contract import (
     BaseContractFunctions,
     ContractFunction,
@@ -19,6 +16,9 @@ from web3.types import (
     CallOverride
 )
 
+from cfx_address import (
+    Base32Address
+)
 from conflux_web3.types import (
     TxParam,
     AddressParam,
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from conflux_web3.transaction_hash import TransactionHash
 
 def build_transaction_for_function(
-        address: ChecksumAddress,
+        address: Base32Address,
         web3: 'Web3',
         function_name: Optional[FunctionIdentifier] = None,
         transaction: Optional[TxParam] = None,
@@ -50,7 +50,7 @@ def build_transaction_for_function(
     on your contract instance.
     """
     prepared_transaction:TxParam = prepare_transaction(
-        address,
+        address, # type: ignore
         web3,
         fn_identifier=function_name, # type: ignore
         contract_abi=contract_abi,
@@ -66,6 +66,7 @@ def build_transaction_for_function(
 
 class ConfluxContractFunction(ContractFunction):
     w3: "Web3"
+    address: Base32Address
     
     def __call__(self, *args: Any, **kwargs: Any) -> "ConfluxContractFunction":
         return super().__call__(*args, **kwargs) # type: ignore
@@ -94,7 +95,7 @@ class ConfluxContractFunction(ContractFunction):
 
         return call_contract_function(
             self.w3,
-            self.address,
+            self.address, # type: ignore
             self._return_data_normalizers, # type: ignore
             self.function_identifier,
             call_transaction,

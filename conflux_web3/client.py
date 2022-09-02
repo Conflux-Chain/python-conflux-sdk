@@ -41,9 +41,6 @@ from web3._utils.threads import (
 from web3.datastructures import (
     AttributeDict,
 )
-from web3.types import (
-    _Hash32,
-)
 from web3.exceptions import (
     TransactionNotFound,
     TimeExhausted
@@ -63,6 +60,7 @@ from conflux_web3._utils.disabled_eth_apis import (
     disabled_method_list,
 )
 from conflux_web3.types import (
+    _Hash32,
     Drip,
     EpochLiteral,
     EpochNumberParam,
@@ -510,7 +508,7 @@ class ConfluxClient(BaseCfx, Eth):
     def get_transaction_count(self, address: Optional[AddressParam]=None, block_identifier: Optional[EpochNumberParam] = None) -> Drip:
         return self.get_next_nonce(address, block_identifier)
 
-    def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None):
+    def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None) -> EstimateResult:
         return self._estimate_gas_and_collateral(transaction, block_identifier)
 
     def send_raw_transaction(self, raw_transaction: Union[HexStr, bytes]) -> TransactionHash:
@@ -578,7 +576,7 @@ class ConfluxClient(BaseCfx, Eth):
             },
         """
         try:
-            receipt = cast(TxReceipt, super().wait_for_transaction_receipt(transaction_hash, timeout, poll_latency))
+            receipt = cast(TxReceipt, super().wait_for_transaction_receipt(transaction_hash, timeout, poll_latency)) # type: ignore
         except TimeExhausted:
             raise TimeExhausted(
                 f"Transaction {HexBytes(transaction_hash) !r} is not executed"
@@ -766,7 +764,7 @@ class ConfluxClient(BaseCfx, Eth):
     ) -> Sequence[VoteInfo]:
         return self._get_vote_list(address, block_identifier)
     
-    def get_interst_rate(
+    def get_interest_rate(
         self, block_identifier: Optional[EpochNumberParam] = None
     ) -> int:
         return self._get_interest_rate(block_identifier)

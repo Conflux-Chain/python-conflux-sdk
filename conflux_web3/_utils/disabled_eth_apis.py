@@ -8,6 +8,7 @@ disabled_method_list = [
     "get_uncle_by_block",
     "get_raw_transaction",
     "get_raw_transaction_by_block",
+    "get_transaction_by_block"
     # "get_transaction_count",
     # "replace_transaction",
     # "modify_transaction"

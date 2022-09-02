@@ -66,7 +66,7 @@ class TestStatusQuery:
         assert w3.cfx.client_version
         
     def test_get_interest_rate(self, w3: Web3):
-        interest_rate = w3.cfx.get_interst_rate(w3.cfx.epoch_number_by_tag("latest_state"))
+        interest_rate = w3.cfx.get_interest_rate(w3.cfx.epoch_number_by_tag("latest_state"))
         assert isinstance(interest_rate, int)
     
     def test_get_accumulate_interest_rate(self, w3: Web3):
@@ -331,7 +331,7 @@ class TestPending:
     def test_get_account_pending_transactions(self, w3: Web3, address, future_tx):
         nonce = w3.cfx.get_next_nonce(address)
         info = w3.cfx.get_account_pending_transactions(address, nonce, 1)
-        assert info["firstTxStatus"]["pending"] == "futureNonce"
+        assert info["firstTxStatus"] == {"pending": "futureNonce"}
         assert info["pendingCount"] == 1
         for tx in info["pendingTransactions"]:
             TypeValidator.validate_typed_dict(tx, "TxData")

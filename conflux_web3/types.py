@@ -78,12 +78,25 @@ class LogReceipt(TypedDict):
     address: Base32Address
     topics: Sequence[HexBytes]
     data: HexBytes
-    blockHash: HexBytes
+    blockHash: Hash32
     epochNumber: int
-    transactionHash: HexBytes
+    transactionHash: Hash32
     transactionIndex: int
     logIndex: int
     transactionLogIndex: int
+
+class TransactionEventData(TypedDict):
+    address: Base32Address
+    args: Dict[str, Any]
+    event: str
+    blockHash: Hash32
+    epochNumber: int
+    transactionHash: Hash32
+    transactionIndex: int
+    transactionLogIndex: int
+
+class EventData(TransactionEventData, total=False):
+    logIndex: int
 
 
 # syntax b/c "from" keyword not allowed w/ class construction
@@ -116,7 +129,7 @@ TxReceipt = TypedDict(
 TxData = TypedDict(
     "TxData",
     {
-        "blockHash": Union[None, HexBytes],
+        "blockHash": Union[None, Hash32],
         "chainId": int,
         "contractCreated": Union[None, AddressParam],
         "data": HexBytes,
@@ -137,20 +150,6 @@ TxData = TypedDict(
     },
     total=False,
 )
-
-
-class RequiredEventData(TypedDict):
-    address: Base32Address
-    args: Dict[str, Any]
-    event: str
-
-class EventData(RequiredEventData, total=False):
-    blockHash: HexBytes
-    epochNumber: int
-    logIndex: int
-    transactionHash: HexBytes
-    transactionIndex: int
-
 
 class BlockData(TypedDict):
     hash: Hash32
@@ -254,10 +253,10 @@ class PendingInfo(TypedDict):
     nextPendingTx: Hash32
 
 class PendingTransactionStatus(TypedDict):
-    pending: Literal["futureNonce", "notEnoughCash", "ready"]
+    pending: Literal["futureNonce", "notEnoughCash"]
 
 class PendingTransactionsInfo(TypedDict):
-    firstTxStatus: PendingTransactionStatus
+    firstTxStatus: Union[PendingTransactionStatus, Literal["ready"]]
     pendingCount: int
     pendingTransactions: Sequence[TxData]
 

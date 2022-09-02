@@ -1,6 +1,7 @@
 from typing import (
     Optional,
-    cast
+    cast,
+    Union,
 )
 import itertools
 
@@ -46,16 +47,15 @@ from cfx_address.utils import (
     normalize_to
 )
 from conflux_web3.types import (
-    EventData
-)
-from conflux_web3.types import (
-    LogReceipt
+    EventData,
+    LogReceipt,
+    TransactionLogReceipt
 )
 
 
 @curry
 def cfx_get_event_data(
-    abi_codec: ABICodec, event_abi: ABIEvent, log_entry: LogReceipt, chain_id: Optional[int]= None
+    abi_codec: ABICodec, event_abi: ABIEvent, log_entry: Union[TransactionLogReceipt, LogReceipt], chain_id: Optional[int]= None
 ) -> EventData:
     """
     Given an event ABI and a log entry for that event, return the decoded
@@ -128,6 +128,7 @@ def cfx_get_event_data(
         "event": event_abi.get("name", None),
         "logIndex": log_entry.get("logIndex", None),
         "transactionIndex": log_entry.get("transactionIndex", None),
+        "transactionLogIndex": log_entry.get("transactionLogIndex", None),
         "transactionHash": log_entry.get("transactionHash", None),
         "address": log_entry["address"],
         "blockHash": log_entry.get("blockHash", None),

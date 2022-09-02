@@ -1,6 +1,4 @@
-from typing import cast
 import pytest
-from cfx_address import Base32Address
 from conflux_web3 import Web3
 from conflux_web3.contract import ConfluxContract
 from conflux_web3.middleware.wallet import Wallet
@@ -42,16 +40,21 @@ class TestERC20Contract:
         
         # test getLogs
         fromEpoch = transfer_receipt["epochNumber"]
-        logs = w3_.cfx.get_logs(fromEpoch=fromEpoch)
+        logs = w3_.cfx.get_logs(fromEpoch=fromEpoch, address=contract_address)
         for log in logs:
             TypeValidator.validate_typed_dict(log, "LogReceipt")
             
         # test contract event
-        processed_log = contract.events.Transfer.processReceipt(transfer_receipt)[0]
+        processed_log = contract.events.Transfer.process_receipt(transfer_receipt)[0]
         assert processed_log["args"]["from"] == w3_.cfx.default_account
         assert processed_log["args"]["to"] == random_account.address
         assert processed_log["args"]["value"] == 100
-        
+        assert processed_log["blockHash"] == logs[0]["blockHash"]
+        assert processed_log["epochNumber"] == logs[0]["epochNumber"]
+        assert processed_log["transactionHash"] == logs[0]["transactionHash"]
+        assert processed_log["transactionLogIndex"] == logs[0]["transactionLogIndex"]
+        assert processed_log["transactionIndex"] == logs[0]["transactionIndex"]
+
         # test event filters
         filter_topics = contract.events.Transfer.get_filter_topics(
             value=100,
@@ -70,6 +73,3 @@ class TestERC20Contract:
             fromEpoch=fromEpoch
         )
         assert new_processed_logs[0]["args"] == processed_log["args"]
-        
-        
-            

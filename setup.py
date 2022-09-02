@@ -6,7 +6,7 @@ from setuptools import (
 )
 
 VERSION = '0.2.0b1'
-DESCRIPTION = 'python SDK for Conflux network'
+DESCRIPTION = 'Python SDK for Conflux network'
 with open('./README.md') as readme:
     long_description = readme.read()
 
@@ -72,7 +72,7 @@ extras_require['dev'] = (
 # Setting up
 setup(
     # the name must match the folder name 'verysimplemodule'
-    name="conflux",
+    name="conflux-web3",
     version=VERSION,
     author="Conflux-Dev",
     author_email="wenda.zhang@confluxnetwork.org",
@@ -82,10 +82,10 @@ setup(
     packages=find_packages(),
     url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
-        "web3>=6.0.0b4",
+        "web3~=6.0.0b4",
         "cfx-address>=1.0.0b6",
         "cfx-account>=0.1.0b3",
-        "cfx-utils>=1.0.0b5"
+        "cfx-utils>=1.0.0b6"
         # "eth-account>=0.6.0,<0.7.0"
     ],  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'

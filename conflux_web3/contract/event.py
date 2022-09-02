@@ -98,9 +98,16 @@ class ConfluxContractEvent(BaseContractEvent):
             raise AttributeError(
                 f"Error flag must be one of: {EventLogErrorFlags.flag_options()}"
             )
-
-        for log in txn_receipt["logs"]:
+        for transaction_log_index in range(len(txn_receipt["logs"])):
+        # for log in txn_receipt["logs"]:
+            log = txn_receipt["logs"][transaction_log_index]
             try:
+                log = cast(LogReceipt, dict(log))
+                log["transactionHash"] = txn_receipt["transactionHash"]
+                log["blockHash"] = txn_receipt["blockHash"]
+                log["epochNumber"] = txn_receipt["epochNumber"]
+                log["transactionIndex"] = txn_receipt["index"]
+                log["transactionLogIndex"] = transaction_log_index
                 abi = self.abi or self._get_event_abi()
                 rich_log = cfx_get_event_data(self.w3.codec, abi, log, self.w3.cfx.chain_id)
             except (MismatchedABI, LogTopicError, InvalidEventABI, TypeError) as e:
@@ -115,8 +122,8 @@ class ConfluxContractEvent(BaseContractEvent):
                     raise e
                 else:
                     warnings.warn(
-                        f"The log with transaction hash: {log['transactionHash']!r} "
-                        f"and logIndex: {log['logIndex']} encountered the following "
+                        f"The log with transaction hash: {txn_receipt['transactionHash']!r} "
+                        f"encountered the following "
                         f"error during processing: {type(e).__name__}({e}). It has "
                         "been discarded."
                     )

@@ -4,9 +4,9 @@ from conflux_web3.types import AddressParam
 from conflux_web3._utils.rpc_abi import RPC
 
 class Txpool(Module):
-    _nextNonce = ConfluxMethod(
+    _next_nonce = ConfluxMethod(
         RPC.txpool_nextNonce
     )
     
-    def nextNonce(self, address: AddressParam):
-        return self._nextNonce(address)
+    def next_nonce(self, address: AddressParam):
+        return self._next_nonce(address)

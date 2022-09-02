@@ -1,9 +1,7 @@
-# python-conflux-sdk
+# conflux-web3 
 Python SDK for interacting with Conflux network.
 
-Note: this SDK still is in developing, and the API may change in the future.
-
-- [python-conflux-sdk](#python-conflux-sdk)
+- [conflux-web3](#conflux-web3)
   - [Quick start](#quick-start)
   - [Overview](#overview)
     - [Code Examples](#code-examples)
@@ -12,23 +10,24 @@ Note: this SDK still is in developing, and the API may change in the future.
       - [Contract Interaction](#contract-interaction)
       - [RPC support](#rpc-support)
       - [Base32 Address Operation](#base32-address-operation)
-    - [APIs to support in the near future](#apis-to-support-in-the-near-future)
 
 ## Quick start
 
+Requirements: python version >= 3.8
+
 ```shell
-$ pip3 install conflux
+$ pip3 install conflux-web3
 ```
 
 ```python
 from conflux_web3.dev import get_testnet_web3
-from conflux_web3.middleware import WalletMiddleware
+from conflux_web3.middleware import Wallet
 
 w3 = get_testnet_web3()
 # fill your secret key
 # and you can claim testnet token from https://faucet.confluxnetwork.org/
 acct = w3.account.from_key("0xxxxxxxxxxxxxx") 
-w3.middleware_onion.add(WalletMiddleware(acct, network_id=1))
+w3.wallet.add_account(acct)
 w3.cfx.default_account = acct.address
 
 w3.cfx.send_transaction({
@@ -39,11 +38,13 @@ w3.cfx.send_transaction({
 
 ## Overview
 
-Python-conflux-sdk is a wrapping layer over [web3.py](https://github.com/ethereum/web3.py), and we are trying to make most of its APIs consistent with web3.py. 
+Python-conflux-sdk helps to interact with Conflux network using python, and most of its APIs are consistent with [web3.py](https://github.com/ethereum/web3.py). 
+
+> Python-conflux-sdk is a wrapping layer over [web3.py](https://github.com/ethereum/web3.py).
 
 ### Code Examples
 
-Python-conflux-sdk is still in developing, and currently supports these features:
+Here are some simple code examples. More detailed code examples are in the folder `examples`
 
 #### initialization with providers
 
@@ -75,7 +76,7 @@ from conflux_web3.middleware import construct_sign_and_send_raw_middleware
 
 w3 = get_testnet_web3()
 acct = w3.cfx.account.from_key(os.environ.get('PRIVATE_KEY'))
-# construct_sign_and_send_raw_middleware(acct) is same as WalletMiddleware(acct)
+# construct_sign_and_send_raw_middleware(acct) is same as Wallet(acct)
 w3.middleware_onion.add(construct_sign_and_send_raw_middleware(acct))
 w3.cfx.default_account = acct.address
 
@@ -147,8 +148,3 @@ address
 ]
 # ['user', 1, '0x1ecde7223747601823f7535d7968ba98b4881e09', 'CFXTEST:TYPE.USER:AATP533CG7D0AGBD87KZ48NJ1MPNKCA8BE1RZ695J4', 'cfxtest:aat...95j4', '0x349f086998cF4a0C5a00b853a0E93239D81A97f6', '0x1ECdE7223747601823f7535d7968Ba98b4881E09']
 ```
-
-### APIs to support in the near future
-
-- [ ] contract caller and contract events are not fully supported
-- [ ] support for all RPCs
