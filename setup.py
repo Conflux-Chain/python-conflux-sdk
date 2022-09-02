@@ -5,17 +5,16 @@ from setuptools import (
     setup,
 )
 
-VERSION = '0.2.0b1'
-DESCRIPTION = 'python SDK for Conflux network'
-LONG_DESCRIPTION = 'A Python SDK for interacting with Conflux network, check details here https://github.com/conflux-chain/python-conflux-sdk'
-
-# with open("readme.md", "r") as fh:
-#     long_description = fh.read()
+VERSION = "1.0.0-beta.1"
+DESCRIPTION = 'Python SDK for Conflux network'
+with open('./README.md') as readme:
+    long_description = readme.read()
 
 extras_require = {
     'tester': [
         "docker>=5.0.0,<6",
         "pytest>=6.2.5,<7",
+        "typing_extensions"
         # "py-geth>=3.8.0,<4",
     ],
     'linter': [
@@ -41,7 +40,7 @@ extras_require = {
         # "toposort>=1.4",
         # "towncrier==18.5.0",
         # "urllib3",
-        # "wheel"
+        "wheel"
     ],
     'dev': [
         # "bumpversion",
@@ -73,25 +72,30 @@ extras_require['dev'] = (
 # Setting up
 setup(
     # the name must match the folder name 'verysimplemodule'
-    name="conflux",
+    name="conflux-web3",
     version=VERSION,
     author="Conflux-Dev",
-    author_email="wangpan@conflux-chain.org",
+    author_email="wenda.zhang@confluxnetwork.org",
     description=DESCRIPTION,
-    long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/markdown",
+    long_description=long_description,
     packages=find_packages(),
+    url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
-        "web3>=6.0.0b4",
-        "cfx-address>=1.0.0b1",
+        "web3~=6.0.0b4",
+        "cfx-address>=1.0.0b6",
         "cfx-account>=0.1.0b3",
-        "cfx-utils>=1.0.0b3"
+        "cfx-utils>=1.0.0b6"
         # "eth-account>=0.6.0,<0.7.0"
     ],  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'
     extras_require=extras_require,
     keywords=['python', 'conflux', 'blockchain'],
     classifiers=[
-        "Programming Language :: Python :: 3",
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
     ]

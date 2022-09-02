@@ -37,8 +37,8 @@ class TransactionHash(HexBytes):
     #     pass
     
     # TODO
-    def wait_till(self, target_status: str):
-        pass
+    # def wait_till(self, target_status: str):
+    #     pass
     
     @requires_web3
     def mined(self, timeout: float = 60, poll_latency: float = 0.5) -> TxData:
@@ -53,10 +53,10 @@ class TransactionHash(HexBytes):
         return self._w3.cfx.wait_till_transaction_confirmed(self, timeout, poll_latency) 
     
     @requires_web3
-    def finalized(self) -> TxReceipt: # type: ignore
+    def finalized(self, timeout: float = 1200, poll_latency: float = 1) -> TxReceipt: # type: ignore
         # TODO
         # warnings.warn("Several minutes are required to finalize a transaction", UserWarning)
-        pass
+        return self._w3.cfx.wait_till_transaction_finalized(self, timeout, poll_latency)
     
     def __repr__(self) -> str:
         return f"TransactionHash({self.hex()!r})"

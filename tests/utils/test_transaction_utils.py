@@ -14,5 +14,4 @@ def test_fill_formal_transaction_defaults(w3: Web3, address):
         "to": w3.account.create().address
     }
     filled_tx = fill_formal_transaction_defaults(w3, unfilled_tx)
-    TypeValidator.validate_tx(filled_tx)
-    
+    TypeValidator.validate_typed_dict(filled_tx, "TxDict")

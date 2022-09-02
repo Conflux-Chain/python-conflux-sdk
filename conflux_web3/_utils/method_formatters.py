@@ -8,35 +8,27 @@ from hexbytes import HexBytes
 
 from web3.datastructures import AttributeDict
 from web3.types import (
-    CallOverrideParams,
     RPCEndpoint,
-    RPCResponse,
-    TReturn,
-    # TxParams,
-    _Hash32,
 )
 from web3._utils.method_formatters import (
     combine_formatters,
     # STANDARD_NORMALIZERS,
     to_hexbytes,
     to_hex_if_integer,
+    to_integer_if_hex,
     is_not_null,
     apply_list_to_array_formatter,
-    # log
 )
 from web3._utils.abi import (
     is_length
 )
 from web3._utils.normalizers import (
-    # abi_address_to_hex,
     abi_bytes_to_hex,
     abi_int_to_hex,
     abi_string_to_hex,
 )
 from web3.module import Module
 from web3._utils.formatters import (
-    hex_to_integer,
-    # integer_to_hex,
     is_array_of_dicts,
     is_array_of_strings,
     remove_key_if,
@@ -44,7 +36,6 @@ from web3._utils.formatters import (
 from web3._utils.rpc_abi import abi_request_formatters
 
 from eth_utils.types import (
-    is_string,
     is_dict
 )
 
@@ -61,6 +52,7 @@ from eth_utils.curried import (
     apply_formatter_if,
     apply_one_of_formatters,
 )
+from web3._utils.blocks import is_hex_encoded_block_hash as is_hash32_str
 
 from conflux_web3._utils.rpc_abi import (
     RPC_ABIS,
@@ -81,11 +73,6 @@ STANDARD_NORMALIZERS = [
 def to_hash32(val, variable_length=False):
     return to_hexbytes(32, val, variable_length)
 
-# TRANSACTION_REQUEST_FORMATTERS = {
-#     'maxFeePerGas': to_hex_if_integer,
-#     'maxPriorityFeePerGas': to_hex_if_integer,
-# }
-# transaction_request_formatter = apply_formatters_to_dict(TRANSACTION_REQUEST_FORMATTERS)
 transaction_param_formatter = compose(
     remove_key_if('to', lambda txn: txn['to'] in {'', b'', None}),  # type: ignore
     remove_key_if('gasPrice', lambda txn: txn['gasPrice'] in {'', b'', None}),  # type: ignore
@@ -93,55 +80,54 @@ transaction_param_formatter = compose(
 )
 
 ABI_REQUEST_FORMATTERS = abi_request_formatters(STANDARD_NORMALIZERS, RPC_ABIS)
-# METHOD_NORMALIZERS: Dict[RPCEndpoint, Callable[..., Any]] = {
-#     RPC.cfx_getLogs: apply_formatter_at_index(FILTER_PARAM_NORMALIZERS, 0),
-#     # RPC.eth_newFilter: apply_formatter_at_index(FILTER_PARAM_NORMALIZERS, 0)
-# }
-
-to_integer_if_hex = apply_formatter_if(is_string, hex_to_integer)
 
 FILTER_PARAMS_FORMATTERS = {
     "fromEpoch": to_hex_if_integer,
     "toEpoch": to_hex_if_integer,
-    "limit": to_hex_if_integer,
-    "offset": to_hex_if_integer,
 }
 
-filter_params_formatter = apply_formatters_to_dict(FILTER_PARAMS_FORMATTERS)
-
 PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
-    # Eth
-    # RPC.eth_feeHistory: compose(
-    #     apply_formatter_at_index(to_hex_if_integer, 0),
-    #     apply_formatter_at_index(to_hex_if_integer, 1)
-    # ),
+    # Cfx
+
     RPC.cfx_getBalance: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getStakingBalance: apply_formatter_at_index(to_hex_if_integer, 1),
     RPC.cfx_getNextNonce: apply_formatter_at_index(to_hex_if_integer, 1),
-    # RPC.eth_getBlockByNumber: apply_formatter_at_index(to_hex_if_integer, 0),
-    # RPC.eth_getBlockTransactionCountByNumber: apply_formatter_at_index(
-    #     to_hex_if_integer,
-    #     0,
-    # ),
-    # RPC.eth_getCode: apply_formatter_at_index(to_hex_if_integer, 1),
-    # RPC.eth_getStorageAt: apply_formatter_at_index(to_hex_if_integer, 2),
-    # RPC.eth_getTransactionByBlockNumberAndIndex: compose(
-    #     apply_formatter_at_index(to_hex_if_integer, 0),
-    #     apply_formatter_at_index(to_hex_if_integer, 1),
-    # ),
-    # RPC.eth_getTransactionCount: apply_formatter_at_index(to_hex_if_integer, 1),
-    # RPC.eth_getRawTransactionByBlockNumberAndIndex: compose(
-    #     apply_formatter_at_index(to_hex_if_integer, 0),
-    #     apply_formatter_at_index(to_hex_if_integer, 1),
-    # ),
-    # RPC.eth_getRawTransactionByBlockHashAndIndex: apply_formatter_at_index(to_hex_if_integer, 1),
-    # RPC.eth_getUncleCountByBlockNumber: apply_formatter_at_index(to_hex_if_integer, 0),
-    # RPC.eth_getUncleByBlockNumberAndIndex: compose(
-    #     apply_formatter_at_index(to_hex_if_integer, 0),
-    #     apply_formatter_at_index(to_hex_if_integer, 1),
-    # ),
-    # RPC.eth_getUncleByBlockHashAndIndex: apply_formatter_at_index(to_hex_if_integer, 1),
-    # RPC.eth_newFilter: apply_formatter_at_index(filter_params_formatter, 0),
-    RPC.cfx_getLogs: apply_formatter_at_index(filter_params_formatter, 0),
+    
+    RPC.cfx_getBlockByEpochNumber: apply_formatter_at_index(to_hex_if_integer, 0),
+    RPC.cfx_getBlockByBlockNumber: apply_formatter_at_index(to_hex_if_integer, 0),
+    RPC.cfx_getBlocksByEpoch: apply_formatter_at_index(to_hex_if_integer, 0),
+    RPC.cfx_getSkippedBlocksByEpoch: apply_formatter_at_index(to_hex_if_integer, 0),
+    RPC.cfx_getBlockByHashWithPivotAssumption: apply_formatter_at_index(to_hex_if_integer, 2),
+    
+    RPC.cfx_getCode: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getStorageAt: apply_formatter_at_index(to_hex_if_integer, 2),
+    RPC.cfx_getStorageRoot: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getCollateralForStorage: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getSponsorInfo: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getAccount: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getDepositList: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getVoteList: apply_formatter_at_index(to_hex_if_integer, 1),
+    
+    RPC.cfx_getInterestRate: apply_formatter_at_index(to_hex_if_integer, 0),
+    RPC.cfx_getAccumulateInterestRate: apply_formatter_at_index(to_hex_if_integer, 0),
+    RPC.cfx_getBlockRewardInfo: apply_formatter_at_index(to_hex_if_integer, 0),
+    RPC.cfx_getPoSEconomics: apply_formatter_at_index(to_hex_if_integer, 0),
+    RPC.cfx_getPoSRewardByEpoch: apply_formatter_at_index(to_hex_if_integer, 0),
+    RPC.cfx_getParamsFromVote: apply_formatter_at_index(to_hex_if_integer, 0),
+    # RPC.cfx_getSupplyInfo: ,
+    # RPC.cfx_getAccountPendingInfo: ,
+    RPC.cfx_getAccountPendingTransactions: compose(
+        apply_formatter_at_index(to_hex_if_integer, 1),
+        apply_formatter_at_index(to_hex_if_integer, 2),
+    ),
+    RPC.cfx_checkBalanceAgainstTransaction: compose(
+        apply_formatter_at_index(to_hex_if_integer, 2),
+        apply_formatter_at_index(to_hex_if_integer, 3),
+        apply_formatter_at_index(to_hex_if_integer, 4),
+        apply_formatter_at_index(to_hex_if_integer, 5),
+    ),
+
+    RPC.cfx_getLogs: apply_formatter_at_index(apply_formatters_to_dict(FILTER_PARAMS_FORMATTERS), 0),
     RPC.cfx_call: apply_one_of_formatters((
         (is_length(1), apply_formatter_at_index(transaction_param_formatter, 0)), # type: ignore
         (is_length(2), apply_formatters_to_sequence( # type: ignore
@@ -210,10 +196,9 @@ LOG_ENTRY_FORMATTERS = {
     "epochNumber": apply_formatter_if(is_not_null, to_integer_if_hex),
     "transactionHash": apply_formatter_if(is_not_null, to_hash32), 
     "transactionIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
-    "logIndex": to_integer_if_hex,
-    "transactionLogIndex": to_integer_if_hex,
+    "logIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
+    "transactionLogIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
 }
-
 log_entry_formatter = apply_formatters_to_dict(LOG_ENTRY_FORMATTERS)
 
 RECEIPT_FORMATTERS = {
@@ -236,10 +221,10 @@ RECEIPT_FORMATTERS = {
     "logsBloom": to_hexbytes(256), # type: ignore
     "logs": apply_list_to_array_formatter(log_entry_formatter),
 }
-receipt_formatter = apply_formatters_to_dict(RECEIPT_FORMATTERS)
+# receipt_formatter = apply_formatters_to_dict(RECEIPT_FORMATTERS)
 
 
-TRANSACTION_RESULT_FORMATTERS = {
+TRANSACTION_DATA_FORMATTERS = {
     "blockHash": apply_formatter_if(is_not_null, to_hash32),
     "chainId": apply_formatter_if(is_not_null, to_integer_if_hex),
     # "contractCreated": AddressParam,
@@ -259,9 +244,7 @@ TRANSACTION_RESULT_FORMATTERS = {
     "v": apply_formatter_if(is_not_null, to_integer_if_hex),
     "value": to_integer_if_hex,
 }
-
-
-transaction_result_formatter = apply_formatters_to_dict(TRANSACTION_RESULT_FORMATTERS)
+transaction_data_formatter = apply_formatters_to_dict(TRANSACTION_DATA_FORMATTERS)
 
 filter_result_formatter = apply_one_of_formatters(
     (
@@ -297,13 +280,12 @@ BLOCK_FORMATTERS = {
         (
             (
                 is_array_of_dicts,
-                apply_list_to_array_formatter(transaction_result_formatter),
+                apply_list_to_array_formatter(transaction_data_formatter),
             ),
             (is_array_of_strings, apply_list_to_array_formatter(to_hash32)),
         )
     )
 }
-
 block_formatter = apply_formatters_to_dict(BLOCK_FORMATTERS)
 
 
@@ -316,59 +298,159 @@ def fixed64_to_float(val: str) -> float:
     MAX = 2**256 - 1
     return int(val, 16) / MAX
 
+STORAGE_ROOT_FORMATTERS = {
+    "delta": apply_formatter_if(is_hash32_str, to_hash32),
+    "intermediate": apply_formatter_if(is_hash32_str, to_hash32),
+    "snapshot": apply_formatter_if(is_hash32_str, to_hash32),
+}
+storage_root_formatter = apply_formatters_to_dict(STORAGE_ROOT_FORMATTERS)
+
+SPONSOR_INFO_FORMATTERS = {
+    "sponsorBalanceForCollateral": to_integer_if_hex,
+    "sponsorBalanceForGas": to_integer_if_hex,
+    "sponsorGasBound": to_integer_if_hex,
+}
+
+ACCOUNT_INFO_FORMATTERS = {
+    "accumulatedInterestReturn": to_integer_if_hex,
+    # "address": Base32Address,
+    # "admin": Base32Address,
+    "balance": to_integer_if_hex,
+    "codeHash": to_hash32,
+    "collateralForStorage": to_integer_if_hex,
+    "nonce": to_integer_if_hex,
+    "stakingBalance": to_integer_if_hex
+}
+
+DEPOSIT_INFO_FORMATTERS = {
+    "accumulatedInterestRate": to_integer_if_hex,
+    "amount": to_integer_if_hex,
+    "depositTime": to_integer_if_hex,
+}
+
+VOTE_INFO_FORMATTERS = {
+    "amount": to_integer_if_hex,
+    "unlockBlockNumber": to_integer_if_hex,
+}
+
+BLOCK_REWARD_INFO_FORMATTERS = {
+    "blockHash": to_hash32,
+    # "author": Base32,
+    "totalReward": to_integer_if_hex, # Drip
+    "baseReward": to_integer_if_hex, # Drip
+    "txFee": to_integer_if_hex, # Drip
+}
+
+POS_ECONOMICS_FORMATTERS = {
+    "distributablePosInterest": to_integer_if_hex, # Drip
+    "lastDistributeBlock": to_integer_if_hex,
+    "totalPosStakingTokens": to_integer_if_hex, # Drip
+}
+
+POS_ACCOUNT_REWARDS_FORMATTERS = {
+    # "posAddress": hexaddress
+    # "powAddress": Base32
+    "reward": to_integer_if_hex # drip
+}
+
+POS_REWARDS_INFO_FORMATTERS = {
+    "accountRewards": apply_list_to_array_formatter(
+        apply_formatters_to_dict(POS_ACCOUNT_REWARDS_FORMATTERS)
+    ),
+    "powEpochHash": to_hash32
+}
+
+DAO_INFO_FORMATTERS = {
+    "powBaseReward": to_integer_if_hex,
+    "interestRate": to_integer_if_hex,
+}
+
+SUPPLY_INFO_FORMATTERS = {
+    "totalCirculating": to_integer_if_hex,
+    "totalCollateral": to_integer_if_hex,
+    "totalIssued": to_integer_if_hex,
+    "totalStaking": to_integer_if_hex,
+    "totalEspaceTokens": to_integer_if_hex,
+}
+
+PENDING_INFO_FORMATTERS = {
+    "localNonce": to_integer_if_hex,
+    "nextPendingTx": to_hash32,
+    "pendingCount": to_integer_if_hex,
+    "pendingNonce": to_integer_if_hex,
+}
+
+PENDING_TRANSACTIONS_INFO_FORMATTERS = {
+    "pendingCount": to_integer_if_hex,
+    "pendingTransactions": apply_list_to_array_formatter(
+        transaction_data_formatter
+    )
+}
+
+
 PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
-    # Eth
-    # RPC.eth_accounts: apply_list_to_array_formatter(to_checksum_address),
+    # cfx namespace
     RPC.cfx_epochNumber: to_integer_if_hex,
     RPC.cfx_getStatus: apply_formatters_to_dict(STATUS_FORMATTERS),
-    # RPC.eth_coinbase: to_checksum_address,
     RPC.cfx_call: HexBytes,
     RPC.cfx_estimateGasAndCollateral: apply_formatters_to_dict(ESTIMATE_FORMATTERS),
     RPC.cfx_getConfirmationRiskByHash: fixed64_to_float,
-    # RPC.eth_feeHistory: fee_history_formatter,
-    # RPC.eth_maxPriorityFeePerGas: to_integer_if_hex,
     RPC.cfx_gasPrice: to_integer_if_hex,
     RPC.cfx_getBalance: to_integer_if_hex,
+    RPC.cfx_getStakingBalance: to_integer_if_hex,
     RPC.cfx_getNextNonce: to_integer_if_hex,
     RPC.cfx_getBlockByHash: apply_formatter_if(is_not_null, block_formatter),
-    # RPC.eth_getBlockByNumber: apply_formatter_if(is_not_null, block_formatter),
-    # RPC.eth_getBlockTransactionCountByHash: to_integer_if_hex,
-    # RPC.eth_getBlockTransactionCountByNumber: to_integer_if_hex,
-    # RPC.eth_getCode: HexBytes,
-    # RPC.eth_getFilterChanges: filter_result_formatter,
-    # RPC.eth_getFilterLogs: filter_result_formatter,
+    RPC.cfx_getBlockByEpochNumber: apply_formatter_if(is_not_null, block_formatter),
+    RPC.cfx_getBlockByBlockNumber: apply_formatter_if(is_not_null, block_formatter),
+    RPC.cfx_getBestBlockHash: to_hash32,
+    RPC.cfx_getBlocksByEpoch: apply_list_to_array_formatter(to_hash32),
+    RPC.cfx_getSkippedBlocksByEpoch: apply_list_to_array_formatter(to_hash32),
+    RPC.cfx_getBlockByHashWithPivotAssumption: apply_formatter_if(is_not_null, block_formatter),
     RPC.cfx_getLogs: filter_result_formatter,
-    # RPC.eth_getProof: apply_formatter_if(is_not_null, proof_formatter),
-    # RPC.eth_getRawTransactionByBlockHashAndIndex: HexBytes,
-    # RPC.eth_getRawTransactionByBlockNumberAndIndex: HexBytes,
-    # RPC.eth_getRawTransactionByHash: HexBytes,
-    # RPC.eth_getStorageAt: HexBytes,
-    # RPC.eth_getTransactionByBlockHashAndIndex: apply_formatter_if(
-    #     is_not_null,
-    #     transaction_result_formatter,
-    # ),
-    # RPC.eth_getTransactionByBlockNumberAndIndex: apply_formatter_if(
-    #     is_not_null,
-    #     transaction_result_formatter,
-    # ),
+    
+    RPC.cfx_getCode: HexBytes,
+    RPC.cfx_getStorageAt: apply_formatter_if(is_not_null, to_hash32),
+    RPC.cfx_getStorageRoot: apply_formatter_if(is_not_null, storage_root_formatter),
+    RPC.cfx_getCollateralForStorage: to_integer_if_hex,
+    RPC.cfx_getSponsorInfo: apply_formatters_to_dict(SPONSOR_INFO_FORMATTERS),
+    RPC.cfx_getAccount: apply_formatters_to_dict(ACCOUNT_INFO_FORMATTERS),
+    RPC.cfx_getDepositList: apply_list_to_array_formatter(
+        apply_formatters_to_dict(DEPOSIT_INFO_FORMATTERS)
+    ),
+    RPC.cfx_getVoteList: apply_list_to_array_formatter(
+        apply_formatters_to_dict(VOTE_INFO_FORMATTERS)
+    ),
+    
+    RPC.cfx_getInterestRate: to_integer_if_hex,
+    RPC.cfx_getAccumulateInterestRate: to_integer_if_hex,
+    RPC.cfx_getBlockRewardInfo: apply_list_to_array_formatter(
+        apply_formatters_to_dict(BLOCK_REWARD_INFO_FORMATTERS)
+    ),
+    RPC.cfx_getPoSEconomics: apply_formatter_if(
+        is_not_null, 
+        apply_formatters_to_dict(POS_ECONOMICS_FORMATTERS),
+    ),
+    RPC.cfx_getPoSRewardByEpoch: apply_formatter_if(
+        is_not_null,
+        apply_formatters_to_dict(POS_REWARDS_INFO_FORMATTERS),
+    ),
+    RPC.cfx_getParamsFromVote: apply_formatter_if(
+        is_not_null,
+        apply_formatters_to_dict(DAO_INFO_FORMATTERS)
+    ),
+    RPC.cfx_getSupplyInfo: apply_formatters_to_dict(SUPPLY_INFO_FORMATTERS),
+    RPC.cfx_getAccountPendingInfo: apply_formatters_to_dict(PENDING_INFO_FORMATTERS),
+    RPC.cfx_getAccountPendingTransactions: apply_formatters_to_dict(PENDING_TRANSACTIONS_INFO_FORMATTERS),
     RPC.cfx_getTransactionByHash: apply_formatter_if(
         is_not_null,
-        transaction_result_formatter
+        transaction_data_formatter
     ),
     # RPC.eth_getTransactionCount: to_integer_if_hex,
     RPC.cfx_getTransactionReceipt: apply_formatter_if(
         is_not_null,
-        receipt_formatter,
+        apply_formatters_to_dict(RECEIPT_FORMATTERS),
     ),
-    # RPC.eth_getUncleCountByBlockHash: to_integer_if_hex,
-    # RPC.eth_getUncleCountByBlockNumber: to_integer_if_hex,
-    # RPC.eth_hashrate: to_integer_if_hex,
-    # RPC.eth_protocolVersion: compose(
-    #     apply_formatter_if(is_0x_prefixed, to_integer_if_hex),
-    #     apply_formatter_if(is_integer, str),
-    # ),
     
-    # add is_string condition for the sake of pending middleware
     RPC.cfx_sendRawTransaction: to_transaction_hash,  
     RPC.cfx_sendTransaction: to_transaction_hash,  
     # RPC.eth_sign: HexBytes,
@@ -382,13 +464,9 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # RPC.personal_newAccount: to_checksum_address,
     # RPC.personal_sendTransaction: to_hash32,
     # RPC.personal_signTypedData: HexBytes,
-    # # Transaction Pool
-    # RPC.txpool_content: transaction_pool_content_formatter,
-    # RPC.txpool_inspect: transaction_pool_inspect_formatter,
-    # # Snapshot and Revert
-    # RPC.evm_snapshot: hex_to_integer,
-    # # Net
-    # RPC.net_peerCount: to_integer_if_hex,
+    
+    # Transaction Pool
+    RPC.txpool_nextNonce: to_integer_if_hex,
 }
 
 

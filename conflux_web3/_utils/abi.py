@@ -6,8 +6,13 @@ from eth_abi.registry import (
 from eth_abi.decoding import (
     AddressDecoder
 )
-from web3._utils.abi import build_default_registry, AddressEncoder
-from conflux_web3._utils.validation import validate_base32_address
+from web3._utils.abi import (
+    build_default_registry, 
+    AddressEncoder,
+)
+from conflux_web3._utils.validation import (
+    validate_base32
+)
 from cfx_address import Base32Address
 
 class Base32AddressEncoder(AddressEncoder):
@@ -16,7 +21,7 @@ class Base32AddressEncoder(AddressEncoder):
     
     @classmethod
     def validate_value(cls, value: Any) -> None:
-        validate_base32_address(value)
+        validate_base32(value)
 
 class CfxAddressDecoder(AddressDecoder):
     decode_fn = lambda x: x

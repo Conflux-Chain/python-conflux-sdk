@@ -1,4 +1,5 @@
 from typing import (
+    TYPE_CHECKING,
     Any,
     Optional,
     Sequence,
@@ -7,12 +8,8 @@ from typing import (
 
 from eth_abi.codec import ABICodec
 from web3 import Web3 as OriWeb3
-from web3 import HTTPProvider
 from web3.providers.base import (
     BaseProvider,
-)
-from web3 import (
-    HTTPProvider,
 )
 from web3.types import (
     RPCEndpoint
@@ -27,13 +24,22 @@ from conflux_web3.middleware import (
     conflux_default_middlewares
 )
 
-
-from conflux_web3.client import ConfluxClient
-from conflux_web3._utils.abi import build_cfx_default_registry
+from conflux_web3.client import (
+    ConfluxClient
+)
+from conflux_web3.txpool import (
+    Txpool
+)
+from conflux_web3._utils.abi import (
+    build_cfx_default_registry
+)
+if TYPE_CHECKING:
+    from conflux_web3.middleware.wallet import Wallet
 
 # The module name __name__ should be Web3 
 class Web3(OriWeb3):
     cfx: ConfluxClient
+    txpool: Txpool
     
     def __init__(
         self,
@@ -57,7 +63,8 @@ class Web3(OriWeb3):
         # if modules is None:
         #     modules = get_default_modules()
         modules = {
-            "eth": ConfluxClient
+            "cfx": ConfluxClient,
+            "txpool": Txpool,
         }
 
         self.attach_modules(modules)  # type: ignore
@@ -68,7 +75,7 @@ class Web3(OriWeb3):
         self.ens = empty  # type: ignore
         
         # use __setattr__ to avoid language server type hint
-        self.__setattr__("cfx", self.eth)
+        self.__setattr__("eth", self.cfx)
         
         # provide easy access
         Web3.account = self.cfx.account
@@ -88,6 +95,10 @@ class Web3(OriWeb3):
     @property
     def client_version(self) -> str:
         return self.cfx.client_version
+    
+    @property
+    def wallet(self) -> "Wallet":
+        return self.middleware_onion["wallet"] # type: ignore
     
     def isConnected(self) -> bool:
         return self.is_connected()

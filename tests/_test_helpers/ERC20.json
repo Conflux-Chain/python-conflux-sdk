@@ -5,17 +5,17 @@
       "inputs": [
         {
           "internalType": "string",
-          "name": "name_",
+          "name": "name",
           "type": "string"
         },
         {
           "internalType": "string",
-          "name": "symbol_",
+          "name": "symbol",
           "type": "string"
         },
         {
           "internalType": "uint256",
-          "name": "totalSupply",
+          "name": "initialSupply",
           "type": "uint256"
         }
       ],
@@ -113,7 +113,7 @@
     },
     {
       "inputs": [],
-      "name": "totalSupply",
+      "name": "initialSupply",
       "outputs": [
         {
           "internalType": "uint256",

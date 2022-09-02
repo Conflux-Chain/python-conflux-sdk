@@ -17,6 +17,7 @@ class RPC:
     cfx_getBalance = RPCEndpoint("cfx_getBalance")
     cfx_getBestBlockHash = RPCEndpoint("cfx_getBestBlockHash")
     cfx_getBlockByEpochNumber = RPCEndpoint("cfx_getBlockByEpochNumber")
+    cfx_getBlockByBlockNumber = RPCEndpoint("cfx_getBlockByBlockNumber")
     cfx_getBlockByHash = RPCEndpoint("cfx_getBlockByHash")
     cfx_getBlockByHashWithPivotAssumption = RPCEndpoint("cfx_getBlockByHashWithPivotAssumption")
     cfx_getBlockRewardInfo = RPCEndpoint("cfx_getBlockRewardInfo")
@@ -38,43 +39,92 @@ class RPC:
     cfx_getVoteList = RPCEndpoint("cfx_getVoteList")
     cfx_sendRawTransaction = RPCEndpoint("cfx_sendRawTransaction")
     cfx_sendTransaction = RPCEndpoint("cfx_sendTransaction")
-
+    
+    cfx_getPoSEconomics = RPCEndpoint("cfx_getPoSEconomics")
+    cfx_getPoSRewardByEpoch = RPCEndpoint("cfx_getPoSRewardByEpoch")
+    cfx_getParamsFromVote = RPCEndpoint("cfx_getParamsFromVote")
+    cfx_getSupplyInfo = RPCEndpoint("cfx_getSupplyInfo")
+    
+    cfx_getAccountPendingInfo = RPCEndpoint("cfx_getAccountPendingInfo")
+    cfx_getAccountPendingTransactions = RPCEndpoint("cfx_getAccountPendingTransactions")
+    cfx_checkBalanceAgainstTransaction = RPCEndpoint("cfx_checkBalanceAgainstTransaction")
+    
     # trace
     trace_block = RPCEndpoint("trace_block")
     trace_transaction = RPCEndpoint("trace_transaction")
 
     # debug
     accounts = RPCEndpoint("accounts")
+    
+    # txpool
+    txpool_nextNonce = RPCEndpoint("txpool_nextNonce")
 
     # other
-    cfx_method = RPCEndpoint("cfx_method")
+    # cfx_method = RPCEndpoint("cfx_method")
 
 TRANSACTION_PARAMS_ABIS = {
-    'from': 'address',
-    'to': 'address',
-    'data': 'bytes',
-    'gas': 'uint',
-    'gasPrice': 'uint',
-    'nonce': 'uint',
-    'value': 'uint',
-    'chainId': 'uint',
-    'storageLimit': 'uint',
-    'epochHeight': 'uint',
+    "from": "address",
+    "to": "address",
+    "data": "bytes",
+    "gas": "uint",
+    "gasPrice": "uint",
+    "nonce": "uint",
+    "value": "uint",
+    "chainId": "uint",
+    "storageLimit": "uint",
+    "epochHeight": "uint",
 }
 
+# RPC request formatters, parses abi types 
+# the complex ones (None parameter, such as EpochNumberParam) are implemented in _utils.method_formatters.py
+
+EPOCH_NUMBER_PARAM = None
+
 RPC_ABIS = {
-    'cfx_call': TRANSACTION_PARAMS_ABIS,
-    'cfx_estimateGasAndCollateral': TRANSACTION_PARAMS_ABIS,
-    # 'cfx_getBalance': ['address', None],
-    'cfx_getBlockByHash': ['bytes32', 'bool'],
-    'cfx_getCode': ['address', None],
-    'cfx_getStorageAt': ['address', 'uint', None],
-    'cfx_getTransactionByHash': ['bytes32'],
-    'cfx_getTransactionReceipt': ['bytes32'],
-    'cfx_getConfirmationRiskByHash': ['bytes32'],
-    'cfx_sendRawTransaction': ['bytes'],
-    'cfx_sendTransaction': TRANSACTION_PARAMS_ABIS,
-    # 'cfx_getLogs': FILTER_PARAMS_ABIS,
-    # 'cfx_signTransaction': TRANSACTION_PARAMS_ABIS,
-    # 'cfx_sign': ['address', 'bytes'],
+    RPC.cfx_call: TRANSACTION_PARAMS_ABIS,
+    RPC.cfx_estimateGasAndCollateral: TRANSACTION_PARAMS_ABIS,
+    RPC.cfx_getBlockByHash: ["bytes32", "bool"],
+    RPC.cfx_getBlockByEpochNumber: [EPOCH_NUMBER_PARAM, "bool"],
+    RPC.cfx_getBlockByBlockNumber: [EPOCH_NUMBER_PARAM, "bool"],
+    RPC.cfx_getBestBlockHash: [],
+    RPC.cfx_getBlocksByEpoch: [EPOCH_NUMBER_PARAM],
+    RPC.cfx_getSkippedBlocksByEpoch: [EPOCH_NUMBER_PARAM],
+    RPC.cfx_getBlockByHashWithPivotAssumption: ["bytes32", "bytes32", "uint"],
+
+    RPC.cfx_getBalance: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getStakingBalance: ["address", EPOCH_NUMBER_PARAM],
+    
+    RPC.cfx_getCode: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getStorageAt: ["address", "uint", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getStorageRoot: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getCollateralForStorage: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getAdmin: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getSponsorInfo: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getAccount: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getDepositList: ["address", EPOCH_NUMBER_PARAM],
+    RPC.cfx_getVoteList: ["address", EPOCH_NUMBER_PARAM],
+    
+    RPC.cfx_getInterestRate: [EPOCH_NUMBER_PARAM],
+    RPC.cfx_getAccumulateInterestRate: [EPOCH_NUMBER_PARAM],
+    RPC.cfx_getBlockRewardInfo: [None], # integer epoch number, or the string "latest_checkpoint"
+    RPC.cfx_getPoSEconomics: [EPOCH_NUMBER_PARAM],
+    RPC.cfx_getPoSRewardByEpoch: ["uint"],
+    RPC.cfx_getParamsFromVote: [EPOCH_NUMBER_PARAM],
+    RPC.cfx_getSupplyInfo: [],
+    
+    RPC.cfx_getAccountPendingInfo: ["addresss"],
+    RPC.cfx_getAccountPendingTransactions: ["address", "uint", "uint"],
+    RPC.cfx_checkBalanceAgainstTransaction: ["address", "address", "uint", "uint", "uint", EPOCH_NUMBER_PARAM],
+    
+    RPC.cfx_getTransactionByHash: ["bytes32"],
+    RPC.cfx_getTransactionReceipt: ["bytes32"],
+    RPC.cfx_getConfirmationRiskByHash: ["bytes32"],
+    # "cfx_sendRawTransaction": ["bytes"],
+    RPC.cfx_sendRawTransaction: ["bytes"],
+    # "cfx_sendTransaction": TRANSACTION_PARAMS_ABIS,
+    RPC.cfx_sendTransaction: TRANSACTION_PARAMS_ABIS,
+
+    # "cfx_getLogs": FILTER_PARAMS_ABIS,
+    # "cfx_signTransaction": TRANSACTION_PARAMS_ABIS,
+    # "cfx_sign": ["address", "bytes"],
 }

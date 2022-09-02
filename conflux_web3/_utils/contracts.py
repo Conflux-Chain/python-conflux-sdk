@@ -77,4 +77,3 @@ contracts.encode_abi = conditional_func(
 )(contracts.encode_abi)
 
 prepare_transaction = contracts.prepare_transaction
-

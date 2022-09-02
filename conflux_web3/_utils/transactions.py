@@ -20,7 +20,7 @@ from conflux_web3.types import TxParam
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
-# TODO: don't estimate twice or fas and storageLimit
+# TODO: don't estimate twice for gas and storageLimit
 TRANSACTION_DEFAULTS = {
     "value": 0,
     "data": b"",

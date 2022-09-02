@@ -1,4 +1,12 @@
-from typing import Any, Callable
+import functools
+from typing import (
+    Any,
+    Callable
+)
+
+from conflux_web3.exceptions import (
+    DisabledException
+)
 
 
 def temp_alter_module_variable(module: Any, varname: str, new_var: Any, condition: Callable[..., bool]):
@@ -22,21 +30,21 @@ def temp_alter_module_variable(module: Any, varname: str, new_var: Any, conditio
         return wrapper
     return inner
 
-def conditional_func(real_func: Callable, condition: Callable[..., bool]):
+def conditional_func(target_func: Callable, condition: Callable[..., bool]) -> Callable:
     """decorate a function to optionally execute another one
     if condition:
-        real_func
+        target_func
     else:
         original_func
 
     Args:
-        real_func (Callable): function to be executed if condition
+        target_func (Callable): function to be executed if condition
         condition (Callable[..., bool]): receives func arguments, returns a bool
     """
-    def inner(func):
+    def inner(func) :
         def wrapper(*args, **kwargs):
             if condition(*args, **kwargs):
-                return real_func(*args, **kwargs)
+                return target_func(*args, **kwargs)
             return func(*args, **kwargs)
         return wrapper
     return inner
@@ -52,3 +60,17 @@ def cfx_web3_condition(*args, **kwargs) -> bool:
         if isinstance(arg, Web3):
             return True
     return False
+
+def use_instead(func=None, *, origin="This web3.eth api", substitute=None):
+    if func is None:
+        return functools.partial(use_instead, substitute=substitute)
+    
+    @functools.wraps(func)
+    def inner(*args, **kwargs):
+        if substitute is None:
+            raise DisabledException(f"{origin} is not valid in Conflux Network."
+                            "Check https://developer.confluxnetwork.org/conflux-doc/docs/json_rpc/#migrating-from-ethereum-json-rpc for more information")
+        else:
+            raise DisabledException(f"{origin} is not valid in Conflux Network, "
+                            f"use {substitute} instead")
+    return inner
