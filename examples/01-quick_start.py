@@ -1,7 +1,7 @@
 import os
-from conflux_web3.dev import get_testnet_web3
+from conflux_web3 import Web3
 
-web3 = get_testnet_web3()
+web3 = Web3(Web3.HTTPProvider("https://test.confluxrpc.com"))
 
 # Run export TESTNET_SECRET="0xxxxxxxxx" in your console, where "0xxxxxxxxx" is your testnet secret key
 # You can claim testnet token at https://faucet.confluxnetwork.org/

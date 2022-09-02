@@ -1,5 +1,6 @@
 from conflux_web3.dev import get_testnet_web3
 
+# equivalent to Web3(Web3.HTTPProvider("https://test.confluxrpc.com"))
 web3 = get_testnet_web3()
 
 status = web3.cfx.get_status()

@@ -1,7 +1,7 @@
 import json, os
-from conflux_web3.dev import get_testnet_web3
+from conflux_web3 import Web3
 
-web3 = get_testnet_web3()
+web3 = Web3(Web3.HTTPProvider("https://test.confluxrpc.com"))
 web3.wallet.add_account(
     account := web3.account.from_key(os.environ.get("TESTNET_SECRET"))
 )
@@ -15,7 +15,7 @@ erc20 = web3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadat
 # you might need to change the argument name depending on the solidity source code
 # below works if wallet middleware and default account is set 
 # see examples/10-send_raw_transactions.py if you want to manually sign and send transactions
-hash = erc20.constructor(name_="ERC20", symbol_="C", totalSupply=10**18).transact()
+hash = erc20.constructor(name="ERC20", symbol="C", initialSupply=10**18).transact()
 # or use 
 # contract_address = hash.executed()["contractCreated"]
 contract_address = web3.cfx.wait_for_transaction_receipt(hash)["contractCreated"] 

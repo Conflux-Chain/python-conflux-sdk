@@ -1,8 +1,8 @@
 import os
 from cfx_address import Base32Address
-from conflux_web3.dev import get_testnet_web3
+from conflux_web3 import Web3
 
-web3 = get_testnet_web3()
+web3 = Web3(Web3.HTTPProvider("https://test.confluxrpc.com"))
 # web3.account is a cfx_account.Account object inherited from eth_account.Account
 # most of its apis are consistent with eth_account (https://eth-account.readthedocs.io/en/stable/eth_account.html)
 random_account = web3.account.create()

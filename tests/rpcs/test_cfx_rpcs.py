@@ -36,7 +36,7 @@ def tx_hash(moduled_w3: Web3, secret_key) -> HexBytes:
 @pytest.fixture(scope="module")
 def contract_address(moduled_w3: Web3):
     erc20 = moduled_w3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
-    hash = erc20.constructor(name_="ERC20", symbol_="C", totalSupply=10**18).transact()
+    hash = erc20.constructor(name="ERC20", symbol="C", initialSupply=10**18).transact()
     contract_address = hash.executed()["contractCreated"]
     return contract_address
 
@@ -71,7 +71,7 @@ class TestStatusQuery:
     
     def test_get_accumulate_interest_rate(self, w3: Web3):
         assert isinstance(
-            w3.cfx.get_accumulate_interst_rate(w3.cfx.epoch_number_by_tag("latest_state")),
+            w3.cfx.get_accumulate_interest_rate(w3.cfx.epoch_number_by_tag("latest_state")),
             int
         )
     

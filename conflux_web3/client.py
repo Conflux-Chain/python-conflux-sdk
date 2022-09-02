@@ -769,7 +769,7 @@ class ConfluxClient(BaseCfx, Eth):
     ) -> int:
         return self._get_interest_rate(block_identifier)
     
-    def get_accumulate_interst_rate(
+    def get_accumulate_interest_rate(
         self, block_identifier: Optional[EpochNumberParam] = None
     ) -> int:
         return self._get_accumulate_interest_rate(block_identifier)
