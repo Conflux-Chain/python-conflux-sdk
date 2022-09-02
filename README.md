@@ -6,7 +6,6 @@ Python SDK for interacting with Conflux network.
   - [Overview](#overview)
     - [Code Examples](#code-examples)
       - [initialization with providers](#initialization-with-providers)
-      - [Send a transaction](#send-a-transaction)
       - [Contract Interaction](#contract-interaction)
       - [RPC support](#rpc-support)
       - [Base32 Address Operation](#base32-address-operation)
@@ -16,14 +15,13 @@ Python SDK for interacting with Conflux network.
 Requirements: python version >= 3.8
 
 ```shell
-$ pip3 install conflux-web3
+$ pip3 install --pre conflux-web3
 ```
 
 ```python
-from conflux_web3.dev import get_testnet_web3
-from conflux_web3.middleware import Wallet
+from conflux_web3 import Web3
 
-w3 = get_testnet_web3()
+w3 = Web3(Web3.HTTPProvider("https://test.confluxrpc.com"))
 # fill your secret key
 # and you can claim testnet token from https://faucet.confluxnetwork.org/
 acct = w3.account.from_key("0xxxxxxxxxxxxxx") 
@@ -64,41 +62,15 @@ from conflux_web3.dev import (
 w3 = get_testnet_web3()
 ```
 
-#### Send a transaction
-
-Code example
-
-``` python
-# modified from https://web3py.readthedocs.io/en/latest/middleware.html?highlight=construct_sign_and#web3.middleware.construct_sign_and_send_raw_middleware
-import os
-from conflux_web3.dev import get_testnet_web3
-from conflux_web3.middleware import construct_sign_and_send_raw_middleware
-
-w3 = get_testnet_web3()
-acct = w3.cfx.account.from_key(os.environ.get('PRIVATE_KEY'))
-# construct_sign_and_send_raw_middleware(acct) is same as Wallet(acct)
-w3.middleware_onion.add(construct_sign_and_send_raw_middleware(acct))
-w3.cfx.default_account = acct.address
-
-transaction = {
-    'to': w3.cfx.account.create().address, # a random address encoded in base32 format
-    'value': 22,
-}
-
-# or you can simply use """w3.cfx.send_transaction(transaction).executed()"""
-w3.cfx.wait_for_transaction_receipt(w3.cfx.send_transaction(transaction))
-```
-
 #### Contract Interaction
 
 ``` py
 import os, json
-from conflux_web3.dev import get_testnet_web3
-from conflux_web3.middleware import construct_sign_and_send_raw_middleware
+from conflux_web3 import Web3
 
-w3 = get_testnet_web3()
+w3 = Web3(Web3.HTTPProvider("https://test.confluxrpc.com"))
 acct = w3.cfx.account.from_key(os.environ.get('PRIVATE_KEY'))
-w3.middleware_onion.add(construct_sign_and_send_raw_middleware(acct))
+w3.wallet.add_account(acct)
 w3.cfx.default_account = acct.address
 
 erc20_metadata = json.load(open("path/to/metadata/ERC20.json"))
