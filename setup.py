@@ -5,7 +5,7 @@ from setuptools import (
     setup,
 )
 
-VERSION = "0.2.0-beta.1"
+VERSION = "1.0.0-beta.1"
 DESCRIPTION = 'Python SDK for Conflux network'
 with open('./README.md') as readme:
     long_description = readme.read()
