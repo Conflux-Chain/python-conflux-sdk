@@ -8,6 +8,7 @@ tests/__pycache__
 venv
 conflux/__init__.pyc
 conflux.egg-info
+conflux_web3.egg-info
 bin/
 lib/
 include/

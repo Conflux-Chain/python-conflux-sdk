@@ -2,6 +2,7 @@ import pytest
 from conflux_web3 import Web3
 from conflux_web3.contract import ConfluxContract
 from conflux_web3.middleware.wallet import Wallet
+from cfx_account import LocalAccount
 from tests._test_helpers.ENV_SETTING import erc20_metadata
 from tests._test_helpers.type_check import TypeValidator
 
@@ -73,3 +74,31 @@ class TestERC20Contract:
             fromEpoch=fromEpoch
         )
         assert new_processed_logs[0]["args"] == processed_log["args"]
+
+    def test_contract_without_wallet(self, w3: Web3, account: LocalAccount):
+        erc20 = w3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
+        # test raw
+        prebuilt_tx_params = erc20.constructor(name="ERC20", symbol="C", initialSupply=10**18).build_transaction({
+            'from': account.address,
+            # 'nonce': w3.cfx.get_next_nonce(account.address),
+            # 'value': 0,
+            # 'gas': 21000,
+            # 'gasPrice': 10**9,
+            # 'chainId': w3.cfx.chain_id,
+            # 'epochHeight': w3.cfx.epoch_number
+        })
+        
+        raw_constuct_tx = account.sign_transaction(prebuilt_tx_params).rawTransaction
+        contract_address = w3.cfx.send_raw_transaction(raw_constuct_tx).executed()["contractCreated"]
+        assert contract_address
+        
+        contract_instance = w3.cfx.contract(address=contract_address, abi=erc20_metadata["abi"])
+        prebuilt_transfer = contract_instance.functions.transfer(
+            w3.account.create().address,
+            100
+        ).build_transaction({
+            'from': account.address
+        })
+        raw_tx = account.sign_transaction(prebuilt_transfer).rawTransaction
+        w3.cfx.send_raw_transaction(raw_tx).executed()
+        

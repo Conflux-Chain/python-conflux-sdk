@@ -1,18 +1,22 @@
-from typing import TYPE_CHECKING, Optional, Type, Union, cast
+import warnings
+from typing import (
+    TYPE_CHECKING, Optional, Type, Union, cast
+)
 from hexbytes import HexBytes
 from web3._utils.method_formatters import (
     to_hexbytes
 )
-from conflux_web3.types import (
-    TxReceipt,
-    TxData,
-)
+
 from conflux_web3.exceptions import (
     NoWeb3Exception
 )
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
+    from conflux_web3.types import (
+        TxReceipt,
+        TxData,
+    )
 
 def requires_web3(func):
     def inner(self, *args, **kwargs):
@@ -41,21 +45,21 @@ class TransactionHash(HexBytes):
     #     pass
     
     @requires_web3
-    def mined(self, timeout: float = 60, poll_latency: float = 0.5) -> TxData:
+    def mined(self, timeout: float = 60, poll_latency: float = 0.5) -> "TxData":
         return self._w3.cfx.wait_till_transaction_mined(self, timeout, poll_latency)
     
     @requires_web3
-    def executed(self, timeout: float = 300, poll_latency: float = 0.5) -> TxReceipt:
+    def executed(self, timeout: float = 300, poll_latency: float = 0.5) -> "TxReceipt":
         return self._w3.cfx.wait_for_transaction_receipt(self, timeout, poll_latency) 
     
     @requires_web3
-    def confirmed(self, timeout: float = 600, poll_latency: float = 0.5) -> TxReceipt:
+    def confirmed(self, timeout: float = 600, poll_latency: float = 0.5) -> "TxReceipt":
         return self._w3.cfx.wait_till_transaction_confirmed(self, timeout, poll_latency) 
     
     @requires_web3
-    def finalized(self, timeout: float = 1200, poll_latency: float = 1) -> TxReceipt: # type: ignore
-        # TODO
-        # warnings.warn("Several minutes are required to finalize a transaction", UserWarning)
+    def finalized(self, timeout: float = 1200, poll_latency: float = 1) -> "TxReceipt":
+        # TODO: test this api
+        warnings.warn("Several minutes are required to finalize a transaction", UserWarning)
         return self._w3.cfx.wait_till_transaction_finalized(self, timeout, poll_latency)
     
     def __repr__(self) -> str:

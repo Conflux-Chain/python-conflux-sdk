@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 from conflux_web3._utils.rpc_abi import (
     RPC
 )
-from conflux_web3.transaction_hash import (
+from conflux_web3.types.transaction_hash import (
     TransactionHash
 )
 

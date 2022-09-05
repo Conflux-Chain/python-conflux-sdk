@@ -28,12 +28,12 @@ from conflux_web3._utils.contracts import (
     prepare_transaction,
 )
 from conflux_web3._utils.transactions import (
-    fill_formal_transaction_defaults,
+    fill_transaction_defaults,
 )
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
-    from conflux_web3.transaction_hash import TransactionHash
+    from conflux_web3.types.transaction_hash import TransactionHash
 
 def build_transaction_for_function(
         address: Base32Address,
@@ -60,7 +60,7 @@ def build_transaction_for_function(
         fn_kwargs=kwargs,
     ) 
 
-    prepared_transaction = fill_formal_transaction_defaults(web3, prepared_transaction)
+    prepared_transaction = fill_transaction_defaults(web3, prepared_transaction)
 
     return prepared_transaction  # type: ignore
 

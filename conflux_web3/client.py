@@ -98,7 +98,7 @@ from conflux_web3._utils.validation import (
     validate_base32
 )
 from conflux_web3._utils.transactions import (
-    fill_formal_transaction_defaults
+    fill_transaction_defaults
 )
 from conflux_web3.method import (
     ConfluxMethod
@@ -144,7 +144,7 @@ class BaseCfx(BaseEth):
     def send_transaction_munger(self, transaction: TxParam) -> Tuple[TxParam]:
         if 'from' not in transaction and self.default_account :
             transaction = assoc(transaction, 'from', self.default_account)
-        transaction = fill_formal_transaction_defaults(self.w3, transaction)
+        transaction = fill_transaction_defaults(self.w3, transaction)
         return (transaction,)
     
     def estimate_gas_and_collateral_munger(
@@ -510,6 +510,41 @@ class ConfluxClient(BaseCfx, Eth):
 
     def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None) -> EstimateResult:
         return self._estimate_gas_and_collateral(transaction, block_identifier)
+
+    def estimate_gas(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam] = None) -> EstimateResult:
+        """
+        Compatibility API for conflux. Equivalent to estimate_gas_and_collateral
+
+        Parameters
+        ----------
+        transaction : TxParam
+            {
+                "chainId": int,
+                "data": Union[bytes, HexStr],
+                "from": Base32Address,
+                "gas": int,
+                "gasPrice": Drip,
+                "nonce": Nonce,
+                "to": Base32Address,
+                "value": Drip,
+                "epochHeight": int,
+                "storageLimit": int
+            }
+        block_identifier : Optional[EpochNumberParam], optional
+            _description_, by default None
+
+        Returns
+        -------
+        EstimateResult
+        
+        e.g.
+        {
+            "gasLimit": 28000,
+            "gasUsed": 21000,
+            "storageCollateralized": 0
+        }
+        """        
+        return self.estimate_gas_and_collateral(transaction, block_identifier)
 
     def send_raw_transaction(self, raw_transaction: Union[HexStr, bytes]) -> TransactionHash:
         return self._send_raw_transaction(raw_transaction)

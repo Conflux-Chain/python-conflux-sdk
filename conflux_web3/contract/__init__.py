@@ -53,6 +53,9 @@ from .caller import (
 from .event import (
     ConfluxContractEvents
 )
+from .constructor import (
+    ConfluxContractConstructor
+)
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
@@ -150,3 +153,19 @@ class ConfluxContract(Contract):
         )
 
         return contract
+
+    @classmethod
+    def constructor(cls, *args: Any, **kwargs: Any) -> "ConfluxContractConstructor":
+        """
+        :param args: The contract constructor arguments as positional arguments
+        :param kwargs: The contract constructor arguments as keyword arguments
+        :return: a contract constructor object
+        """
+        if cls.bytecode is None:
+            raise ValueError(
+                "Cannot call constructor on a contract that does not have "
+                "'bytecode' associated with it"
+            )
+
+        return ConfluxContractConstructor(cls.w3, cls.abi, cls.bytecode, *args, **kwargs)
+
