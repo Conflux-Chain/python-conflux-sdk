@@ -12,7 +12,6 @@ from web3.contract import (
     Contract,
 )
 
-from web3 import contract
 from web3._utils.blocks import (
     is_hex_encoded_block_hash,
 )
@@ -39,10 +38,6 @@ from conflux_web3.types import (
 from conflux_web3._utils.validation import (
     validate_base32,
 )
-from conflux_web3._utils.decorators import (
-    conditional_func,
-    cfx_web3_condition,
-)
 from .function import (
     ConfluxContractFunction,
     ConfluxContractFunctions,
@@ -60,7 +55,8 @@ from .constructor import (
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
-# begin hacking 
+# used to hook web3.contract.parse_block_identifier
+# hook is activated in conflux_web3._hook
 def cfx_parse_block_identifier(
     w3: "Web3", block_identifier: EpochNumberParam
 ) -> EpochNumberParam:
@@ -76,11 +72,6 @@ def cfx_parse_block_identifier(
         return w3.cfx.get_block_by_hash(block_identifier)["epochNumber"] # type: ignore
     else:
         raise InvalidEpochNumebrParam
-
-contract.parse_block_identifier = conditional_func(
-    cfx_parse_block_identifier,
-    cfx_web3_condition
-)(contract.parse_block_identifier)
 
 
 class ConfluxContract(Contract):
