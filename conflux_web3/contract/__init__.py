@@ -38,17 +38,17 @@ from conflux_web3.types import (
 from conflux_web3._utils.validation import (
     validate_base32,
 )
-from .function import (
+from conflux_web3.contract.function import (
     ConfluxContractFunction,
     ConfluxContractFunctions,
 )
-from .caller import (
+from conflux_web3.contract.caller import (
     ConfluxContractCaller
 )
-from .event import (
+from conflux_web3.contract.event import (
     ConfluxContractEvents
 )
-from .constructor import (
+from conflux_web3.contract.constructor import (
     ConfluxContractConstructor
 )
 
@@ -159,4 +159,3 @@ class ConfluxContract(Contract):
             )
 
         return ConfluxContractConstructor(cls.w3, cls.abi, cls.bytecode, *args, **kwargs)
-
