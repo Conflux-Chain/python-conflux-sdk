@@ -98,7 +98,7 @@ class Web3(OriWeb3):
     
     @property
     def wallet(self) -> "Wallet":
-        return self.middleware_onion["wallet"] # type: ignore
+        return self.middleware_onion.get("wallet", None) # type: ignore
     
     def isConnected(self) -> bool:
         return self.is_connected()

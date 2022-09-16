@@ -5,9 +5,6 @@ from typing import (
     cast
 )
 
-from eth_typing.evm import (
-    ChecksumAddress
-)
 from web3.contract import (
     Contract,
 )
@@ -26,17 +23,19 @@ from web3._utils.datatypes import (
 from cfx_address import (
     Base32Address,
 )
+from cfx_address.utils import (
+    validate_address_agaist_network_id,
+)
+
 from cfx_utils.exceptions import (
-    InvalidEpochNumebrParam
+    InvalidEpochNumebrParam,
+    Base32AddressNotMatch,
 )
 from conflux_web3.types import (
     Base32Address,
     AddressParam,
     EpochNumberParam,
     EpochLiteral,
-)
-from conflux_web3._utils.validation import (
-    validate_base32,
 )
 from conflux_web3.contract.function import (
     ConfluxContractFunction,
@@ -77,7 +76,6 @@ def cfx_parse_block_identifier(
 class ConfluxContract(Contract):
     address: AddressParam
     w3: 'Web3'
-    _hex_address: ChecksumAddress
     functions: ConfluxContractFunctions
     caller: "ConfluxContractCaller"
     events: "ConfluxContractEvents"
@@ -93,12 +91,14 @@ class ConfluxContract(Contract):
                 '`web3.contract` interface to create your contract class.'
             )
 
-        if address:
-            # TODO: validate is a contract address
-            # TODO: validate chainid matches
-            validate_base32(address)
-            self.address = address
-            self._hex_address = cast(ChecksumAddress, Base32Address(address).eth_checksum_address)
+        # address should match chainId
+        if address:             
+            validate_address_agaist_network_id(address, self.w3.cfx.chain_id, True)
+            address = Base32Address(address, self.w3.cfx.chain_id)
+            if address.address_type != "contract" and address.address_type != "builtin":
+                raise Base32AddressNotMatch(f"expected an address of contract type or builtin type"
+                                            f"receives {address} of {address.address_type}")
+            self.address = Base32Address(address, self.w3.cfx.chain_id)
 
         if not self.address:
             raise TypeError("The address argument is required to instantiate a contract.")
@@ -106,8 +106,8 @@ class ConfluxContract(Contract):
         self.functions = ConfluxContractFunctions(self.abi, self.w3, self.address)
         self.caller = ConfluxContractCaller(self.abi, self.w3, self.address) 
         self.events = ConfluxContractEvents(self.abi, self.w3, self.address)
-        self.fallback = Contract.get_fallback_function(self.abi, self.w3, self.address) # type: ignore
-        self.receive = Contract.get_receive_function(self.abi, self.w3, self.address) # type: ignore
+        self.fallback = Contract.get_fallback_function(self.abi, self.w3, ConfluxContractFunction, self.address) # type: ignore
+        self.receive = Contract.get_receive_function(self.abi, self.w3, ConfluxContractFunction, self.address) # type: ignore
 
     @classmethod
     def factory(cls, w3: "Web3", class_name: Optional[str] = None, **kwargs: Any) -> "Contract":

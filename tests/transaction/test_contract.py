@@ -1,10 +1,20 @@
+from typing import TYPE_CHECKING
 import pytest
 from conflux_web3 import Web3
-from conflux_web3.contract import ConfluxContract
+from conflux_web3.contract import (
+    ConfluxContract,
+)
+from conflux_web3.contract.metadata import (
+    get_contract_metadata
+)
+from cfx_utils.exceptions import Base32AddressNotMatch
 from conflux_web3.middleware.wallet import Wallet
 from cfx_account import LocalAccount
 from tests._test_helpers.ENV_SETTING import erc20_metadata
 from tests._test_helpers.type_check import TypeValidator
+
+if TYPE_CHECKING:
+    from conflux_web3 import Web3
 
 class TestERC20Contract:
     contract: ConfluxContract
@@ -47,14 +57,14 @@ class TestERC20Contract:
             
         # test contract event
         processed_log = contract.events.Transfer.process_receipt(transfer_receipt)[0]
-        assert processed_log["args"]["from"] == w3_.cfx.default_account
-        assert processed_log["args"]["to"] == random_account.address
-        assert processed_log["args"]["value"] == 100
-        assert processed_log["blockHash"] == logs[0]["blockHash"]
-        assert processed_log["epochNumber"] == logs[0]["epochNumber"]
-        assert processed_log["transactionHash"] == logs[0]["transactionHash"]
-        assert processed_log["transactionLogIndex"] == logs[0]["transactionLogIndex"]
-        assert processed_log["transactionIndex"] == logs[0]["transactionIndex"]
+        assert processed_log["args"]["from"] == w3_.cfx.default_account, processed_log
+        assert processed_log["args"]["to"] == random_account.address, processed_log
+        assert processed_log["args"]["value"] == 100, processed_log
+        assert processed_log["blockHash"] == logs[0]["blockHash"], processed_log
+        assert processed_log["epochNumber"] == logs[0]["epochNumber"], processed_log
+        assert processed_log["transactionHash"] == logs[0]["transactionHash"], processed_log
+        assert processed_log["transactionLogIndex"] == logs[0]["transactionLogIndex"], processed_log
+        assert processed_log["transactionIndex"] == logs[0]["transactionIndex"], processed_log
 
         # test event filters
         filter_topics = contract.events.Transfer.get_filter_topics(
@@ -102,3 +112,57 @@ class TestERC20Contract:
         raw_tx = account.sign_transaction(prebuilt_transfer).rawTransaction
         w3.cfx.send_raw_transaction(raw_tx).executed()
         
+class TestEmbeddedContractMetadata:
+    def test_get_contract_metadata(self):
+        admin_contract_metadata = get_contract_metadata("AdminControl")
+        assert isinstance(admin_contract_metadata["abi"], list)
+        assert isinstance(admin_contract_metadata, dict)
+
+    def test_contract_from_metadata(self, w3: Web3, use_remote: bool):
+        admin_contract = w3.cfx.contract(**get_contract_metadata("AdminControl"))
+        assert admin_contract.abi
+        assert admin_contract.bytecode
+        assert w3.cfx.address.is_valid_base32(admin_contract.address)
+        
+        if use_remote:
+            
+            usdt_contract = w3.cfx.contract(**get_contract_metadata("cUSDT", w3.cfx.chain_id))
+            assert usdt_contract.abi
+            assert usdt_contract.bytecode
+            assert w3.cfx.address.is_valid_base32(usdt_contract.address)
+            assert usdt_contract.caller.symbol() == "cUSDT"
+            
+    def test_contract_from_name(self, w3: Web3, use_remote: bool):
+        admin_contract = w3.cfx.contract(name="AdminControl")
+        assert admin_contract.abi
+        assert admin_contract.bytecode
+        assert w3.cfx.address.is_valid_base32(admin_contract.address)
+        
+        if use_remote:
+            usdt_contract = w3.cfx.contract(name="cUSDT")
+            assert usdt_contract.abi
+            assert usdt_contract.bytecode
+            assert w3.cfx.address.is_valid_base32(usdt_contract.address)
+            assert usdt_contract.caller.symbol() == "cUSDT"
+            
+        if w3.cfx.chain_id == 1:
+            faucet = w3.cfx.contract(name="Faucet")
+            assert faucet
+    
+    # TODO: test all embedded metadata functionalities
+    def test_faucet_functions(self, w3: Web3):
+        if w3.cfx.chain_id == 1:
+            random_account = w3.account.create()
+            w3.cfx.default_account = random_account
+            faucet = w3.cfx.contract(name="Faucet")
+            faucet.functions.claimCfx().transact().executed()
+            assert w3.cfx.get_balance(w3.cfx.default_account) > 0
+            
+
+def test_contract_initialization(w3: Web3):
+    metadata = get_contract_metadata("AdminControl")
+    chain_id = w3.cfx.chain_id
+    metadata["address"] = w3.cfx.address(metadata["address"], chain_id+1)
+    
+    with pytest.raises(Base32AddressNotMatch):
+        w3.cfx.contract(**metadata)

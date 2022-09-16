@@ -114,7 +114,6 @@ class LocalNode(BaseNode):
     def secrets(self) -> List[str]:
         raw = self._container.exec_run("cat genesis_secret.txt").output.decode("utf-8")  # type: ignore
         secrets = raw.split("\n")
-        secrets.append("0x46b9e861b63d3509c88b7817275a30d22d62c8cd8fa6486ddee35ef0d8e0495f")
         return secrets
     
     def _wait_for_start(self):
@@ -160,8 +159,8 @@ class RemoteTestnetNode(BaseNode):
     
     @functools.cached_property
     def secrets(self) -> List[str]:
-        testnet_secret = os.environ.get("TESTNET_SECRET")
+        testnet_secret = os.environ.get("TESTNET_SECRET", None)
         if not testnet_secret:
-            raise RuntimeError("Environment secret is not set")
+            return []
         return [testnet_secret]
         

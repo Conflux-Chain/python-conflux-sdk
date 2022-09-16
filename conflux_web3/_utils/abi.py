@@ -10,10 +10,10 @@ from web3._utils.abi import (
     build_default_registry, 
     AddressEncoder,
 )
-from conflux_web3._utils.validation import (
+from cfx_address import (
+    Base32Address,
     validate_base32
 )
-from cfx_address import Base32Address
 
 class Base32AddressEncoder(AddressEncoder):
     

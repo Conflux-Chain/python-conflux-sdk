@@ -16,8 +16,9 @@ from typing import (
 import functools
 from hexbytes import HexBytes
 
-from eth_utils.toolz import (
-    keyfilter  # type: ignore
+from toolz import (
+    keyfilter,
+    merge
 )
 from eth_typing.encoding import (
     HexStr
@@ -47,7 +48,10 @@ from web3.exceptions import (
 )
 from web3._utils.blocks import is_hex_encoded_block_hash as is_hash32_str
 
-from cfx_address import Base32Address as CfxAddress
+from cfx_address import (
+    Base32Address as CfxAddress,
+    validate_base32
+)
 from cfx_account import Account as CfxAccount
 from cfx_account.account import (
     LocalAccount
@@ -94,8 +98,8 @@ from conflux_web3.types import (
 from conflux_web3.contract import (
     ConfluxContract
 )
-from conflux_web3._utils.validation import (
-    validate_base32
+from conflux_web3.contract.metadata import (
+    get_contract_metadata
 )
 from conflux_web3._utils.transactions import (
     fill_transaction_defaults
@@ -128,15 +132,13 @@ class BaseCfx(BaseEth):
     @default_account.setter
     def default_account(self, account: Union[AddressParam, LocalAccount, Empty]) -> None:
         """set default account address
-        Args:
-            account: an address or a local account (but only address field works)
         """
-        if getattr(account, "address", None):
-            validate_base32(account.address) # type: ignore
-            self._default_account = account.address # type: ignore
+        if isinstance(account, LocalAccount):
+            self._default_account = Base32Address(account.address)
+            if (self.w3.wallet is not None and account.address not in self.w3.wallet):
+                self.w3.wallet.add_account(account)
         else:
-            validate_base32(account)
-            self._default_account = account # type: ignore
+            self._default_account = Base32Address(account) # type: ignore
     
     def remove_default_account(self):
         self._default_account = empty
@@ -362,9 +364,17 @@ class BaseCfx(BaseEth):
     def contract(  # noqa: F811
         self,
         address: Optional[AddressParam] = None,
+        name: Optional[str] = None,
         **kwargs: Any,
     ) -> Union[Type[ConfluxContract], ConfluxContract]:
-        return super().contract(address, **kwargs)  # type: ignore
+        metadata = {}
+        if name is not None:
+            metadata = get_contract_metadata(name, self.chain_id) # type: ignore
+            # the latter one shares greater priority when merging
+            kwargs = merge(metadata, kwargs)
+        if address is not None:
+            kwargs["address"] = address
+        return super().contract(**kwargs)  # type: ignore
     
 
 class ConfluxClient(BaseCfx, Eth):
@@ -463,7 +473,8 @@ class ConfluxClient(BaseCfx, Eth):
     def cahched_chain_id(self) -> int:
         return self._get_status()["chainId"]
     
-    @property
+    # TODO: change to @cache after cache middleware is added
+    @functools.cached_property
     def chain_id(self) -> int:
         """We don't use functools.cached_property here in case provider changes network.
         Always get status to avoid unexpected circumstances
@@ -853,7 +864,7 @@ class ConfluxClient(BaseCfx, Eth):
     
     def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs):
         if filter_params is None:
-            filter_params = keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs)
+            filter_params = keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs) # type: ignore
             return self._get_logs(filter_params)
         else:
             if len(kwargs.keys()) != 0:
