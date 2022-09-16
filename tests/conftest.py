@@ -1,10 +1,8 @@
 from typing import Iterable, Sequence, Union
 import os
 import pytest
-from tests._test_helpers.node import LocalNode, BaseNode, RemoteTestnetNode
-from tests._test_helpers.ENV_SETTING import (
-    PORT,
-    LOCAL_HOST,
+from tests._test_helpers.node import (
+    LocalNode, BaseNode, RemoteTestnetNode, LocalTestnetNode
 )
 
 from cfx_account.account import LocalAccount
@@ -20,15 +18,16 @@ from conflux_web3.middleware import (
 )
 
 @pytest.fixture(scope="session")
-def use_remote() -> bool:
-    # return True
+def use_testnet() -> bool:
     return bool(os.environ.get("TESTNET_SECRET")) or bool(os.environ.get("USE_TESTNET"))
 
 @pytest.fixture(scope="session")
-def node(use_remote) -> Iterable[BaseNode]:
-    if use_remote:
-        node = RemoteTestnetNode()
+def node(use_testnet) -> Iterable[BaseNode]:
+    if use_testnet:
+        node = RemoteTestnetNode() # connection error might occur if using public RPC
+        # node = LocalTestnetNode() 
         yield node
+        # node.exit()
     else:
         node = LocalNode()
         yield node
@@ -44,7 +43,7 @@ def secret_key(node: LocalNode) -> Union[str, None]:
     Returns:
         str: secret key with enough balance
     """
-    return node.secrets[0] if node.secrets else Account.create().privateKey
+    return node.secrets[0]
 
 # no scope here
 @pytest.fixture
@@ -73,7 +72,7 @@ def account(node_url: str, secret_key) -> LocalAccount:
         faucet.functions.claimCfx().transact().executed()
         return acct
     else:
-        raise Exception("Unexpected exception: not local nor testnet node and no environment variable is set")
+        raise Exception("Unexpected exception: not local nor testnet node and no environment secret key is set")
 
 @pytest.fixture(scope="module")
 def moduled_w3(node_url: str, node: LocalNode, account) -> Web3:
@@ -99,7 +98,7 @@ def address(node_url, secret_key) -> str:
     return addr
 
 @pytest.fixture
-def embedded_accounts(w3: Web3, use_remote: bool) -> Sequence[Base32Address]:
-    if use_remote:
+def embedded_accounts(w3: Web3, use_testnet: bool) -> Sequence[Base32Address]:
+    if use_testnet:
         return []
     return w3.cfx.accounts

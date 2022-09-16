@@ -58,8 +58,7 @@ class TransactionHash(HexBytes):
     
     @requires_web3
     def finalized(self, timeout: float = 1200, poll_latency: float = 1) -> "TxReceipt":
-        # TODO: test this api
-        warnings.warn("Several minutes are required to finalize a transaction", UserWarning)
+        warnings.warn("10 ~ 15 minutes are required to finalize a transaction", UserWarning)
         return self._w3.cfx.wait_till_transaction_finalized(self, timeout, poll_latency)
     
     def __repr__(self) -> str:

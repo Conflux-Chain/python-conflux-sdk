@@ -1,3 +1,4 @@
+import os
 from typing import TYPE_CHECKING, Sequence, cast
 from cfx_account.account import LocalAccount
 
@@ -9,7 +10,7 @@ from tests._test_helpers.type_check import TypeValidator
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
-def test_pending(w3: "Web3", account: LocalAccount):
+def test_pending(w3: "Web3", account: LocalAccount, use_testnet):
     # activate by default
     # w3.middleware_onion.add(PendingTransactionMiddleware)
     
@@ -34,4 +35,5 @@ def test_pending(w3: "Web3", account: LocalAccount):
     pending.mined()
     pending.executed()
     pending.confirmed()
-    # TODO: finalized testing
+    if use_testnet and os.environ.get("TEST_FINALIZING", None):
+        pending.finalized()

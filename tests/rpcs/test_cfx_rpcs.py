@@ -85,8 +85,8 @@ class TestStatusQuery:
         TypeValidator.validate_typed_dict(info, "PoSEconomicsInfo")
 
     # TODO: finish this test after pos RPC finished
-    # def test_get_pos_reward_by_epoch(self, w3: Web3, use_remote: bool):
-    #     if use_remote:
+    # def test_get_pos_reward_by_epoch(self, w3: Web3, use_testnet: bool):
+    #     if use_testnet:
     #         info = w3.cfx.get_pos_reward_by_epoch("100")
     #         TypeValidator.validate_typed_dict(info, "PoSEpochRewardInfo")
 
@@ -107,9 +107,9 @@ class TestAccountQuery:
         # the balance is supposed to be non-zero
         assert balance > 0
 
-    def test_get_balance_empty_param(self, w3: Web3, use_remote):
-        # TODO: remove use_remote if statement after testnet node is repaired
-        if use_remote:
+    def test_get_balance_empty_param(self, w3: Web3, use_testnet):
+        # TODO: remove use_testnet if statement after testnet node is repaired
+        if use_testnet:
             return
         with pytest.raises(ValueError):
             w3.cfx.get_balance()
@@ -128,9 +128,9 @@ class TestAccountQuery:
         user_code = w3.cfx.get_code(w3.cfx.account.create().address)
         assert not user_code
         
-    def test_get_storage_at(self, w3: Web3, contract_address, use_remote):
+    def test_get_storage_at(self, w3: Web3, contract_address, use_testnet):
         # TODO: a potential bug in RPC, at present we ignore the testing in local node
-        if use_remote:
+        if use_testnet:
             storage = w3.cfx.get_storage_at(contract_address, 100, w3.cfx.epoch_number_by_tag("latest_state"))
             assert isinstance(storage, bytes)
         else:
@@ -182,9 +182,9 @@ class TestNonce:
         nonce = w3.cfx.get_transaction_count(address)
         assert nonce >= 0
 
-    def test_get_next_nonce_empty_param(self, w3: Web3, use_remote):
-        # TODO: remove use_remote if statement after testnet node is repaired
-        if use_remote:
+    def test_get_next_nonce_empty_param(self, w3: Web3, use_testnet):
+        # TODO: remove use_testnet if statement after testnet node is repaired
+        if use_testnet:
             return
         with pytest.raises(ValueError):
             w3.cfx.get_next_nonce()
@@ -205,8 +205,8 @@ def test_get_tx(moduled_w3: Web3, contract_address):
 
     TypeValidator.validate_typed_dict(transaction_receipt, "TxReceipt")
 
-def test_accounts(w3: Web3, use_remote: bool):
-    if use_remote:
+def test_accounts(w3: Web3, use_testnet: bool):
+    if use_testnet:
         assert True
         return
     
@@ -223,11 +223,11 @@ def test_get_confirmation_risk(w3: Web3, tx_hash):
     risk = w3.cfx.get_confirmation_risk_by_hash(blockHash)
     assert risk < 1
 
-def preprocess_block_data(block_data: BlockData, use_remote: bool) -> BlockData:
+def preprocess_block_data(block_data: BlockData, use_testnet: bool) -> BlockData:
     """
     preprocess block in local testnet
     """    
-    if not use_remote:
+    if not use_testnet:
         # local node may not run pos chain
         block_data = dict(block_data) # type: ignore
         block_data['posReference'] = HexBytes("0x0") # type: ignore
@@ -239,23 +239,23 @@ class TestBlock:
         return w3.cfx.wait_for_transaction_receipt(tx_hash)['blockHash']
     
     @pytest.fixture
-    def block_data(self, w3:Web3, block_hash, use_remote):
+    def block_data(self, w3:Web3, block_hash, use_testnet):
         block_data = w3.cfx.get_block_by_hash(block_hash, True)
-        # if not use_remote:
+        # if not use_testnet:
         #     # local node may not run pos chain
         #     block_data = dict(block_data)
         #     block_data['posReference'] = HexBytes("0x0")
-        block_data = preprocess_block_data(block_data, use_remote)
+        block_data = preprocess_block_data(block_data, use_testnet)
         return block_data
     
     @pytest.fixture
-    def no_full_block_data(self, w3:Web3, block_hash, use_remote):
+    def no_full_block_data(self, w3:Web3, block_hash, use_testnet):
         block_data = w3.cfx.get_block_by_hash(block_hash, False)
-        # if not use_remote:
+        # if not use_testnet:
         #     # local node may not run pos chain
         #     block_data = dict(block_data)
         #     block_data['posReference'] = HexBytes("0x0")
-        block_data = preprocess_block_data(block_data, use_remote)
+        block_data = preprocess_block_data(block_data, use_testnet)
         return block_data
     
     def test_get_block_by_hash(self, block_data, no_full_block_data):
@@ -264,16 +264,16 @@ class TestBlock:
         TypeValidator.validate_typed_dict(no_full_block_data, "BlockData")
         return block_data
 
-    def test_get_block_by_epoch_number(self, w3:Web3, block_data: BlockData, use_remote):
+    def test_get_block_by_epoch_number(self, w3:Web3, block_data: BlockData, use_testnet):
         assert block_data['epochNumber'] is not None
         data_ = w3.cfx.get_block_by_epoch_number(block_data['epochNumber'], True)
-        data_ = preprocess_block_data(data_, use_remote)
+        data_ = preprocess_block_data(data_, use_testnet)
         TypeValidator.validate_typed_dict(data_, "BlockData")
         
-    def test_get_block_by_block_number(self, w3:Web3, block_data: BlockData, use_remote):
+    def test_get_block_by_block_number(self, w3:Web3, block_data: BlockData, use_testnet):
         assert block_data['blockNumber'] is not None
         data_ = w3.cfx.get_block_by_block_number(block_data['blockNumber'], True)
-        data_ = preprocess_block_data(data_, use_remote)
+        data_ = preprocess_block_data(data_, use_testnet)
         assert dict(data_) == dict(block_data)
 
     def test_get_best_block_hash(self, w3:Web3):
@@ -291,7 +291,7 @@ class TestBlock:
         for block_hash in blocks:
             assert isinstance(block_hash, bytes)
             
-    def test_get_blocks_by_hash_with_pivot_assumptions(self, w3: Web3, use_remote):
+    def test_get_blocks_by_hash_with_pivot_assumptions(self, w3: Web3, use_testnet):
         epoch_number = w3.cfx.epoch_number_by_tag("latest_confirmed")
         blocks = w3.cfx.get_blocks_by_epoch(epoch_number)
         block_data = w3.cfx.get_block_by_hash_with_pivot_assumptions(
@@ -299,17 +299,17 @@ class TestBlock:
             blocks[-1],
             epoch_number,
         )
-        block_data = preprocess_block_data(block_data, use_remote)
+        block_data = preprocess_block_data(block_data, use_testnet)
         TypeValidator.validate_typed_dict(block_data, "BlockData")
 
-    def test_get_block(self, w3: Web3, block_data: BlockData, use_remote):
+    def test_get_block(self, w3: Web3, block_data: BlockData, use_testnet):
         epoch_number = block_data["epochNumber"]
         assert epoch_number is not None
         hash = block_data["hash"]
         str_hash = hash.hex()
         for block_identifier in [epoch_number, str_hash, hash, "latest_state"]:
             block = w3.cfx.get_block(block_identifier)
-            block = preprocess_block_data(block, use_remote)
+            block = preprocess_block_data(block, use_testnet)
             TypeValidator.validate_typed_dict(block, "BlockData")
 
 class TestPending:

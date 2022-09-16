@@ -14,14 +14,19 @@ from docker.errors import (
     NotFound
 )
 
+from cfx_account import Account
 from conflux_web3 import (
     Web3,
 )
 from tests._test_helpers.ENV_SETTING import (
-    IMAGE_FULL_NAME,
+    DEV_IMAGE_FULL_NAME,
+    TESTNET_IMAGE_FULL_NAME,
     LOCAL_NODE_NAME,
+    TESTNET_NODE_NAME,
     LOCAL_HOST,
     PORT,
+    VOLUMES,
+    TESTNET_HOST_PORT
 )
 
 def setup_docker_env(client: docker.client.DockerClient, image_name:str, node_name: str):
@@ -91,7 +96,7 @@ class LocalNode(BaseNode):
     if container with node_name (default as "python-sdk-env") already exists, no extra work needs be done
     else pull image and create environment
     """
-    def __init__(self, image_name=IMAGE_FULL_NAME, node_name=LOCAL_NODE_NAME):
+    def __init__(self, image_name=DEV_IMAGE_FULL_NAME, node_name=LOCAL_NODE_NAME):
         self._image_name = image_name
         self._node_name = node_name
         self._url = f"http://{LOCAL_HOST}:{PORT}"
@@ -107,7 +112,7 @@ class LocalNode(BaseNode):
                                                         # auto_remove=True,
                                                         ports={
                                                             f"{PORT}/tcp": f"{PORT}"
-                                                        }) 
+                                                        })
             self._wait_for_start()
 
     @functools.cached_property
@@ -151,7 +156,35 @@ class LocalNode(BaseNode):
             self._container.remove(force=True)  # type: ignore
         if self._client:
             self._client.close()
+
+class LocalTestnetNode(LocalNode):
+    def __init__(self, image_name=TESTNET_IMAGE_FULL_NAME, node_name=TESTNET_NODE_NAME, volumes=VOLUMES):
+        self._image_name = image_name
+        self._node_name = node_name
+        self._url = f"http://{LOCAL_HOST}:{TESTNET_HOST_PORT}"
+        self._client = docker.from_env()
         
+        if container := get_existed_container(self._client, self._node_name):
+            self._container = container
+        else:
+            pull_image(self._client, self._image_name)
+            self._container = self._client.containers.run(self._image_name, 
+                                                        name=self._node_name, 
+                                                        detach=True, 
+                                                        # auto_remove=True,
+                                                        volumes=volumes,
+                                                        ports={
+                                                            f"{PORT}/tcp": f"{TESTNET_HOST_PORT}" # use a different port on host
+                                                        })
+            self._wait_for_start()
+    
+    @functools.cached_property
+    def secrets(self) -> List[str]:
+        secrets = [Account.create().privateKey]
+        return secrets 
+    
+    def _wait_for_embedded_tx_finished(self):
+        return
 
 class RemoteTestnetNode(BaseNode):
     def __init__(self) -> None:
@@ -161,6 +194,6 @@ class RemoteTestnetNode(BaseNode):
     def secrets(self) -> List[str]:
         testnet_secret = os.environ.get("TESTNET_SECRET", None)
         if not testnet_secret:
-            return []
+            return [Account.create().privateKey]
         return [testnet_secret]
         

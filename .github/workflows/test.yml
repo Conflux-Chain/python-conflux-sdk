@@ -29,6 +29,5 @@ jobs:
       run: |
         pytest tests
     - name: Run test on testnet
-      if: ${{ matrix.python-version }} == "3.8"
       run: |
-        export USE_TESTNET=1 && pytest tests
+        export USE_TESTNET=1 && export TEST_FINALIZE=1 && pytest tests

@@ -118,13 +118,13 @@ class TestEmbeddedContractMetadata:
         assert isinstance(admin_contract_metadata["abi"], list)
         assert isinstance(admin_contract_metadata, dict)
 
-    def test_contract_from_metadata(self, w3: Web3, use_remote: bool):
+    def test_contract_from_metadata(self, w3: Web3, use_testnet: bool):
         admin_contract = w3.cfx.contract(**get_contract_metadata("AdminControl"))
         assert admin_contract.abi
         assert admin_contract.bytecode
         assert w3.cfx.address.is_valid_base32(admin_contract.address)
         
-        if use_remote:
+        if use_testnet:
             
             usdt_contract = w3.cfx.contract(**get_contract_metadata("cUSDT", w3.cfx.chain_id))
             assert usdt_contract.abi
@@ -132,13 +132,13 @@ class TestEmbeddedContractMetadata:
             assert w3.cfx.address.is_valid_base32(usdt_contract.address)
             assert usdt_contract.caller.symbol() == "cUSDT"
             
-    def test_contract_from_name(self, w3: Web3, use_remote: bool):
+    def test_contract_from_name(self, w3: Web3, use_testnet: bool):
         admin_contract = w3.cfx.contract(name="AdminControl")
         assert admin_contract.abi
         assert admin_contract.bytecode
         assert w3.cfx.address.is_valid_base32(admin_contract.address)
         
-        if use_remote:
+        if use_testnet:
             usdt_contract = w3.cfx.contract(name="cUSDT")
             assert usdt_contract.abi
             assert usdt_contract.bytecode
