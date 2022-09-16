@@ -196,4 +196,3 @@ class RemoteTestnetNode(BaseNode):
         if not testnet_secret:
             return [Account.create().privateKey]
         return [testnet_secret]
-        

@@ -92,7 +92,7 @@ class ConfluxContract(Contract):
             )
 
         # address should match chainId
-        if address:             
+        if address:
             validate_address_agaist_network_id(address, self.w3.cfx.chain_id, True)
             address = Base32Address(address, self.w3.cfx.chain_id)
             if address.address_type != "contract" and address.address_type != "builtin":
