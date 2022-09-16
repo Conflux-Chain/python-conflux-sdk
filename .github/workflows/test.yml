@@ -6,8 +6,6 @@ name: Python package
 on:
   push:
     branches: [ "dev", "v1" ]
-  # pull_request:
-  #   branches: [ "v2" ]
 
 jobs:
   build:
