@@ -35,5 +35,5 @@ def test_pending(w3: "Web3", account: LocalAccount, use_testnet):
     pending.mined()
     pending.executed()
     pending.confirmed()
-    if use_testnet and os.environ.get("TEST_FINALIZING", None):
+    if use_testnet and os.environ.get("TEST_FINALIZATION", None):
         pending.finalized()

@@ -14,6 +14,7 @@ from typing import (
     overload
 )
 import functools
+import warnings
 from hexbytes import HexBytes
 
 from toolz import (
@@ -664,6 +665,7 @@ class ConfluxClient(BaseCfx, Eth):
     def wait_till_transaction_finalized(
         self, transaction_hash: _Hash32, timeout: float = 1200, poll_latency: float = 0.5
     ) -> TxReceipt:
+        warnings.warn("10 ~ 15 minutes are required to finalize a transaction", UserWarning)
         try:
             with Timeout(timeout) as _timeout:
                 while True:
