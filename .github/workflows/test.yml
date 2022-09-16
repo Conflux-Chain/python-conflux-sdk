@@ -27,4 +27,8 @@ jobs:
         pip install ".[tester]"
     - name: Run test
       run: |
-        make test
+        pytest tests
+    - name: Run test on testnet
+      if: ${{ matrix.python-version }} == "3.8"
+      run: |
+        export USE_TESTNET=1 && pytest tests
