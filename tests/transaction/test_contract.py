@@ -121,7 +121,6 @@ class TestEmbeddedContractMetadata:
     def test_contract_from_metadata(self, w3: Web3, use_testnet: bool):
         admin_contract = w3.cfx.contract(**get_contract_metadata("AdminControl"))
         assert admin_contract.abi
-        assert admin_contract.bytecode
         assert w3.cfx.address.is_valid_base32(admin_contract.address)
         
         if use_testnet:
@@ -135,7 +134,6 @@ class TestEmbeddedContractMetadata:
     def test_contract_from_name(self, w3: Web3, use_testnet: bool):
         admin_contract = w3.cfx.contract(name="AdminControl")
         assert admin_contract.abi
-        assert admin_contract.bytecode
         assert w3.cfx.address.is_valid_base32(admin_contract.address)
         
         if use_testnet:
