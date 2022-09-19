@@ -12,9 +12,6 @@ LOCAL_HOST = "127.0.0.1"
 PORT = "12537"
 TESTNET_HOST_PORT = "12637"
 
-# TODO: replace with Contract metadata
-erc20_metadata = json.load(open("tests/_test_helpers/ERC20.json"))
-
 TESTNET_CONFIG_DIR = os.path.join(
     os.path.dirname(__file__), 
     "testnet"

@@ -73,14 +73,14 @@ acct = w3.cfx.account.from_key(os.environ.get('PRIVATE_KEY'))
 w3.wallet.add_account(acct)
 w3.cfx.default_account = acct.address
 
-erc20_metadata = json.load(open("path/to/metadata/ERC20.json"))
-
-# deploy contract
-erc20 = w3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
-hash = erc20.constructor(name="ERC20", symbol="C", initialSupply=10**18).transact()
+# if you want to get contract object from metadata file, uses 
+# >>> erc20_metadata = json.load(open("path/to/ERC20metadata.json"))
+# >>> erc20 = web3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
+erc20 = web3.cfx.contract(name="ERC20")
+hash = erc20.constructor(name="Coin", symbol="C", initialSupply=10**18).transact()
 contract_address = w3.cfx.wait_for_transaction_receipt(hash)["contractCreated"]
 assert contract_address is not None
-contract = w3.cfx.contract(contract_address, abi=erc20_metadata["abi"])
+contract = w3.cfx.contract(contract_address, name="ERC20")
 
 # transfer
 random_account = w3.account.create()

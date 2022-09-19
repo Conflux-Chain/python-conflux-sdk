@@ -10,7 +10,6 @@ from conflux_web3.contract.metadata import (
 from cfx_utils.exceptions import Base32AddressNotMatch
 from conflux_web3.middleware.wallet import Wallet
 from cfx_account import LocalAccount
-from tests._test_helpers.ENV_SETTING import erc20_metadata
 from tests._test_helpers.type_check import TypeValidator
 
 if TYPE_CHECKING:
@@ -32,8 +31,9 @@ class TestERC20Contract:
     # warnings might be raised by web3.py, we just ignore these warnings
     def test_contract_deploy_and_transfer(self, w3_: Web3):
         # test deployment
+        erc20_metadata = get_contract_metadata("ERC20")
         erc20 = w3_.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
-        hash = erc20.constructor(name="ERC20", symbol="C", initialSupply=10**18).transact()
+        hash = erc20.constructor(name="Coin", symbol="C", initialSupply=10**18).transact()
         contract_address = w3_.cfx.wait_for_transaction_receipt(hash)["contractCreated"]
         assert contract_address is not None
         contract = w3_.cfx.contract(contract_address, abi=erc20_metadata["abi"])
@@ -86,9 +86,11 @@ class TestERC20Contract:
         assert new_processed_logs[0]["args"] == processed_log["args"]
 
     def test_contract_without_wallet(self, w3: Web3, account: LocalAccount):
+        erc20_metadata = get_contract_metadata("ERC20")
+        
         erc20 = w3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
         # test raw
-        prebuilt_tx_params = erc20.constructor(name="ERC20", symbol="C", initialSupply=10**18).build_transaction({
+        prebuilt_tx_params = erc20.constructor(name="Coin", symbol="C", initialSupply=10**18).build_transaction({
             'from': account.address,
             # 'nonce': w3.cfx.get_next_nonce(account.address),
             # 'value': 0,

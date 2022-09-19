@@ -7,15 +7,15 @@ web3.wallet.add_account(
 )
 web3.cfx.default_account = account.address
 
-# you can compile ERC20 yourself 
-# or use our pre-compiled file https://raw.githubusercontent.com/Conflux-Chain/python-conflux-sdk/v2/tests/_test_helpers/ERC20.json
-erc20_metadata = json.load(open("path/to/ERC20metadata.json"))
-erc20 = web3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
+# if you want to get contract object from metadata file, uses 
+# >>> erc20_metadata = json.load(open("path/to/ERC20metadata.json"))
+# >>> erc20 = web3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
+erc20 = web3.cfx.contract(name="ERC20")
 
 # you might need to change the argument name depending on the solidity source code
 # below works if wallet middleware and default account is set 
 # see examples/10-send_raw_transactions.py if you want to manually sign and send transactions
-hash = erc20.constructor(name="ERC20", symbol="C", initialSupply=10**18).transact()
+hash = erc20.constructor(name="Coin", symbol="C", initialSupply=10**18).transact()
 # or use 
 # contract_address = hash.executed()["contractCreated"]
 contract_address = web3.cfx.wait_for_transaction_receipt(hash)["contractCreated"] 
@@ -23,7 +23,7 @@ assert contract_address is not None
 print(f"contract deployed: {contract_address}")
 print()
 
-contract = web3.cfx.contract(contract_address, abi=erc20_metadata["abi"])
+contract = web3.cfx.contract(contract_address, name="ERC20")
 random_account = web3.account.create()
 # contract.functions.transfer(random_account.address, 100) prebuilt the transaction
 # the transaction is not send until .transact() is called
