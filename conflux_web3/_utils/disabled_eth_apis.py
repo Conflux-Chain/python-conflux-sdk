@@ -12,7 +12,7 @@ disabled_method_list = [
     # "get_transaction_count",
     # "replace_transaction",
     # "modify_transaction"
-    "estimate_gas",
+    # "estimate_gas",
     "fee_history",
     "get_filter_changes",
     "get_filter_logs",

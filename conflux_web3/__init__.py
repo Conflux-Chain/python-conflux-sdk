@@ -1,3 +1,6 @@
+# should be placed at the most front
+import conflux_web3._hook
+
 from conflux_web3.main import Web3
 from conflux_web3.dev import (
     get_local_web3,

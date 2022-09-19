@@ -49,6 +49,29 @@ def conditional_func(target_func: Callable, condition: Callable[..., bool]) -> C
         return wrapper
     return inner
 
+def conditional_post_func(post_func: Callable, condition: Callable[..., bool]) -> Callable:
+    """decorate a function to optionally execute post operation
+    rtn = original_func
+    if condition:
+        post_func
+    return rtn
+
+    Args:
+        post_func (Callable): function to be executed after original function if condition
+        condition (Callable[..., bool]): receives func arguments, returns a bool
+    """
+    def inner(func) :
+        def wrapper(*args, **kwargs):
+            rtn = func(*args, **kwargs)
+            if condition(*args, **kwargs):
+                post_func(*args, **kwargs)
+                print("do post!")
+            else:
+                print("do not post")
+            return rtn
+        return wrapper
+    return inner
+
 def cfx_web3_condition(*args, **kwargs) -> bool:
     """
 

@@ -35,7 +35,7 @@ TRANSACTION_DEFAULTS = {
 
 
 @curry
-def fill_formal_transaction_defaults(w3: "Web3", transaction: TxParam) -> TxParam:
+def fill_transaction_defaults(w3: "Web3", transaction: TxParam) -> TxParam:
     """
     Fill the necessary fields to "send" a transaction
     Before this function is invoked, ensure 'from' field is filled

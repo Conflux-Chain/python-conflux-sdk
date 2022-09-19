@@ -14,10 +14,12 @@ from typing import (
     overload
 )
 import functools
+import warnings
 from hexbytes import HexBytes
 
-from eth_utils.toolz import (
-    keyfilter  # type: ignore
+from toolz import (
+    keyfilter,
+    merge
 )
 from eth_typing.encoding import (
     HexStr
@@ -47,7 +49,10 @@ from web3.exceptions import (
 )
 from web3._utils.blocks import is_hex_encoded_block_hash as is_hash32_str
 
-from cfx_address import Base32Address as CfxAddress
+from cfx_address import (
+    Base32Address as CfxAddress,
+    validate_base32
+)
 from cfx_account import Account as CfxAccount
 from cfx_account.account import (
     LocalAccount
@@ -94,11 +99,11 @@ from conflux_web3.types import (
 from conflux_web3.contract import (
     ConfluxContract
 )
-from conflux_web3._utils.validation import (
-    validate_base32
+from conflux_web3.contract.metadata import (
+    get_contract_metadata
 )
 from conflux_web3._utils.transactions import (
-    fill_formal_transaction_defaults
+    fill_transaction_defaults
 )
 from conflux_web3.method import (
     ConfluxMethod
@@ -128,15 +133,13 @@ class BaseCfx(BaseEth):
     @default_account.setter
     def default_account(self, account: Union[AddressParam, LocalAccount, Empty]) -> None:
         """set default account address
-        Args:
-            account: an address or a local account (but only address field works)
         """
-        if getattr(account, "address", None):
-            validate_base32(account.address) # type: ignore
-            self._default_account = account.address # type: ignore
+        if isinstance(account, LocalAccount):
+            self._default_account = Base32Address(account.address)
+            if (self.w3.wallet is not None and account.address not in self.w3.wallet):
+                self.w3.wallet.add_account(account)
         else:
-            validate_base32(account)
-            self._default_account = account # type: ignore
+            self._default_account = Base32Address(account) # type: ignore
     
     def remove_default_account(self):
         self._default_account = empty
@@ -144,7 +147,7 @@ class BaseCfx(BaseEth):
     def send_transaction_munger(self, transaction: TxParam) -> Tuple[TxParam]:
         if 'from' not in transaction and self.default_account :
             transaction = assoc(transaction, 'from', self.default_account)
-        transaction = fill_formal_transaction_defaults(self.w3, transaction)
+        transaction = fill_transaction_defaults(self.w3, transaction)
         return (transaction,)
     
     def estimate_gas_and_collateral_munger(
@@ -362,9 +365,17 @@ class BaseCfx(BaseEth):
     def contract(  # noqa: F811
         self,
         address: Optional[AddressParam] = None,
+        name: Optional[str] = None,
         **kwargs: Any,
     ) -> Union[Type[ConfluxContract], ConfluxContract]:
-        return super().contract(address, **kwargs)  # type: ignore
+        metadata = {}
+        if name is not None:
+            metadata = get_contract_metadata(name, self.chain_id) # type: ignore
+            # the latter one shares greater priority when merging
+            kwargs = merge(metadata, kwargs)
+        if address is not None:
+            kwargs["address"] = address
+        return super().contract(**kwargs)  # type: ignore
     
 
 class ConfluxClient(BaseCfx, Eth):
@@ -463,7 +474,8 @@ class ConfluxClient(BaseCfx, Eth):
     def cahched_chain_id(self) -> int:
         return self._get_status()["chainId"]
     
-    @property
+    # TODO: change to @cache after cache middleware is added
+    @functools.cached_property
     def chain_id(self) -> int:
         """We don't use functools.cached_property here in case provider changes network.
         Always get status to avoid unexpected circumstances
@@ -510,6 +522,41 @@ class ConfluxClient(BaseCfx, Eth):
 
     def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None) -> EstimateResult:
         return self._estimate_gas_and_collateral(transaction, block_identifier)
+
+    def estimate_gas(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam] = None) -> EstimateResult:
+        """
+        Compatibility API for conflux. Equivalent to estimate_gas_and_collateral
+
+        Parameters
+        ----------
+        transaction : TxParam
+            {
+                "chainId": int,
+                "data": Union[bytes, HexStr],
+                "from": Base32Address,
+                "gas": int,
+                "gasPrice": Drip,
+                "nonce": Nonce,
+                "to": Base32Address,
+                "value": Drip,
+                "epochHeight": int,
+                "storageLimit": int
+            }
+        block_identifier : Optional[EpochNumberParam], optional
+            _description_, by default None
+
+        Returns
+        -------
+        EstimateResult
+        
+        e.g.
+        {
+            "gasLimit": 28000,
+            "gasUsed": 21000,
+            "storageCollateralized": 0
+        }
+        """        
+        return self.estimate_gas_and_collateral(transaction, block_identifier)
 
     def send_raw_transaction(self, raw_transaction: Union[HexStr, bytes]) -> TransactionHash:
         return self._send_raw_transaction(raw_transaction)
@@ -618,6 +665,7 @@ class ConfluxClient(BaseCfx, Eth):
     def wait_till_transaction_finalized(
         self, transaction_hash: _Hash32, timeout: float = 1200, poll_latency: float = 0.5
     ) -> TxReceipt:
+        warnings.warn("10 ~ 15 minutes are required to finalize a transaction", UserWarning)
         try:
             with Timeout(timeout) as _timeout:
                 while True:
@@ -818,7 +866,7 @@ class ConfluxClient(BaseCfx, Eth):
     
     def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs):
         if filter_params is None:
-            filter_params = keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs)
+            filter_params = keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs) # type: ignore
             return self._get_logs(filter_params)
         else:
             if len(kwargs.keys()) != 0:

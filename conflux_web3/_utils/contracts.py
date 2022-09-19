@@ -24,14 +24,11 @@ from web3._utils.normalizers import (
     abi_string_to_text,
 )
 
-from conflux_web3._utils.decorators import (
-    cfx_web3_condition,
-    conditional_func
-)
-
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
+# this api is used to hook web3._utils.contracts.encode_abi
+# hook is activated in conflux_web3._hook
 def cfx_encode_abi(
     web3: "Web3", abi: ABIFunction, arguments: Sequence[Any], data: Optional[HexStr] = None
 ) -> HexStr:
@@ -69,11 +66,5 @@ def cfx_encode_abi(
         return to_hex(HexBytes(data) + encoded_arguments)
     else:
         return encode_hex(encoded_arguments)
-    
-# hack the encode_abi function of _util.contracts module
-contracts.encode_abi = conditional_func(
-    cfx_encode_abi,
-    cfx_web3_condition
-)(contracts.encode_abi)
 
 prepare_transaction = contracts.prepare_transaction

@@ -39,7 +39,7 @@ def test_basetx_estimate(w3: Web3, address: Base32Address):
     }
     
     estimate = w3.cfx.estimate_gas_and_collateral(tx, w3.cfx.epoch_number-5)
-    assert estimate.gasUsed == 21000
+    assert estimate['gasUsed'] == 21000
     assert estimate["storageCollateralized"] == 0
     TypeValidator.validate_typed_dict(estimate, "EstimateResult")
     

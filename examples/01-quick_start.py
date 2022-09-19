@@ -1,4 +1,4 @@
-import os
+import os, pprint
 from conflux_web3 import Web3
 
 web3 = Web3(Web3.HTTPProvider("https://test.confluxrpc.com"))
@@ -20,4 +20,4 @@ tx_hash = web3.cfx.send_transaction({
 # in Conflux, the transaction will be executed only after it appears on the chain for 5 epoch 
 # tx_hash.executed() is equivalent to web3.cfx.wait_for_transaction_receipt(tx_hash)
 tx_receipt = tx_hash.executed()
-print(tx_receipt)
+pprint.pprint(dict(tx_receipt))

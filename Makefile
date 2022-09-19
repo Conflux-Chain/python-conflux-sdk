@@ -17,5 +17,5 @@ publish:
 # 	make html
 
 test:
-	pytest tests 
+	pytest tests && export USE_TESTNET=1 && pytest tests
 # cd ./docs && make doctest

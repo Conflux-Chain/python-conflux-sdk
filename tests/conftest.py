@@ -1,10 +1,8 @@
-from typing import Iterable, Sequence
+from typing import Iterable, Sequence, Union
 import os
 import pytest
-from tests._test_helpers.node import LocalNode, BaseNode, RemoteTestnetNode
-from tests._test_helpers.ENV_SETTING import (
-    PORT,
-    LOCAL_HOST,
+from tests._test_helpers.node import (
+    LocalNode, BaseNode, RemoteTestnetNode, LocalTestnetNode
 )
 
 from cfx_account.account import LocalAccount
@@ -20,14 +18,16 @@ from conflux_web3.middleware import (
 )
 
 @pytest.fixture(scope="session")
-def use_remote() -> bool:
-    return bool(os.environ.get("TESTNET_SECRET"))
+def use_testnet() -> bool:
+    return bool(os.environ.get("TESTNET_SECRET")) or bool(os.environ.get("USE_TESTNET"))
 
 @pytest.fixture(scope="session")
-def node(use_remote) -> Iterable[BaseNode]:
-    if use_remote:
-        node = RemoteTestnetNode()
+def node(use_testnet) -> Iterable[BaseNode]:
+    if use_testnet:
+        node = RemoteTestnetNode() # connection error might occur if using public RPC
+        # node = LocalTestnetNode() 
         yield node
+        # node.exit()
     else:
         node = LocalNode()
         yield node
@@ -38,7 +38,7 @@ def node_url(node):
     return node.url
 
 @pytest.fixture(scope="session")
-def secret_key(node: LocalNode) -> str:
+def secret_key(node: LocalNode) -> Union[str, None]:
     """
     Returns:
         str: secret key with enough balance
@@ -57,14 +57,31 @@ def w3(node_url: str, node: LocalNode) -> Web3:
     # assert w3.isConnected()
     return w3
 
+@pytest.fixture(scope="session")
+def account(node_url: str, secret_key) -> LocalAccount:
+    """external_account, not supported by node
+    """
+    provider = Web3.HTTPProvider(node_url)
+    w3 = Web3(provider=provider)
+    acct = w3.account.from_key(secret_key)
+    if w3.cfx.get_balance(acct.address) != 0:
+        return w3.account.from_key(secret_key)
+    elif w3.cfx.chain_id == 1:
+        w3.cfx.default_account = acct
+        faucet = w3.cfx.contract(name="Faucet")
+        faucet.functions.claimCfx().transact().executed()
+        return acct
+    else:
+        raise Exception("Unexpected exception: not local nor testnet node and no environment secret key is set")
+
 @pytest.fixture(scope="module")
-def moduled_w3(node_url: str, node: LocalNode, secret_key) -> Web3:
+def moduled_w3(node_url: str, node: LocalNode, account) -> Web3:
     """
     a web3 instance for the convenience to create module shared objects
     e.g. a transaction or a contract which is required for the module
     NOTE: DON'T CHANGE PROPERTY OF THIS W3
     """
-    account = Account.from_key(secret_key, )
+    # account = Account.from_key(secret_key, )
     provider = Web3.HTTPProvider(node_url)
     w3 = Web3(provider=provider)
     # assert w3.isConnected()
@@ -81,14 +98,7 @@ def address(node_url, secret_key) -> str:
     return addr
 
 @pytest.fixture
-def account(w3: Web3, secret_key) -> LocalAccount:
-    """external_account, not supported by node
-    """
-    return w3.account.from_key(secret_key)
-
-
-@pytest.fixture
-def embedded_accounts(w3: Web3, use_remote: bool) -> Sequence[Base32Address]:
-    if use_remote:
+def embedded_accounts(w3: Web3, use_testnet: bool) -> Sequence[Base32Address]:
+    if use_testnet:
         return []
     return w3.cfx.accounts

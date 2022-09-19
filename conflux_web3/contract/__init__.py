@@ -5,14 +5,10 @@ from typing import (
     cast
 )
 
-from eth_typing.evm import (
-    ChecksumAddress
-)
 from web3.contract import (
     Contract,
 )
 
-from web3 import contract
 from web3._utils.blocks import (
     is_hex_encoded_block_hash,
 )
@@ -27,8 +23,13 @@ from web3._utils.datatypes import (
 from cfx_address import (
     Base32Address,
 )
+from cfx_address.utils import (
+    validate_address_agaist_network_id,
+)
+
 from cfx_utils.exceptions import (
-    InvalidEpochNumebrParam
+    InvalidEpochNumebrParam,
+    Base32AddressNotMatch,
 )
 from conflux_web3.types import (
     Base32Address,
@@ -36,28 +37,25 @@ from conflux_web3.types import (
     EpochNumberParam,
     EpochLiteral,
 )
-from conflux_web3._utils.validation import (
-    validate_base32,
-)
-from conflux_web3._utils.decorators import (
-    conditional_func,
-    cfx_web3_condition,
-)
-from .function import (
+from conflux_web3.contract.function import (
     ConfluxContractFunction,
     ConfluxContractFunctions,
 )
-from .caller import (
+from conflux_web3.contract.caller import (
     ConfluxContractCaller
 )
-from .event import (
+from conflux_web3.contract.event import (
     ConfluxContractEvents
+)
+from conflux_web3.contract.constructor import (
+    ConfluxContractConstructor
 )
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
-# begin hacking 
+# used to hook web3.contract.parse_block_identifier
+# hook is activated in conflux_web3._hook
 def cfx_parse_block_identifier(
     w3: "Web3", block_identifier: EpochNumberParam
 ) -> EpochNumberParam:
@@ -74,16 +72,10 @@ def cfx_parse_block_identifier(
     else:
         raise InvalidEpochNumebrParam
 
-contract.parse_block_identifier = conditional_func(
-    cfx_parse_block_identifier,
-    cfx_web3_condition
-)(contract.parse_block_identifier)
-
 
 class ConfluxContract(Contract):
     address: AddressParam
     w3: 'Web3'
-    _hex_address: ChecksumAddress
     functions: ConfluxContractFunctions
     caller: "ConfluxContractCaller"
     events: "ConfluxContractEvents"
@@ -99,12 +91,14 @@ class ConfluxContract(Contract):
                 '`web3.contract` interface to create your contract class.'
             )
 
+        # address should match chainId
         if address:
-            # TODO: validate is a contract address
-            # TODO: validate chainid matches
-            validate_base32(address)
-            self.address = address
-            self._hex_address = cast(ChecksumAddress, Base32Address(address).eth_checksum_address)
+            validate_address_agaist_network_id(address, self.w3.cfx.chain_id, True)
+            address = Base32Address(address, self.w3.cfx.chain_id)
+            if address.address_type != "contract" and address.address_type != "builtin":
+                raise Base32AddressNotMatch(f"expected an address of contract type or builtin type"
+                                            f"receives {address} of {address.address_type}")
+            self.address = Base32Address(address, self.w3.cfx.chain_id)
 
         if not self.address:
             raise TypeError("The address argument is required to instantiate a contract.")
@@ -112,8 +106,8 @@ class ConfluxContract(Contract):
         self.functions = ConfluxContractFunctions(self.abi, self.w3, self.address)
         self.caller = ConfluxContractCaller(self.abi, self.w3, self.address) 
         self.events = ConfluxContractEvents(self.abi, self.w3, self.address)
-        self.fallback = Contract.get_fallback_function(self.abi, self.w3, self.address) # type: ignore
-        self.receive = Contract.get_receive_function(self.abi, self.w3, self.address) # type: ignore
+        self.fallback = Contract.get_fallback_function(self.abi, self.w3, ConfluxContractFunction, self.address) # type: ignore
+        self.receive = Contract.get_receive_function(self.abi, self.w3, ConfluxContractFunction, self.address) # type: ignore
 
     @classmethod
     def factory(cls, w3: "Web3", class_name: Optional[str] = None, **kwargs: Any) -> "Contract":
@@ -150,3 +144,18 @@ class ConfluxContract(Contract):
         )
 
         return contract
+
+    @classmethod
+    def constructor(cls, *args: Any, **kwargs: Any) -> "ConfluxContractConstructor":
+        """
+        :param args: The contract constructor arguments as positional arguments
+        :param kwargs: The contract constructor arguments as keyword arguments
+        :return: a contract constructor object
+        """
+        if cls.bytecode is None:
+            raise ValueError(
+                "Cannot call constructor on a contract that does not have "
+                "'bytecode' associated with it"
+            )
+
+        return ConfluxContractConstructor(cls.w3, cls.abi, cls.bytecode, *args, **kwargs)

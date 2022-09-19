@@ -5,9 +5,7 @@ name: Python package
 
 on:
   push:
-    branches: [ "dev", "v2" ]
-  # pull_request:
-  #   branches: [ "v2" ]
+    branches: [ "dev", "v1" ]
 
 jobs:
   build:
@@ -27,7 +25,9 @@ jobs:
     - name: Install dependencies
       run: |
         pip install ".[tester]"
-    - name: Test with pytest
+    - name: Run test
       run: |
         pytest tests
-        
+    - name: Run test on testnet
+      run: |
+        export USE_TESTNET=1 && export TEST_FINALIZATION=1 && pytest tests
