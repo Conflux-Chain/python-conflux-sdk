@@ -34,15 +34,13 @@ tx_receipt = h.executed()
 pprint.pprint(dict(tx_receipt))
 
 
-# deploy a contract
-# you can compile erc20 yourself 
-# or use our pre-compiled file https://raw.githubusercontent.com/Conflux-Chain/python-conflux-sdk/v2/tests/_test_helpers/ERC20.json
-# erc20_metadata = json.load(open("path/to/erc20metadata.json"))
-erc20_metadata = json.load(open("tests/_test_helpers/ERC20.json"))
-erc20 = web3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
+# if you want to get contract object from metadata file, uses 
+# >>> erc20_metadata = json.load(open("path/to/ERC20metadata.json"))
+# >>> erc20 = web3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
+erc20 = web3.cfx.contract(name="ERC20")
 
 # "build transaction"
-built_constuct_tx = erc20.constructor(name="ERC20", symbol="C", initialSupply=10**18).build_transaction({
+built_constuct_tx = erc20.constructor(name="Coin", symbol="C", initialSupply=10**18).build_transaction({
     'from': account.address,
 })
 # "sign transaction"
@@ -53,7 +51,7 @@ print(f"deployed contract address: f{contract_address}")
 
 
 # interact with contract
-contract = web3.cfx.contract(address=contract_address, abi=erc20_metadata["abi"])
+contract = web3.cfx.contract(address=contract_address, name="ERC20")
 # "build transaction"
 built_transfer_tx = contract.functions.transfer(
     web3.account.create().address,

@@ -188,7 +188,7 @@ class LocalTestnetNode(LocalNode):
 
 class RemoteTestnetNode(BaseNode):
     def __init__(self) -> None:
-        self._url = 'https://test.confluxrpc.com'
+        self._url = os.environ.get("TESTNET_URL", None) or 'https://test.confluxrpc.com'
     
     @functools.cached_property
     def secrets(self) -> List[str]:

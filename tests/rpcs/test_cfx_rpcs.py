@@ -3,8 +3,8 @@ import pytest
 
 from conflux_web3 import Web3
 from conflux_web3.types import BlockData
-from tests._test_helpers.ENV_SETTING import erc20_metadata
-from tests._test_helpers.type_check import  TypeValidator
+from conflux_web3.contract.metadata import get_contract_metadata
+from tests._test_helpers.type_check import TypeValidator
 
 # Note that we only test if SDK works as expected, especially for request and result formatting.
 # We don't test if RPC works as expected
@@ -35,14 +35,16 @@ def tx_hash(moduled_w3: Web3, secret_key) -> HexBytes:
 
 @pytest.fixture(scope="module")
 def contract_address(moduled_w3: Web3):
+    erc20_metadata = get_contract_metadata("ERC20")
     erc20 = moduled_w3.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
-    hash = erc20.constructor(name="ERC20", symbol="C", initialSupply=10**18).transact()
+    hash = erc20.constructor(name="Coin", symbol="C", initialSupply=10**18).transact()
     contract_address = hash.executed()["contractCreated"]
     return contract_address
 
 @pytest.fixture(scope="module")
 def tx_with_log(moduled_w3: Web3, contract_address) -> HexBytes:
     w3 = moduled_w3
+    erc20_metadata = get_contract_metadata("ERC20")
     erc20 = w3.cfx.contract(address=contract_address, abi=erc20_metadata["abi"])
 
     hash = erc20.functions.transfer(w3.account.create().address, 100).transact()
@@ -193,6 +195,7 @@ def test_get_tx(moduled_w3: Web3, contract_address):
     """test get_transaction(_by_hash) and get_transaction_receipt
     """
     w3 = moduled_w3
+    erc20_metadata = get_contract_metadata("ERC20")
     erc20 = w3.cfx.contract(address=contract_address, abi=erc20_metadata["abi"])
 
     tx_hash = erc20.functions.transfer(w3.account.create().address, 100).transact()
