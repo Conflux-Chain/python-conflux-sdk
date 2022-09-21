@@ -123,7 +123,7 @@ class LocalNode(BaseNode):
     
     def _wait_for_start(self):
         interval = 1
-        max_try = 30
+        max_try = 60
         print("starting test node")
         # time.sleep(10)
         
