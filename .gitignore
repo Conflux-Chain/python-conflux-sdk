@@ -5,14 +5,13 @@ build
 dist
 docs/*
 tests/__pycache__
-venv
+venv*/
 conflux/__init__.pyc
 conflux.egg-info
 conflux_web3.egg-info
 bin/
 lib/
 include/
-conflux/
 __pycache__
 .DS_Store
 .vscode
