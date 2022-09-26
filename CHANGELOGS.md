@@ -1,5 +1,11 @@
 # Change Logs
 
+## 1.0.0-dev3
+
+* bump web3.py version
+  * web3.py: 6.0.0b4->6.0.0b5
+  * eth-account(required by cfx-account): ~=7.0.0
+
 ## 1.0.0-dev2
 
 * Optimizes web3.py hacking mechanisms

@@ -470,12 +470,7 @@ class ConfluxClient(BaseCfx, Eth):
     def epoch_number_by_tag(self, epochTag: EpochLiteral) -> EpochNumber:
         return self._epoch_number(epochTag)
     
-    @functools.cached_property
-    def cahched_chain_id(self) -> int:
-        return self._get_status()["chainId"]
-    
-    # TODO: change to @cache after cache middleware is added
-    @functools.cached_property
+    @property
     def chain_id(self) -> int:
         """We don't use functools.cached_property here in case provider changes network.
         Always get status to avoid unexpected circumstances

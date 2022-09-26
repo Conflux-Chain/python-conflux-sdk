@@ -100,9 +100,6 @@ class Web3(OriWeb3):
     def wallet(self) -> "Wallet":
         return self.middleware_onion.get("wallet", None) # type: ignore
     
-    def isConnected(self) -> bool:
-        return self.is_connected()
-    
     def is_connected(self) -> bool:
         try:
             response = self.provider.make_request(RPCEndpoint("cfx_clientVersion"), [])
