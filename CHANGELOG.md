@@ -1,5 +1,9 @@
 # Change Logs
 
+## 1.0.0-dev4 (intended)
+
+* Response containing "address" from rpc is wrapped by Base32Address
+
 ## 1.0.0-dev3
 
 * bump web3.py version

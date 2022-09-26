@@ -54,6 +54,9 @@ from eth_utils.curried import (
 )
 from web3._utils.blocks import is_hex_encoded_block_hash as is_hash32_str
 
+from cfx_address import (
+    Base32Address
+)
 from conflux_web3._utils.rpc_abi import (
     RPC_ABIS,
     RPC
@@ -72,6 +75,9 @@ STANDARD_NORMALIZERS = [
 
 def to_hash32(val, variable_length=False):
     return to_hexbytes(32, val, variable_length)
+
+def from_trust_to_base32(val):
+    return Base32Address(val, _from_trust=True)
 
 transaction_param_formatter = compose(
     remove_key_if('to', lambda txn: txn['to'] in {'', b'', None}),  # type: ignore
@@ -189,7 +195,7 @@ ESTIMATE_FORMATTERS = {
 
 
 LOG_ENTRY_FORMATTERS = {
-    # "address": pass,
+    "address": from_trust_to_base32,
     "topics": apply_list_to_array_formatter(to_hash32), 
     "data": HexBytes,
     "blockHash": apply_formatter_if(is_not_null, to_hash32), 
@@ -206,15 +212,15 @@ RECEIPT_FORMATTERS = {
     "index": to_integer_if_hex,
     "blockHash": apply_formatter_if(is_not_null, to_hash32), 
     "epochNumber": to_integer_if_hex,
-    # "from": AddressParam,
-    # "to": AddressParam,
+    "from": from_trust_to_base32,
+    "to": apply_formatter_if(is_not_null, from_trust_to_base32),
     "gasUsed": to_integer_if_hex,
     "gasFee": to_integer_if_hex,
     # "gasCoveredBySponsor": bool,
     "storageCollateralized": to_integer_if_hex,
     # "storageCoveredBySponsor": bool,
     "storageReleased": apply_list_to_array_formatter(to_hex_if_integer),
-    # "contractAddress": AddressParam,
+    "contractCreated": apply_formatter_if(is_not_null, from_trust_to_base32),
     
     "stateRoot": to_hash32,
     "outcomeStatus": to_integer_if_hex,
@@ -227,10 +233,10 @@ RECEIPT_FORMATTERS = {
 TRANSACTION_DATA_FORMATTERS = {
     "blockHash": apply_formatter_if(is_not_null, to_hash32),
     "chainId": apply_formatter_if(is_not_null, to_integer_if_hex),
-    # "contractCreated": AddressParam,
+    "contractCreated": apply_formatter_if(is_not_null, from_trust_to_base32),
     "data": HexBytes,
     "epochHeight": apply_formatter_if(is_not_null, to_integer_if_hex),
-    # "from": 
+    "from": from_trust_to_base32,
     "gas": to_integer_if_hex,
     "gasPrice": to_integer_if_hex,
     "hash": to_hash32, # 
@@ -239,7 +245,7 @@ TRANSACTION_DATA_FORMATTERS = {
     "s": apply_formatter_if(is_not_null, to_hexbytes(32, variable_length=True)), # type: ignore
     "status": to_integer_if_hex,
     "storageLimit": to_integer_if_hex,
-    # "to"
+    "to": apply_formatter_if(is_not_null, from_trust_to_base32),
     "transactionIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
     "v": apply_formatter_if(is_not_null, to_integer_if_hex),
     "value": to_integer_if_hex,
@@ -257,7 +263,7 @@ BLOCK_FORMATTERS = {
     "hash": to_hash32,
     "parentHash": to_hash32,
     "height": to_integer_if_hex,
-    # "miner": Base32Address
+    "miner": from_trust_to_base32,
     "deferredStateRoot": to_hash32,
     "deferredReceiptsRoot": to_hash32,
     "deferredLogsBloomHash": to_hash32,
@@ -309,12 +315,14 @@ SPONSOR_INFO_FORMATTERS = {
     "sponsorBalanceForCollateral": to_integer_if_hex,
     "sponsorBalanceForGas": to_integer_if_hex,
     "sponsorGasBound": to_integer_if_hex,
+    "sponsorForCollateral": from_trust_to_base32,
+    "sponsorForGas": from_trust_to_base32,
 }
 
 ACCOUNT_INFO_FORMATTERS = {
     "accumulatedInterestReturn": to_integer_if_hex,
-    # "address": Base32Address,
-    # "admin": Base32Address,
+    "address": from_trust_to_base32,
+    "admin": apply_formatter_if(is_not_null, from_trust_to_base32),
     "balance": to_integer_if_hex,
     "codeHash": to_hash32,
     "collateralForStorage": to_integer_if_hex,
@@ -335,7 +343,7 @@ VOTE_INFO_FORMATTERS = {
 
 BLOCK_REWARD_INFO_FORMATTERS = {
     "blockHash": to_hash32,
-    # "author": Base32,
+    "author": from_trust_to_base32,
     "totalReward": to_integer_if_hex, # Drip
     "baseReward": to_integer_if_hex, # Drip
     "txFee": to_integer_if_hex, # Drip
@@ -349,7 +357,7 @@ POS_ECONOMICS_FORMATTERS = {
 
 POS_ACCOUNT_REWARDS_FORMATTERS = {
     # "posAddress": hexaddress
-    # "powAddress": Base32
+    "powAddress": from_trust_to_base32,
     "reward": to_integer_if_hex # drip
 }
 
