@@ -1,5 +1,6 @@
 from typing import (
     Any,
+    Literal,
     Type,
     TypedDict, 
     get_args, 
@@ -56,6 +57,8 @@ class TypeValidator:
         if get_origin(field_type) is Union:
             return any(TypeValidator.isinstance(val, t)
                         for t in get_args(field_type))
+        if get_origin(field_type) is Literal:
+            return val in get_args(field_type)
         elif TypeValidator._is_list_like_type(field_type):
             return all(
                 TypeValidator.isinstance(v, get_args(field_type)[0])
@@ -69,10 +72,11 @@ class TypeValidator:
                 return True
             return False
         else:
-            # TODO: do fine grained check
-            warnings.warn("complex type check")
-            # raise Exception("unexpected exception")
-            return True
+            if isinstance(val, field_type):
+                return True
+            return False
+            # warnings.warn("complex type check")
+            # return True
 
     @staticmethod
     def validate_typed_dict(value_to_validate: Any, typed_dict_class: Union[str, Type[TypedDict]]):

@@ -31,6 +31,7 @@ from cfx_utils.types import (
     Nonce,
     Drip,
     CFX,
+    GDrip,
     AddressParam,
     Storage,
     EpochNumberParam,
@@ -164,7 +165,7 @@ class BlockData(TypedDict):
     epochNumber: Union[int, None]
     blockNumber: Union[int, None]
     gasLimit: int
-    gasUsed: Union[int, None]
+    gasUsed: Union[Drip, None]
     timestamp: int
     difficulty: int
     powQuality: Union[HexBytes, None]
