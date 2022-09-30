@@ -44,7 +44,7 @@ class TypeValidator:
         )
     
     @staticmethod
-    def isinstance(val, field_type):
+    def isinstance(val, field_type) -> bool:
         if is_typeddict(field_type):
             annotations = field_type.__annotations__
             for key, sub_field_type in annotations.items():
@@ -64,9 +64,10 @@ class TypeValidator:
         elif type(field_type).__name__ == "function":
             return isinstance(val, field_type.__supertype__)
         elif type(field_type) is type:
-            if field_type == Base32Address:
-                return Base32Address.is_valid_base32(val)
-            return isinstance(val, field_type)
+            # for sake of debug
+            if isinstance(val, field_type):
+                return True
+            return False
         else:
             # TODO: do fine grained check
             warnings.warn("complex type check")
