@@ -1,12 +1,14 @@
 from typing import (
     Any,
+    ForwardRef,
     Literal,
     Type,
     TypedDict, 
     get_args, 
     get_origin, 
-    Union
+    Union,
 )
+import typing
 from typing_extensions import (
     is_typeddict,
 )
@@ -59,18 +61,22 @@ class TypeValidator:
                         for t in get_args(field_type))
         if get_origin(field_type) is Literal:
             return val in get_args(field_type)
-        elif TypeValidator._is_list_like_type(field_type):
+        if TypeValidator._is_list_like_type(field_type):
             return all(
                 TypeValidator.isinstance(v, get_args(field_type)[0])
                 for v in val
             )
-        elif type(field_type).__name__ == "function":
+        if type(field_type).__name__ == "function":
             return isinstance(val, field_type.__supertype__)
-        elif type(field_type) is type:
+        if type(field_type) is type:
             # for sake of debug
             if isinstance(val, field_type):
                 return True
             return False
+        if type(field_type) is ForwardRef:
+            return type(val).__name__ == field_type.__forward_arg__
+        if type(field_type) is typing._GenericAlias: # type: ignore
+            return TypeValidator.isinstance(val, get_origin(field_type))
         else:
             if isinstance(val, field_type):
                 return True

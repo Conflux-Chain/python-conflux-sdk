@@ -40,15 +40,16 @@ from web3._utils.empty import (
 from web3._utils.threads import (
     Timeout,
 )
-from web3.datastructures import (
-    AttributeDict,
-)
 from web3.exceptions import (
     TransactionNotFound,
     TimeExhausted
 )
 from web3._utils.blocks import is_hex_encoded_block_hash as is_hash32_str
 
+from cfx_utils.token_unit import (
+    to_int_if_drip_units,
+    AbstractDerivedTokenUnit
+)
 from cfx_address import (
     Base32Address as CfxAddress,
     validate_base32
@@ -67,6 +68,8 @@ from conflux_web3._utils.disabled_eth_apis import (
 from conflux_web3.types import (
     _Hash32,
     Drip,
+    CFX,
+    GDrip,
     EpochLiteral,
     EpochNumberParam,
     AddressParam,
@@ -147,6 +150,10 @@ class BaseCfx(BaseEth):
     def send_transaction_munger(self, transaction: TxParam) -> Tuple[TxParam]:
         if 'from' not in transaction and self.default_account :
             transaction = assoc(transaction, 'from', self.default_account)
+        if 'value' in transaction:
+            transaction['value'] = to_int_if_drip_units(transaction['value'])
+        if 'gasPrice' in transaction:
+            transaction['gasPrice'] = to_int_if_drip_units(transaction['gasPrice'])
         transaction = fill_transaction_defaults(self.w3, transaction)
         return (transaction,)
     
@@ -180,11 +187,11 @@ class BaseCfx(BaseEth):
         RPC.cfx_clientVersion,
     )
     
-    _get_status: ConfluxMethod[Callable[[], AttributeDict]] = ConfluxMethod(
+    _get_status: ConfluxMethod[Callable[[], NodeStatus]] = ConfluxMethod(
         RPC.cfx_getStatus,
     )
 
-    _gas_price: ConfluxMethod[Callable[[], int]] = ConfluxMethod(
+    _gas_price: ConfluxMethod[Callable[[], Drip]] = ConfluxMethod(
         RPC.cfx_gasPrice,
     )
     
@@ -197,21 +204,21 @@ class BaseCfx(BaseEth):
         RPC.accounts
     )
     
-    _call: ConfluxMethod[Callable[[TxParam, EpochNumberParam], Any]] = ConfluxMethod(
+    _call: ConfluxMethod[Callable[[TxParam, Optional[EpochNumberParam]], Any]] = ConfluxMethod(
         RPC.cfx_call,
         mungers=[default_account_munger]
     )
     
-    _get_balance: ConfluxMethod[Callable[..., int]] = ConfluxMethod(
+    _get_balance: ConfluxMethod[Callable[..., Drip]] = ConfluxMethod(
         RPC.cfx_getBalance,
         # mungers=[default_account_munger]
     )
     
-    _get_staking_balance: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Drip]] = ConfluxMethod(
+    _get_staking_balance: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Drip]] = ConfluxMethod(
         RPC.cfx_getStakingBalance
     )
     
-    _epoch_number: ConfluxMethod[Callable[[EpochLiteral], EpochNumber]] = ConfluxMethod(
+    _epoch_number: ConfluxMethod[Callable[[Optional[EpochLiteral]], EpochNumber]] = ConfluxMethod(
         RPC.cfx_epochNumber,
     )
     
@@ -253,7 +260,7 @@ class BaseCfx(BaseEth):
         RPC.cfx_getBlockByBlockNumber
     )
     
-    _get_best_block_hash: ConfluxMethod[Callable[[None], HexBytes]] = ConfluxMethod(
+    _get_best_block_hash: ConfluxMethod[Callable[[], HexBytes]] = ConfluxMethod(
         RPC.cfx_getBestBlockHash
     )
     
@@ -456,8 +463,8 @@ class ConfluxClient(BaseCfx, Eth):
         return self._get_status()
     
     @property
-    def gas_price(self) -> Drip:
-        return self._gas_price()
+    def gas_price(self) -> GDrip:
+        return self._gas_price().to(GDrip)
     
     @property
     def accounts(self) -> Tuple[Base32Address]:
@@ -485,14 +492,14 @@ class ConfluxClient(BaseCfx, Eth):
     #     return 
     
     def get_balance(self,
-                    address: Optional[AddressParam]=None, 
-                    block_identifier: Optional[EpochNumberParam] = None) -> Drip:
-        return cast(Drip, self._get_balance(address, block_identifier))
+                    address: AddressParam, 
+                    block_identifier: Optional[EpochNumberParam] = None) -> CFX:
+        return self._get_balance(address, block_identifier).to(CFX)
     
     def get_staking_balance(self,
-                    address: Optional[AddressParam]=None, 
-                    block_identifier: Optional[EpochNumberParam] = None) -> Drip:
-        return Drip(self._get_staking_balance(address, block_identifier))
+                    address: AddressParam, 
+                    block_identifier: Optional[EpochNumberParam] = None) -> CFX:
+        return self._get_staking_balance(address, block_identifier).to(CFX)
     
     
     def call(self, 
@@ -509,10 +516,10 @@ class ConfluxClient(BaseCfx, Eth):
         """
         return self._call(transaction, block_identifier)
     
-    def get_next_nonce(self, address: Optional[AddressParam]=None, block_identifier: Optional[EpochNumberParam] = None) -> Drip:
+    def get_next_nonce(self, address: Optional[AddressParam]=None, block_identifier: Optional[EpochNumberParam] = None) -> int:
         return self._get_next_nonce(address, block_identifier)
 
-    def get_transaction_count(self, address: Optional[AddressParam]=None, block_identifier: Optional[EpochNumberParam] = None) -> Drip:
+    def get_transaction_count(self, address: Optional[AddressParam]=None, block_identifier: Optional[EpochNumberParam] = None) -> int:
         return self.get_next_nonce(address, block_identifier)
 
     def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None) -> EstimateResult:
@@ -554,9 +561,11 @@ class ConfluxClient(BaseCfx, Eth):
         return self.estimate_gas_and_collateral(transaction, block_identifier)
 
     def send_raw_transaction(self, raw_transaction: Union[HexStr, bytes]) -> TransactionHash:
+        # TODO: remove pending middleware and changes here
         return self._send_raw_transaction(raw_transaction)
     
     def send_transaction(self, transaction: TxParam) -> TransactionHash:
+        # TODO: remove pending middleware and changes here
         return self._send_transaction(transaction)
     
     def get_transaction_receipt(self, transaction_hash: _Hash32) -> TxReceipt:
@@ -851,10 +860,15 @@ class ConfluxClient(BaseCfx, Eth):
         return self._get_account_pending_transactions(address, start_nonce, limit)
     
     def check_balance_against_transaction(
-        self, account_address: AddressParam, contract_address: AddressParam, 
-        gas_limit: int, gas_price: Union[Drip, int], storage_limit: Union[Storage, int],
+        self,
+        account_address: AddressParam,
+        contract_address: AddressParam, 
+        gas_limit: int,
+        gas_price: Union[Drip, AbstractDerivedTokenUnit[Drip], int],
+        storage_limit: Union[Storage, int],
         block_identifier: Optional[EpochNumberParam] = None
     ) -> TransactionPaymentInfo:
+        gas_price = to_int_if_drip_units(gas_price)
         return self._check_balance_against_transaction(
             account_address, contract_address, gas_limit, gas_price, storage_limit, block_identifier
         )

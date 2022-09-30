@@ -19,7 +19,7 @@ from conflux_web3._utils.method_formatters import (
 )
 
 
-class ConfluxMethod(Method, Generic[TFunc]):
+class ConfluxMethod(Method[TFunc]):
     def __init__(
         self,
         json_rpc_method: Optional[RPCEndpoint] = None,
