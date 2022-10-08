@@ -82,7 +82,7 @@ setup(
     packages=find_packages(),
     url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
-        "web3~=6.0.0b5",
+        "web3==6.0.0b5",
         "cfx-address>=1.0.0b9",
         "cfx-account>=0.1.0b6",
         "cfx-utils>=1.0.0b9"
