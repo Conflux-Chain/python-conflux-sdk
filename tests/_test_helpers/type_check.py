@@ -9,11 +9,13 @@ from typing import (
     Union,
 )
 import typing
+import sys
 from typing_extensions import (
     is_typeddict,
 )
 import collections.abc
 import warnings
+
 from cfx_address import Base32Address
 
 import conflux_web3.types
@@ -66,7 +68,11 @@ class TypeValidator:
                 TypeValidator.isinstance(v, get_args(field_type)[0])
                 for v in val
             )
-        if type(field_type).__name__ == "function":
+        if sys.version_info >= (3, 10):
+            # NewType becomes a class after python3.10
+            if type(field_type) == typing.NewType:
+                return isinstance(val, field_type.__supertype__)
+        elif type(field_type).__name__ == "function":
             return isinstance(val, field_type.__supertype__)
         if type(field_type) is type:
             # for sake of debug
