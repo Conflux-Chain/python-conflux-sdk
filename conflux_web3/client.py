@@ -19,7 +19,8 @@ from hexbytes import HexBytes
 
 from toolz import (
     keyfilter,
-    merge
+    merge,
+    dissoc,
 )
 from eth_typing.encoding import (
     HexStr
@@ -357,6 +358,7 @@ class BaseCfx(BaseEth):
         RPC.cfx_getLogs
     )
     
+    # TODO: change overload definitions with name parameter
     @overload
     def contract(
         self, address: None = None, **kwargs: Any
@@ -373,11 +375,12 @@ class BaseCfx(BaseEth):
         self,
         address: Optional[AddressParam] = None,
         name: Optional[str] = None,
+        with_deployment_info: Optional[bool] = None,
         **kwargs: Any,
     ) -> Union[Type[ConfluxContract], ConfluxContract]:
         metadata = {}
         if name is not None:
-            metadata = get_contract_metadata(name, self.chain_id) # type: ignore
+            metadata = get_contract_metadata(name, self.chain_id, with_deployment_info) # type: ignore
             # the latter one shares greater priority when merging
             kwargs = merge(metadata, kwargs)
         if address is not None:
@@ -771,8 +774,11 @@ class ConfluxClient(BaseCfx, Eth):
                 "transactionsRoot": "0xfb245dae4539ea49812e822adbffa9dd2ee9b3de8f3d9a7d186d351dcc9a6ed4",
                 "posReference": "0xd1c2ff79834f86eb4bc98e0e526de475144a13719afba6385cf62a4023c02ae3",
             } 
-        """        
-        if isinstance(block_identifier, bytes) or is_hash32_str(block_identifier):
+        """
+        # TODO: more fine-grained munger
+        if block_identifier == "latest":
+            block_identifier = "latest_state"  
+        elif isinstance(block_identifier, bytes) or is_hash32_str(block_identifier):
             return self.get_block_by_hash(block_identifier, full_transactions) # type: ignore
         return self.get_block_by_epoch_number(block_identifier, full_transactions) # type: ignore
     

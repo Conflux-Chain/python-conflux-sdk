@@ -1,8 +1,11 @@
 from typing import (
     TYPE_CHECKING,
     Any,
+    Dict,
     Optional,
     Sequence,
+    Type,
+    Union,
     cast,
 )
 
@@ -16,6 +19,10 @@ from web3.types import (
 )
 from web3._utils.empty import (
     empty,
+    Empty,
+)
+from web3.module import (
+    Module,
 )
 from conflux_web3.types import (
     MiddlewareOnion
@@ -30,8 +37,14 @@ from conflux_web3.client import (
 from conflux_web3.txpool import (
     Txpool
 )
+from conflux_web3.exceptions import (
+    DeploymentInfoNotFound
+)
 from conflux_web3._utils.abi import (
     build_cfx_default_registry
+)
+from cns import (
+    CNS
 )
 if TYPE_CHECKING:
     from conflux_web3.middleware.wallet import Wallet
@@ -45,34 +58,35 @@ class Web3(OriWeb3):
         self,
         provider: Optional[BaseProvider] = None,
         middlewares: Optional[Sequence[Any]] = None,
-        # modules: Optional[Dict[str, Union[Type[Module], Sequence[Any]]]] = None,
+        modules: Optional[Dict[str, Union[Type[Module], Sequence[Any]]]] = None,
         # external_modules: Optional[Dict[str, Union[Type[Module], Sequence[Any]]]] = None,
-        # ens: ENS = cast(ENS, empty)
+        ens: CNS = cast(CNS, empty) # we don't change the variable name for compatibility
     ):
         # ConfluxClient as eth provider, default middlewares as [] rather than None
         # OriWeb3.__init__(self, provider=provider, middlewares=middlewares, modules={
         #     "eth": ConfluxClient
         # })
         if middlewares is None:
-            middlewares = conflux_default_middlewares
+            middlewares = conflux_default_middlewares(self)
         self.manager = self.RequestManager(self, provider, middlewares)
         # this codec gets used in the module initialization,
         # so it needs to come before attach_modules
         self.codec = ABICodec(build_cfx_default_registry())
 
-        # if modules is None:
-        #     modules = get_default_modules()
-        modules = {
-            "cfx": ConfluxClient,
-            "txpool": Txpool,
-        }
+        if modules is None:
+            # modules = get_default_modules()
+            modules = {
+                "cfx": ConfluxClient,
+                "txpool": Txpool,
+            }
+        # TODO: more specific error
+        assert "cfx" in modules, "must have cfx module"
 
         self.attach_modules(modules)  # type: ignore
 
         # if external_modules is not None:
         #     self.attach_modules(external_modules)
 
-        self.ens = empty  # type: ignore
         
         # use __setattr__ to avoid language server type hint
         self.__setattr__("eth", self.cfx)
@@ -82,7 +96,32 @@ class Web3(OriWeb3):
         Web3.account.set_w3(self)
         Web3.address = self.cfx.address
         
+        # do not activate ens
+        if ens == empty and self.is_connected():
+            try:
+                ens = CNS.from_web3(self)
+            except DeploymentInfoNotFound:
+                pass
+
+        self.cns = ens
+        
         # TODO: set contract
+
+    @property
+    def ens(self) -> Union[CNS, "Empty"]:
+        return self.cns
+    
+    @property
+    def cns(self) -> Union[CNS, "Empty"]:
+        return self._ens # type: ignore
+    
+    @cns.setter
+    def cns(self, new_cns: Union[CNS, "Empty"]) -> None:
+        self._ens = new_cns
+        
+    @ens.setter
+    def ens(self, new_cns: Union[CNS, "Empty"]) -> None:
+        self._ens = new_cns
 
     @property
     def middleware_onion(self) -> MiddlewareOnion:

@@ -5,7 +5,7 @@ name: Python package
 
 on:
   push:
-    branches: [ "dev", "v1" ]
+    branches: [ "dev", "v1", "cns"]
 
 jobs:
   build:
