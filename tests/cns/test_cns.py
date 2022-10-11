@@ -42,7 +42,7 @@ def test_cns_as_sender(w3: Web3, ens_account, ens_name):
 
 def test_cns_as_contract_address(w3: Web3, use_testnet):
     if use_testnet:
-        faucet = w3.cfx.contract("faucet.web3", name="faucet", with_deployment_info=False)
+        faucet = w3.cfx.contract("faucet.web3", name="Faucet", with_deployment_info=False)
         assert faucet.address == "cfxtest:acejjfa80vj06j2jgtz9pngkv423fhkuxj786kjr61"
         account = w3.cfx.account.create()
         w3.cfx.default_account = account
