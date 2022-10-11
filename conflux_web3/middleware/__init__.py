@@ -25,10 +25,10 @@ if TYPE_CHECKING:
 
 def conflux_default_middlewares(w3: "Web3") -> Sequence[Tuple[Middleware, str]]:
     return [
+        (name_to_address_middleware(w3), "name_to_address"),
         (PendingTransactionMiddleware, "PendingTransactionMiddleware"),
         (Wallet(), "wallet"),
         (simple_cache_middleware, "CacheMiddleware"),
-        (name_to_address_middleware(w3), "name_to_address"),
     ]
 
 

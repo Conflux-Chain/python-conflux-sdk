@@ -9,3 +9,6 @@ class DeploymentInfoNotFound(Exception):
 
 class ContractMetadataNotFound(Exception):
     pass
+
+class NameServiceNotSet(Exception):
+    pass

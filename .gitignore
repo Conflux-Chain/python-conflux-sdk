@@ -20,3 +20,4 @@ private_tests
 legacy_tests
 note*.ipynb
 share
+main*.py

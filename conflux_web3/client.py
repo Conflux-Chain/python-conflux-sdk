@@ -118,6 +118,9 @@ from conflux_web3.middleware.pending import (
 from conflux_web3._utils.decorators import (
     use_instead,
 )
+from conflux_web3._utils.cns import (
+    resolve_if_cns_name,
+)
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
@@ -135,7 +138,7 @@ class BaseCfx(BaseEth):
     
 
     @default_account.setter
-    def default_account(self, account: Union[AddressParam, LocalAccount, Empty]) -> None:
+    def default_account(self, account: Union[AddressParam, LocalAccount]) -> None:
         """set default account address
         """
         if isinstance(account, LocalAccount):
@@ -143,13 +146,13 @@ class BaseCfx(BaseEth):
             if (self.w3.wallet is not None and account.address not in self.w3.wallet):
                 self.w3.wallet.add_account(account)
         else:
-            self._default_account = Base32Address(account) # type: ignore
+            self._default_account = Base32Address(resolve_if_cns_name(self.w3, account))
     
     def remove_default_account(self):
         self._default_account = empty
     
     def send_transaction_munger(self, transaction: TxParam) -> Tuple[TxParam]:
-        if 'from' not in transaction and self.default_account :
+        if 'from' not in transaction and self.default_account:
             transaction = assoc(transaction, 'from', self.default_account)
         if 'value' in transaction:
             transaction['value'] = to_int_if_drip_units(transaction['value'])

@@ -18,7 +18,12 @@ from cfx_utils.token_unit import (
 from conflux_web3.exceptions import (
     NoWeb3Exception
 )
-from conflux_web3.types import TxParam
+from conflux_web3.types import (
+    TxParam,
+)
+from conflux_web3._utils.cns import (
+    resolve_if_cns_name,
+)
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
@@ -47,6 +52,8 @@ def fill_transaction_defaults(w3: "Web3", transaction: TxParam) -> TxParam:
         raise NoWeb3Exception("A web3 object is required to fill transaction defaults, but no web3 object is passed")
     if (not transaction.get("from")) and (transaction.get("nonce", None) is None):
         raise ValueError("Transaction's 'from' field is required to fill nonce field")
+    if "from" in transaction:
+        transaction['from'] = resolve_if_cns_name(w3, transaction['from'])
     
     for key, default_getter in TRANSACTION_DEFAULTS.items():
         estimate = None

@@ -14,6 +14,9 @@ from cfx_address import (
     Base32Address,
     validate_base32
 )
+from conflux_web3._utils.cns import (
+    is_cns_name
+)
 
 class Base32AddressEncoder(AddressEncoder):
     
@@ -21,6 +24,8 @@ class Base32AddressEncoder(AddressEncoder):
     
     @classmethod
     def validate_value(cls, value: Any) -> None:
+        if is_cns_name(value):
+            return
         validate_base32(value)
 
 class CfxAddressDecoder(AddressDecoder):

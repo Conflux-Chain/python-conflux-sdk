@@ -108,11 +108,11 @@ class Web3(OriWeb3):
         # TODO: set contract
 
     @property
-    def ens(self) -> Union[CNS, "Empty"]:
+    def ens(self) -> CNS:
         return self.cns
     
     @property
-    def cns(self) -> Union[CNS, "Empty"]:
+    def cns(self) -> CNS:
         return self._ens # type: ignore
     
     @cns.setter

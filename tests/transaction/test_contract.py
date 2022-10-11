@@ -166,3 +166,7 @@ def test_contract_initialization(w3: Web3):
     
     with pytest.raises(Base32AddressNotMatch):
         w3.cfx.contract(**metadata)
+
+def test_contract_with_no_deployment_info(w3: Web3):
+    c = w3.cfx.contract(name="AdminControl", with_deployment_info=False)
+    assert not c.address

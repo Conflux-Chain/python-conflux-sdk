@@ -37,6 +37,9 @@ from conflux_web3.types import (
     EpochNumberParam,
     EpochLiteral,
 )
+from conflux_web3._utils.cns import (
+    resolve_if_cns_name
+)
 from conflux_web3.contract.function import (
     ConfluxContractFunction,
     ConfluxContractFunctions,
@@ -93,6 +96,7 @@ class ConfluxContract(Contract):
 
         # address should match chainId
         if address:
+            address = resolve_if_cns_name(self.w3, address)
             validate_address_agaist_network_id(address, self.w3.cfx.chain_id, True)
             address = Base32Address(address, self.w3.cfx.chain_id)
             if address.address_type != "contract" and address.address_type != "builtin":
