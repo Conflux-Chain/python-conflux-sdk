@@ -1,3 +1,4 @@
+import imp
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -27,6 +28,10 @@ from web3.exceptions import (
 )
 from conflux_web3._utils.cns import (
     is_cns_name,
+    resolve_if_cns_name,
+)
+from conflux_web3.exceptions import (
+    NoWeb3Exception
 )
 
 if TYPE_CHECKING:
@@ -37,22 +42,10 @@ if TYPE_CHECKING:
 def abi_cns_resolver(w3: "Web3", type_str: TypeStr, val: Any) -> Tuple[TypeStr, Any]:
     if type_str == "address" and is_cns_name(val):
         if w3 is None:
-            raise InvalidAddress(
+            raise NoWeb3Exception(
                 f"Could not look up name {val!r} because no web3"
                 " connection available"
             )
-
-        _ens = cast(ENS, w3.ens)
-        if _ens is empty:
-            raise InvalidAddress(
-                f"Could not look up name {val!r} because ENS is" " set to None"
-            )
-        # elif int(w3.net.version) != 1 and not isinstance(_ens, StaticENS):
-        #     raise InvalidAddress(
-        #         f"Could not look up name {val!r} because web3 is"
-        #         " not connected to mainnet"
-        #     )
-        else:
-            return type_str, validate_name_has_address(_ens, val)
+        return type_str, resolve_if_cns_name(w3, val)
     else:
         return type_str, val

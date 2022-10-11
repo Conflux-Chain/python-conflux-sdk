@@ -1,8 +1,9 @@
 import pytest
-from conflux_web3.dev import get_testnet_web3
 from cns import CNS
-from web3.exceptions import InvalidAddress
 from conflux_web3 import Web3
+from conflux_web3.exceptions import (
+    NameServiceNotSet
+)
 
 def test_cns(w3: Web3, use_testnet, ens_name, ens_account):
 
@@ -17,8 +18,8 @@ def test_cns_with_rpc(w3: Web3, use_testnet: bool, ens_name):
         balance = w3.cfx.get_balance(ens_name)
         assert balance >= 0
     else:
-        with pytest.raises(InvalidAddress):
-            balance = w3.cfx.get_balance(ens_name)
+        with pytest.raises(NameServiceNotSet):
+            balance = w3.cfx.get_balance("hello.web3")
             
 def test_cns_usage_as_contract_param(w3: Web3, use_testnet, account, ens_name):
     if use_testnet:
