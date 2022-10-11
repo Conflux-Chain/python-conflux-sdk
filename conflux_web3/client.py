@@ -617,7 +617,7 @@ class ConfluxClient(BaseCfx, Eth):
                 "epochNumber": int,
                 "from": AddressParam,
                 "to": AddressParam,
-                "gasUsed": Drip,
+                "gasUsed": int,
                 "gasFee": Drip,
                 "gasCoveredBySponsor": bool,
                 "storageCollateralized": Storage,
