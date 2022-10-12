@@ -60,8 +60,32 @@ class Web3(OriWeb3):
         middlewares: Optional[Sequence[Any]] = None,
         modules: Optional[Dict[str, Union[Type[Module], Sequence[Any]]]] = None,
         # external_modules: Optional[Dict[str, Union[Type[Module], Sequence[Any]]]] = None,
-        ens: CNS = cast(CNS, empty) # we don't change the variable name for compatibility
+        cns: CNS = cast(CNS, empty),
+        **kwargs,
     ):
+        """
+        _summary_
+
+        Parameters
+        ----------
+        provider : Optional[BaseProvider], optional
+            _description_, by default None
+        middlewares : Optional[Sequence[Any]], optional
+            _description_, by default None
+        modules : Optional[Dict[str, Union[Type[Module], Sequence[Any]]]], optional
+            _description_, by default None
+        cns : Union[CNS, None]
+            cns value, by default cast(CNS, empty)
+            if cns is not empty: (including None)
+                w3.cns = cns
+            else:
+                init w3.cns with default setting
+
+        Raises
+        ------
+        ValueError
+            _description_
+        """        
         # ConfluxClient as eth provider, default middlewares as [] rather than None
         # OriWeb3.__init__(self, provider=provider, middlewares=middlewares, modules={
         #     "eth": ConfluxClient
@@ -96,14 +120,24 @@ class Web3(OriWeb3):
         Web3.account.set_w3(self)
         Web3.address = self.cfx.address
         
-        # do not activate ens
-        if ens == empty and self.is_connected():
+        # ens argument is remained for compatibility
+        # but it is not allowed to specify ens AND cns at the same time
+
+        # kwargs["ens"] might be None, we assume a developer will not deliberately pass empty
+        if kwargs.get("ens", empty) is not empty:
+            ens = kwargs["ens"]
+            if cns is empty:
+                cns = ens
+            else:
+                raise ValueError("Redundant arguments: ens and cns argument are both specified. Only ens argument OR cns argument is allowed")
+        
+        if cns == empty and self.is_connected():
             try:
-                ens = CNS.from_web3(self)
+                cns = CNS.from_web3(self)
             except DeploymentInfoNotFound:
                 pass
 
-        self.cns = ens
+        self.cns = cns
         
         # TODO: set contract
 
