@@ -11,6 +11,9 @@ from toolz import (
     keyfilter
 )
 
+from ens import (
+    abis,
+)
 from cfx_address.utils import (
     validate_address_agaist_network_id
 )
@@ -87,13 +90,21 @@ def get_contract_metadata(
         _description_
     DeploymentInfoNotFound
         _description_
-    """    
-    metadata_path = METADATA_DIR / f"{METADATA_INFO.get(contract_name, contract_name)}.json"
-    if not os.path.exists(metadata_path):
-        raise ContractMetadataNotFound(f"Metadata for {contract_name} not found")
-    with open(metadata_path) as f:
-        metadata = json.load(f)
-    metadata = keyfilter(lambda x: x in ["abi", "bytecode"], metadata)
+    """
+    try:
+        metadata_path = METADATA_DIR / f"{METADATA_INFO.get(contract_name, contract_name)}.json"
+        if not os.path.exists(metadata_path):
+            raise ContractMetadataNotFound(f"Metadata for {contract_name} not found")
+        with open(metadata_path) as f:
+            metadata = json.load(f)
+        metadata = keyfilter(lambda x: x in ["abi", "bytecode"], metadata)
+    except ContractMetadataNotFound as e:
+        if abi := getattr(abis, contract_name, None):
+            metadata = {
+                "abi": abi
+            }
+        else:
+            raise e
     # process address field if with_deployment_info is True or None
     if with_deployment_info is not False:
         if contract_name not in DEPLOYMENT_INFO:

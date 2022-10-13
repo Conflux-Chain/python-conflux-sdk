@@ -1,7 +1,5 @@
-from audioop import add
 from typing import (
     Type,
-    Union,
     cast,
     Optional,
     Sequence,
@@ -12,13 +10,8 @@ from typing_extensions import (
     Self
 )
 
-from web3._utils.empty import (
-    Empty,
-    empty,
-)
 from ens import (
     ENS,
-    abis,
 )
 from ens.utils import (
     default,
@@ -40,7 +33,6 @@ if TYPE_CHECKING:
     )
     from conflux_web3.types import (  # noqa: F401
         Middleware,
-        TxParam,
     )
 
 class CNS(ENS):
@@ -66,12 +58,10 @@ class CNS(ENS):
         if addr:
             self.ens = cast("ConfluxContract", self.w3.cfx.contract(addr, name="ENS"))
         else:
-            self.ens = cast("ConfluxContract", self.w3.cfx.contract(addr, name="ENS", with_deployment_info=True))
-        # TODO: use contract to init
-        self._resolver_contract = self.w3.cfx.contract(abi=abis.RESOLVER)
-        self._reverse_resolver_contract = self.w3.cfx.contract(
-            abi=abis.REVERSE_RESOLVER
-        )
+            self.ens = cast("ConfluxContract", self.w3.cfx.contract(name="ENS", with_deployment_info=True))
+        
+        self._resolver_contract = self.w3.cfx.contract(name="RESOLVER", with_deployment_info=False)
+        self._reverse_resolver_contract = self.w3.cfx.contract(name="REVERSE_RESOLVER", with_deployment_info=False)
     
     def address(self, name: str) -> Optional[Base32Address]:
         address = self._resolve(name, "addr")
