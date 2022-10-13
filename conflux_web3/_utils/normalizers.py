@@ -1,9 +1,7 @@
-import imp
 from typing import (
     TYPE_CHECKING,
     Any,
     Tuple,
-    cast,
 )
 
 from eth_typing import (
@@ -14,17 +12,8 @@ from eth_utils.toolz import (
     curry, # type: ignore
 )
 
-from ens import ENS
-
-from web3._utils.ens import (
-    StaticENS,
-    validate_name_has_address,
-)
-from web3._utils.empty import (
-    empty
-)
-from web3.exceptions import (
-    InvalidAddress,
+from cfx_address import (
+    Base32Address
 )
 from conflux_web3._utils.cns import (
     is_cns_name,
@@ -49,3 +38,11 @@ def abi_cns_resolver(w3: "Web3", type_str: TypeStr, val: Any) -> Tuple[TypeStr, 
         return type_str, resolve_if_cns_name(w3, val)
     else:
         return type_str, val
+
+@curry
+def addresses_to_verbose_base32(
+    network_id: int, type_str: TypeStr, data: Any
+) -> Tuple[TypeStr, Base32Address]:
+    if type_str == "address":
+        return type_str, Base32Address(data, network_id, verbose=True, _ignore_invalid_type=True)
+    return type_str, data

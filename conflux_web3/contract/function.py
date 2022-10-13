@@ -30,6 +30,9 @@ from conflux_web3._utils.contracts import (
 from conflux_web3._utils.transactions import (
     fill_transaction_defaults,
 )
+from conflux_web3._utils.normalizers import (
+    addresses_to_verbose_base32
+)
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
@@ -96,7 +99,10 @@ class ConfluxContractFunction(ContractFunction):
         return call_contract_function(
             self.w3,
             self.address, # type: ignore
-            self._return_data_normalizers, # type: ignore
+            # self._return_data_normalizers,
+            [
+                addresses_to_verbose_base32(self.w3.cfx.chain_id), # type: ignore
+            ],
             self.function_identifier,
             call_transaction,
             block_identifier, # type: ignore
