@@ -24,7 +24,7 @@ def test_cns_with_rpc(w3: Web3, use_testnet: bool, ens_name):
 def test_cns_usage_as_contract_param(w3: Web3, use_testnet, account, ens_name):
     if use_testnet:
         w3.cfx.default_account = account
-        erc20 = w3.cfx.contract(name="ERC20")
+        erc20 = w3.cfx.contract(name="ERC20", with_deployment_info=False)
         addr = erc20.constructor("Token", "T", 100).transact().executed()["contractCreated"]
         assert addr is not None
         erc20 = erc20(address=addr)

@@ -281,39 +281,39 @@ class BaseCfx(BaseEth):
     )
     
     
-    _get_code: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], HexBytes]] = ConfluxMethod(
+    _get_code: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], HexBytes]] = ConfluxMethod(
         RPC.cfx_getCode
     )
     
-    _get_storage_at: ConfluxMethod[Callable[[AddressParam, int, EpochNumberParam], Union[HexBytes, None]]] = ConfluxMethod(
+    _get_storage_at: ConfluxMethod[Callable[[AddressParam, int, Optional[EpochNumberParam]], Union[HexBytes, None]]] = ConfluxMethod(
         RPC.cfx_getStorageAt
     )
     
-    _get_storage_root: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Union[HexBytes, None]]] = ConfluxMethod(
+    _get_storage_root: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Union[StorageRoot, None]]] = ConfluxMethod(
         RPC.cfx_getStorageRoot
     )
     
-    _get_collateral_for_storage: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Storage]] = ConfluxMethod(
+    _get_collateral_for_storage: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Storage]] = ConfluxMethod(
         RPC.cfx_getCollateralForStorage
     )
     
-    _get_admin: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Union[Base32Address, None]]] = ConfluxMethod(
+    _get_admin: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Union[Base32Address, None]]] = ConfluxMethod(
         RPC.cfx_getAdmin
     )
     
-    _get_sponsor_info: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], SponsorInfo]] = ConfluxMethod(
+    _get_sponsor_info: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], SponsorInfo]] = ConfluxMethod(
         RPC.cfx_getSponsorInfo
     )
     
-    _get_account: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], AccountInfo]] = ConfluxMethod(
+    _get_account: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], AccountInfo]] = ConfluxMethod(
         RPC.cfx_getAccount
     )
     
-    _get_deposit_list: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Sequence[DepositInfo]]] = ConfluxMethod(
+    _get_deposit_list: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Sequence[DepositInfo]]] = ConfluxMethod(
         RPC.cfx_getDepositList
     )
     
-    _get_vote_list: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Sequence[VoteInfo]]] = ConfluxMethod(
+    _get_vote_list: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Sequence[VoteInfo]]] = ConfluxMethod(
         RPC.cfx_getVoteList
     )
     
@@ -360,27 +360,85 @@ class BaseCfx(BaseEth):
     _get_logs: ConfluxMethod[Callable[[FilterParams], List[LogReceipt]]] = ConfluxMethod(
         RPC.cfx_getLogs
     )
-    
-    # TODO: change overload definitions with name parameter
+
+    @overload  
+    def contract(
+        self, address: AddressParam, *, name: Optional[str]=None, with_deployment_info: Optional[bool]=None, **kwargs: Any
+    ) -> ConfluxContract:
+        ...
+
     @overload
     def contract(
-        self, address: None = None, **kwargs: Any
+        self, address: None=None, *, name: None=None, with_deployment_info: Optional[bool]=None, **kwargs: Any
     ) -> Type[ConfluxContract]:
-        ...  # noqa: E704,E501
-
-    @overload  # noqa: F811
+        ...
+    
+    @overload  
     def contract(
-        self, address: AddressParam, **kwargs: Any
-    ) -> ConfluxContract:
-        ...  # noqa: E704,E501
+        self, address: None=None, *, name: str=..., with_deployment_info: None=None, **kwargs: Any  
+    ) -> Union[Type[ConfluxContract], ConfluxContract]:
+        ...
+    
+    @overload  
+    def contract(
+        self, address: None=None, *, name: str=..., with_deployment_info: Literal[False]=..., **kwargs: Any 
+    ) -> Type[ConfluxContract]:
+        ...
 
-    def contract(  # noqa: F811
+    @overload  
+    def contract(
+        self, address: None=None, *, name: str=..., with_deployment_info: Literal[True]=..., **kwargs: Any
+    ) -> ConfluxContract:
+        ...
+
+    def contract(
         self,
         address: Optional[AddressParam] = None,
+        *,
         name: Optional[str] = None,
         with_deployment_info: Optional[bool] = None,
         **kwargs: Any,
     ) -> Union[Type[ConfluxContract], ConfluxContract]:
+        """
+        Produce a contract factory (address is not specified) or a contract(address is not specified).
+        Address is specified by:
+            1. explicitly using address param
+            2. embedded contract deployment info if 
+                (1) "name" parameter specified and corresponding contract has deployment info 
+                (2) with_deployment_info is not False
+
+        Parameters
+        ----------
+        address : Optional[AddressParam], optional
+            the address of the contract, by default None
+        name : Optional[str], optional
+            the name of the contract, which is used to specify abi, bytecode, or deployed contract address, by default None
+        with_deployment_info : Optional[bool], optional
+            whether address will be specified if name parameter is provided, 
+            if True, the address will always be specified if name argument is provided
+            if False, the address will never be specified if name argument is provided
+            if None, the address will be specified depending on if corresponding address exists
+            by default None
+        **kwargs: Dict[str, Any]
+            used to specify abi and bytecode argument
+        Returns
+        -------
+        Union[Type[ConfluxContract], ConfluxContract]
+            returns a contract factory or contract
+            
+        >>> from conflux_web3.dev import get_mainnet_web3
+        >>> w3 = get_mainnet_web3()
+        >>> from conflux_web3.contract import get_contract_metadata
+        >>> abi = get_contract_metadata("ERC20")["abi"]
+        >>> bytecode = get_contract_metadata("ERC20")["bytecode"]
+        >>> erc20_factory = w3.cfx.contract(abi=abi, bytecode=bytecode)
+
+        >>> c1 = w3.cfx.contract(name="AdminControl")
+        >>> assert c1.address
+        >>> c2 = w3.cfx.contract(name="AdminControl", with_deployment_info=False)
+        >>> assert not c2.address
+
+        """        
         metadata = {}
         if name is not None:
             metadata = get_contract_metadata(name, self.chain_id, with_deployment_info) # type: ignore
@@ -478,7 +536,7 @@ class ConfluxClient(BaseCfx, Eth):
     
     @property
     def epoch_number(self) -> EpochNumber:
-        return self._epoch_number()
+        return self._epoch_number(None)
     
     def epoch_number_by_tag(self, epochTag: EpochLiteral) -> EpochNumber:
         return self._epoch_number(epochTag)
@@ -568,11 +626,11 @@ class ConfluxClient(BaseCfx, Eth):
 
     def send_raw_transaction(self, raw_transaction: Union[HexStr, bytes]) -> TransactionHash:
         # TODO: remove pending middleware and changes here
-        return self._send_raw_transaction(raw_transaction)
+        return cast(TransactionHash, self._send_raw_transaction(raw_transaction))
     
     def send_transaction(self, transaction: TxParam) -> TransactionHash:
         # TODO: remove pending middleware and changes here
-        return self._send_transaction(transaction)
+        return cast(TransactionHash, self._send_transaction(transaction))
     
     def get_transaction_receipt(self, transaction_hash: _Hash32) -> TxReceipt:
         return self._get_transaction_receipt(transaction_hash)
@@ -797,7 +855,7 @@ class ConfluxClient(BaseCfx, Eth):
     
     def get_storage_root(
         self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
-    ) -> StorageRoot:
+    ) -> Union[StorageRoot, None]:
         return self._get_storage_root(address, block_identifier)
     
     def get_collateral_for_storage(
@@ -884,7 +942,7 @@ class ConfluxClient(BaseCfx, Eth):
     
     def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs):
         if filter_params is None:
-            filter_params = keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs) # type: ignore
+            filter_params = cast(FilterParams, keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs))
             return self._get_logs(filter_params)
         else:
             if len(kwargs.keys()) != 0:

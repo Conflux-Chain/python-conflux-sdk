@@ -110,6 +110,8 @@ def get_contract_metadata(
         #     1029: "cfx:acf2rcsh8payyxpg6xj7b0ztswwh81ute60tsw35j7",
         # }
         elif isinstance(address_info, dict):
+            if not chain_id:
+                raise ValueError(f"{contract_name}'s deployment info varies with different chain id, chain id should be specified")
             if with_deployment_info and (chain_id not in address_info):
                 raise DeploymentInfoNotFound(f"Deployment info for {contract_name} of chain id {chain_id} not found")
             metadata["address"] = address_info[chain_id]
