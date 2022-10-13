@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -103,8 +104,9 @@ class Web3(OriWeb3):
                 "cfx": ConfluxClient,
                 "txpool": Txpool,
             }
-        # TODO: more specific error
-        assert "cfx" in modules, "must have cfx module"
+        
+        if "cfx" not in modules:
+            raise ValueError("cfx module is missing in modules: cfx module is required to initialze a web3 instance")
 
         self.attach_modules(modules)  # type: ignore
 
