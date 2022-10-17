@@ -16,6 +16,9 @@ from web3.types import (
     CallOverride
 )
 
+from cfx_utils.token_unit import (
+    to_int_if_drip_units
+)
 from cfx_address import (
     Base32Address
 )
@@ -115,6 +118,8 @@ class ConfluxContractFunction(ContractFunction):
         )
 
     def transact(self, transaction: Optional[TxParam] = None) -> "TransactionHash":
+        if transaction and "value" in transaction:
+            transaction["value"] = to_int_if_drip_units(transaction["value"])
         return super().transact(transaction) # type: ignore
 
 

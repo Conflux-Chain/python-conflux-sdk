@@ -1,27 +1,9 @@
-from datetime import (
-    datetime,
-    timezone,
-)
 from typing import (
     TYPE_CHECKING,
-    Any,
-    Callable,
-    Collection,
-    Dict,
-    List,
     Optional,
     Sequence,
     Tuple,
-    Type,
-    Union,
     cast,
-)
-
-from eth_typing import (
-    Address,
-    ChecksumAddress,
-    HexAddress,
-    HexStr,
 )
 
 from ens.utils import (
@@ -29,6 +11,10 @@ from ens.utils import (
 )
 from ens.constants import (
     ACCEPTABLE_STALE_HOURS,
+)
+
+from cfx_address import (
+    Base32Address
 )
 
 if TYPE_CHECKING:
@@ -44,6 +30,7 @@ if TYPE_CHECKING:
 def init_web3(
     provider: "BaseProvider" = cast("BaseProvider", default),
     middlewares: Optional[Sequence[Tuple["Middleware", str]]] = None,
+    default_account: Optional[Base32Address] = None
 ) -> "_Web3":
     from conflux_web3 import Web3 as Web3Main
     from conflux_web3.client import ConfluxClient as CfxMain
@@ -52,7 +39,8 @@ def init_web3(
         w3 = Web3Main(ens=None, modules={"cfx": (CfxMain)})   # type: ignore
     else:
         w3 = Web3Main(provider, middlewares, ens=None, modules={"cfx": (CfxMain)})  # type: ignore
-
+    if default_account:
+        w3.cfx._default_account = default_account
     return customize_web3(w3)
 
 
@@ -67,3 +55,7 @@ def customize_web3(w3: "_Web3") -> "_Web3":
             make_stalecheck_middleware(ACCEPTABLE_STALE_HOURS * 3600, ("cfx_getBlockByEpochNumber",)), name="stalecheck"
         )
     return w3
+
+# is_none_or_base_32_zero_address is implemented in conflux_web3._hook
+# def is_none_or_base_32_zero_address(addr) -> bool:
+#     ...

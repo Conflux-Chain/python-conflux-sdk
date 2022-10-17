@@ -142,14 +142,20 @@ class BaseCfx(BaseEth):
         """set default account address
         """
         if isinstance(account, LocalAccount):
-            self._default_account = Base32Address(account.address)
+            self._default_account = (normalized_address := Base32Address(account.address))
             if (self.w3.wallet is not None and account.address not in self.w3.wallet):
                 self.w3.wallet.add_account(account)
+            if self.w3.cns:
+                self.w3.cns.w3.cfx.default_account = normalized_address
         else:
-            self._default_account = Base32Address(resolve_if_cns_name(self.w3, account))
+            self._default_account = (normalized_address := Base32Address(resolve_if_cns_name(self.w3, account)))
+            if self.w3.cns:
+                self.w3.cns.w3.cfx.default_account = normalized_address
     
     def remove_default_account(self):
         self._default_account = empty
+        if self.w3.cns:
+            self.w3.cns.w3.cfx.remove_default_account()
     
     def send_transaction_munger(self, transaction: TxParam) -> Tuple[TxParam]:
         if 'from' not in transaction and self.default_account:

@@ -57,23 +57,23 @@ from conflux_web3.contract.constructor import (
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
-# used to hook web3.contract.parse_block_identifier
-# hook is activated in conflux_web3._hook
-def cfx_parse_block_identifier(
-    w3: "Web3", block_identifier: EpochNumberParam
-) -> EpochNumberParam:
-    if isinstance(block_identifier, int):
-        return block_identifier
-    elif block_identifier in EpochLiteral.__args__: # type: ignore
-        return block_identifier
-    elif isinstance(block_identifier, bytes) or is_hex_encoded_block_hash(
-        block_identifier
-    ):
-        # r = 
-        # assert r is not None
-        return w3.cfx.get_block_by_hash(block_identifier)["epochNumber"] # type: ignore
-    else:
-        raise InvalidEpochNumebrParam
+# # used to hook web3.contract.parse_block_identifier
+# # hook is activated in conflux_web3._hook
+# def cfx_parse_block_identifier(
+#     w3: "Web3", block_identifier: EpochNumberParam
+# ) -> EpochNumberParam:
+#     if isinstance(block_identifier, int):
+#         return block_identifier
+#     elif block_identifier in EpochLiteral.__args__: # type: ignore
+#         return block_identifier
+#     elif isinstance(block_identifier, bytes) or is_hex_encoded_block_hash(
+#         block_identifier
+#     ):
+#         # r = 
+#         # assert r is not None
+#         return w3.cfx.get_block_by_hash(block_identifier)["epochNumber"] # type: ignore
+#     else:
+#         raise InvalidEpochNumebrParam
 
 
 class ConfluxContract(Contract):
@@ -102,13 +102,13 @@ class ConfluxContract(Contract):
             if address.address_type != "contract" and address.address_type != "builtin":
                 raise Base32AddressNotMatch(f"expected an address of contract type or builtin type"
                                             f"receives {address} of {address.address_type}")
-            self.address = Base32Address(address, self.w3.cfx.chain_id)
+            self.address = Base32Address(address, self.w3.cfx.chain_id, verbose=True)
 
         if not self.address:
             raise TypeError("The address argument is required to instantiate a contract.")
 
         self.functions = ConfluxContractFunctions(self.abi, self.w3, self.address)
-        self.caller = ConfluxContractCaller(self.abi, self.w3, self.address) 
+        self.caller = ConfluxContractCaller(self.abi, self.w3, self.address)
         self.events = ConfluxContractEvents(self.abi, self.w3, self.address)
         self.fallback = Contract.get_fallback_function(self.abi, self.w3, ConfluxContractFunction, self.address) # type: ignore
         self.receive = Contract.get_receive_function(self.abi, self.w3, ConfluxContractFunction, self.address) # type: ignore

@@ -1,9 +1,13 @@
+# WARNING: 
+# note that the hook won't effect already imported objects,
+# so make sure this module is executed before any module of conflux_web3 or web3 is executed
+# or the hook might not take effect
+# else try directly importing the package to hook
+
 from typing import (
     TYPE_CHECKING,
     Callable,
-    get_args,
 )
-# NOTE: do not import other
 from cfx_utils.post_import_hook import (
     when_imported
 )
@@ -13,14 +17,13 @@ from cfx_address import (
 from cfx_utils.exceptions import (
     InvalidEpochNumebrParam
 )
-from conflux_web3.types import (
-    EpochNumberParam,
-    EpochLiteral,
-)
 
 if TYPE_CHECKING:
     from conflux_web3 import (
         Web3
+    )
+    from conflux_web3.types import (
+        EpochNumberParam,
     )
     
     
@@ -94,7 +97,7 @@ def cfx_parse_block_identifier(
 ) -> "EpochNumberParam":
     if isinstance(block_identifier, int):
         return block_identifier
-    elif block_identifier in get_args(EpochLiteral):
+    elif block_identifier in ['earliest', 'latest_checkpoint', 'latest_finalized', 'latest_confirmed', 'latest_state', 'latest_mined']: # get_args("EpochLiteral")
         return block_identifier
     elif isinstance(block_identifier, bytes) or (
         isinstance(block_identifier, str) and block_identifier.startswith("0x")
@@ -135,3 +138,6 @@ def is_none_or_base_32_zero_address(addr) -> bool:
 def hook_is_none_or_zero_address(mod):
     if mod.__name__ == "ens.utils":
         mod.is_none_or_zero_address = is_none_or_base_32_zero_address
+
+# we manually import ens.utils to hook is_none_or_zero_address because of insuccessful hook
+import ens.utils
