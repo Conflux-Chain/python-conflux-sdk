@@ -30,59 +30,7 @@ def temp_alter_module_variable(module: Any, varname: str, new_var: Any, conditio
         return wrapper
     return inner
 
-def conditional_func(target_func: Callable, condition: Callable[..., bool]) -> Callable:
-    """decorate a function to optionally execute another one
-    if condition:
-        target_func
-    else:
-        original_func
 
-    Args:
-        target_func (Callable): function to be executed if condition
-        condition (Callable[..., bool]): receives func arguments, returns a bool
-    """
-    def inner(func) :
-        def wrapper(*args, **kwargs):
-            if condition(*args, **kwargs):
-                return target_func(*args, **kwargs)
-            return func(*args, **kwargs)
-        return wrapper
-    return inner
-
-def conditional_post_func(post_func: Callable, condition: Callable[..., bool]) -> Callable:
-    """decorate a function to optionally execute post operation
-    rtn = original_func
-    if condition:
-        post_func
-    return rtn
-
-    Args:
-        post_func (Callable): function to be executed after original function if condition
-        condition (Callable[..., bool]): receives func arguments, returns a bool
-    """
-    def inner(func) :
-        def wrapper(*args, **kwargs):
-            rtn = func(*args, **kwargs)
-            if condition(*args, **kwargs):
-                post_func(*args, **kwargs)
-                print("do post!")
-            else:
-                print("do not post")
-            return rtn
-        return wrapper
-    return inner
-
-def cfx_web3_condition(*args, **kwargs) -> bool:
-    """
-
-    Returns:
-        bool: returns if conflux_web3.Web3 type variable in arguments
-    """
-    from conflux_web3 import Web3
-    for arg in list(args)+list(kwargs.values()):
-        if isinstance(arg, Web3):
-            return True
-    return False
 
 def use_instead(func=None, *, origin="This web3.eth api", substitute=None):
     if func is None:
