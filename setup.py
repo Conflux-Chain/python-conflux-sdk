@@ -18,10 +18,10 @@ extras_require = {
         # "py-geth>=3.8.0,<4",
     ],
     'linter': [
-        # "black>=22.1.0,<23.0",
+        "black>=22.1.0,<23.0",
         # "flake8==3.8.3",
         # "isort>=4.2.15,<4.3.5",
-        # "mypy==0.910",
+        "mypy==0.910",
         # "types-setuptools>=57.4.4,<58",
         # "types-requests>=2.26.1,<3",
         # "types-protobuf==3.19.13",
@@ -80,13 +80,15 @@ setup(
     long_description_content_type="text/markdown",
     long_description=long_description,
     packages=find_packages(),
-    package_data={"conflux_web3": ["contract/metadata/*.json"]},
+    package_data={"conflux_web3": ["contract/metadata/*.json", "py.typed"],
+                  "cns": ["py.typed"],
+                  "cfxpm": ["py.typed"]},
     url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
         "web3==6.0.0b5",
         "cfx-address>=1.0.0b12",
         "cfx-account>=0.1.0b6",
-        "cfx-utils>=1.0.0b9"
+        "cfx-utils>=1.0.0b10"
         # "eth-account>=0.6.0,<0.7.0"
     ],  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'
