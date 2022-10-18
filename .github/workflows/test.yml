@@ -37,4 +37,4 @@ jobs:
         pytest tests
     - name: test finalization api
       run: |
-        export TEST_FINALIZATION=1 && pytest tests/middleware/test_pending.py
+        export USE_TESTNET=1 && export TEST_FINALIZATION=1 && pytest tests/middleware/test_pending.py
