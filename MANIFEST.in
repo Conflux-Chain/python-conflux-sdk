@@ -1,0 +1,1 @@
+recursive-include conflux_web3/contract/metadata *.json
