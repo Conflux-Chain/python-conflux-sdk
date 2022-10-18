@@ -77,7 +77,7 @@ if TYPE_CHECKING:
 
 
 class ConfluxContract(Contract):
-    address: AddressParam
+    address: Base32Address
     w3: 'Web3'
     functions: ConfluxContractFunctions
     caller: "ConfluxContractCaller"

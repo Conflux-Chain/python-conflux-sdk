@@ -69,6 +69,7 @@ class CNS(ENS):
     w3: "Web3"
     ens: "ConfluxContract"
     allow_unstable_api: bool = False
+    _resolver_contract: Type["ConfluxContract"]
 
     def __init__(
         self,
@@ -100,38 +101,6 @@ class CNS(ENS):
     def address(self, name: str) -> Union[Base32Address, None]:
         address = self._resolve(name, "addr")
         return cast(Base32Address, address)
-    
-    def _resolve(
-        self, name: str, fn_name: str = "addr"
-    ) -> Optional[Base32Address]:
-        normal_name = normalize_name(name)
-
-        resolver, current_name = self._get_resolver(normal_name, fn_name)
-        if not resolver:
-            return None
-
-        node = self.namehash(normal_name)
-
-        # TODO: check commented implementation
-        # handle extended resolver case
-        # if _resolver_supports_interface(resolver, EXTENDED_RESOLVER_INTERFACE_ID):
-        #     contract_func_with_args = (fn_name, [node])
-
-        #     calldata = resolver.encodeABI(*contract_func_with_args)
-        #     contract_call_result = resolver.caller.resolve(
-        #         ens_encode_name(normal_name), calldata
-        #     )
-        #     result = self._decode_ensip10_resolve_data(
-        #         contract_call_result, resolver, fn_name
-        #     )
-        #     return to_checksum_address(result) if is_address(result) else result
-        if normal_name.endswith(current_name):
-            lookup_function = getattr(resolver.functions, fn_name)
-            result = lookup_function(node).call()
-            if is_none_or_zero_address(result):
-                return None
-            return result
-        return None
     
     def owner(self, name: str, wrapped=False) -> Base32Address:
         """
@@ -216,7 +185,7 @@ class CNS(ENS):
         ------
         ResolverNotFound
             the resolver of the address is not found
-        """        
+        """
         self._check_unstable_api("setup_address")
         # simple implementation without subnode setup
         transact = deepcopy(transact) if transact else {}
@@ -232,11 +201,25 @@ class CNS(ENS):
         
         self.setup_owner(name, transact=transact, wrapped=wrapped)
 
-        resolver = self.resolver(name)
-        if resolver is None:
-            raise ResolverNotFound(f"Resolver of {name} is None")
+        resolver, current_name = self._get_resolver(name)
+        assert resolver is not None
+        self._set_resolver(name, resolver.address, transact, wrapped=wrapped)
         
         return resolver.functions.setAddr(normal_name_to_hash(name), address).transact(transact)
+
+    def _get_resolver(self, normal_name: str, fn_name: str = "addr") -> Tuple[Optional["ConfluxContract"], str]:
+        return super()._get_resolver(normal_name, fn_name) # type: ignore
+
+    def _set_resolver(self, name: str, resolver_addr: Base32Address, transact: "TxParam", wrapped: bool=False) -> "ConfluxContract":
+        # if is_none_or_zero_address(resolver_addr):
+        #     resolver_addr = self.address("resolver.eth")
+        namehash = raw_name_to_hash(name)
+        if self.ens.caller.resolver(namehash) != resolver_addr:
+            if wrapped:
+                self._name_wrapper_contract(self.owner(name)).functions.setResolver(namehash, resolver_addr).transact(transact).executed()
+            else:
+                self.ens.functions.setResolver(namehash, resolver_addr).transact(transact).executed()
+        return self._resolver_contract(address=resolver_addr)
 
     def setup_name(self, name: str, address: Optional[Base32Address] = None, transact: Optional["TxParam"] = None) -> HexBytes:
         self._check_unstable_api("setup_name")
