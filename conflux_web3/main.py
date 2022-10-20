@@ -144,6 +144,11 @@ class Web3(OriWeb3):
         # TODO: set contract
 
     @property
+    def api(self) -> str:
+        from conflux_web3 import __version__
+        return __version__
+
+    @property
     def ens(self) -> CNS:
         return self.cns
     
