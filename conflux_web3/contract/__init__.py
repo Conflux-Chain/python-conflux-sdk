@@ -58,7 +58,7 @@ if TYPE_CHECKING:
     from conflux_web3 import Web3
 
 # # used to hook web3.contract.parse_block_identifier
-# # hook is activated in conflux_web3._hook
+# # hook is activated in _web3_hook
 # def cfx_parse_block_identifier(
 #     w3: "Web3", block_identifier: EpochNumberParam
 # ) -> EpochNumberParam:

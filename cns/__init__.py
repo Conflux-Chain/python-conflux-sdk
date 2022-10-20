@@ -1,5 +1,5 @@
 # should be placed at the most front
-import conflux_web3._hook
+import _web3_hook
 
 from cns.cns import (
     CNS

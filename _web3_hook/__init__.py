@@ -91,7 +91,7 @@ def hook_encode_abi(mod):
         )(mod.encode_abi)
 
 # used to hook web3.contract.parse_block_identifier
-# hook is activated in conflux_web3._hook
+# hook is activated in _web3_hook
 def cfx_parse_block_identifier(
     w3: "Web3", block_identifier: "EpochNumberParam"
 ) -> "EpochNumberParam":
@@ -126,7 +126,7 @@ def hook_ethpm_package(mod):
             cfx_web3_condition
         )(mod.Package.__init__)
 
-# hooked to is_none_or_zero_address in conflux_web3._hook
+# hooked to is_none_or_zero_address in _web3_hook
 def is_none_or_base_32_zero_address(addr) -> bool:
     EMPTY_ADDR_HEX = "0x" + "00" * 20
     try:

@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 # totally borrows the implementation of LinkableContract except for base class
 # used to hack ethpm Package
-# hack activated in conflux_web3._hook
+# hack activated in _web3_hook
 
 # the implementation below does not work because super() won't work
 # ConfluxLinkableContract = type(

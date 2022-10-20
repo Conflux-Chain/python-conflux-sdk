@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from conflux_web3 import Web3
 
 # this api is used to hook web3._utils.contracts.encode_abi
-# hook is activated in conflux_web3._hook
+# hook is activated in _web3_hook
 def cfx_encode_abi(
     web3: "Web3", abi: ABIFunction, arguments: Sequence[Any], data: Optional[HexStr] = None
 ) -> HexStr:

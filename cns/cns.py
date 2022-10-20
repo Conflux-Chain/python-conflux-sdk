@@ -31,23 +31,20 @@ from ens.exceptions import (
     UnauthorizedError,
     ResolverNotFound,
 )
-from cns.utils import (
-    init_web3
-)
+
 from cfx_address import (
     Base32Address,
 )
 from cfx_address.utils import (
     normalize_to
 )
-from conflux_web3.types import (
-    TxParam,
-    AddressParam,
-)
-from conflux_web3.exceptions import (
+from cns.exceptions import (
     InterfaceNotSupported,
     MissingTransactionSender,
     UnstableAPI,
+)
+from cns.utils import (
+    init_web3
 )
 
 if TYPE_CHECKING:
@@ -60,6 +57,8 @@ if TYPE_CHECKING:
     )
     from conflux_web3.types import (  # noqa: F401
         Middleware,
+        TxParam,
+        AddressParam,
     )
     from conflux_web3.types.transaction_hash import (
         TransactionHash
@@ -130,7 +129,7 @@ class CNS(ENS):
     def setup_owner(
         self,
         name: str,
-        new_owner: AddressParam = cast(Base32Address, default),
+        new_owner: "AddressParam" = cast(Base32Address, default),
         transact: Optional["TxParam"] = None,
         wrapped: bool = False
     ) -> Optional[Base32Address]:
@@ -150,8 +149,8 @@ class CNS(ENS):
     def setup_address(
         self,
         name: str,
-        address: Union[AddressParam, None] = cast(Base32Address, default),
-        transact: Optional[TxParam] = None,
+        address: Union["AddressParam", None] = cast(Base32Address, default),
+        transact: Optional["TxParam"] = None,
         wrapped: bool = False
     ) -> Optional["TransactionHash"]:
         """
@@ -231,7 +230,7 @@ class CNS(ENS):
 
     def _claim_ownership(
         self,
-        owner: AddressParam,
+        owner: "AddressParam",
         unowned: Sequence[str],
         owned: str,
         old_owner: Optional[Base32Address] = None,
@@ -258,7 +257,7 @@ class CNS(ENS):
                 ).transact(transact).executed()
             owned = f"{label}.{owned}"
     
-    def _tx_sender(self, transact: TxParam) -> Base32Address:
+    def _tx_sender(self, transact: "TxParam") -> Base32Address:
         if 'from' in transact:
             return cast(Base32Address, transact['from'])
         elif self.w3.cfx.default_account:

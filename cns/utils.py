@@ -56,6 +56,6 @@ def customize_web3(w3: "_Web3") -> "_Web3":
         )
     return w3
 
-# is_none_or_base_32_zero_address is implemented in conflux_web3._hook
+# is_none_or_base_32_zero_address is implemented in _web3_hook
 # def is_none_or_base_32_zero_address(addr) -> bool:
 #     ...
