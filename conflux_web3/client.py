@@ -52,12 +52,15 @@ from cfx_utils.token_unit import (
     AbstractDerivedTokenUnit
 )
 from cfx_address import (
-    Base32Address as CfxAddress,
+    Base32Address,
     validate_base32
 )
-from cfx_account import Account as CfxAccount
-from cfx_account.account import (
-    LocalAccount
+from cfx_address.address import (
+    get_base32_address_factory,
+)
+from cfx_account import (
+    Account,
+    LocalAccount,
 )
 
 from conflux_web3._utils.rpc_abi import (
@@ -458,14 +461,19 @@ class BaseCfx(BaseEth):
 class ConfluxClient(BaseCfx, Eth):
     """RPC entry defined provides friendlier APIs for users
     """
-    # an instance of CfxAccount, which means the class variable won't be changed
-    account = CfxAccount()
-    address = CfxAddress
+    account: Account
     defaultContractFactory = ConfluxContract
     
     def __init__(self, w3: "Web3") -> None:
         super().__init__(w3)
+        self.account = Account()
+        self.account.set_w3(w3)
         self.disable_eth_methods(disabled_method_list)
+    
+    # lazy initialize self.address
+    @functools.cached_property
+    def address(self) -> Type[Base32Address]:
+        return get_base32_address_factory(self.chain_id)
         
     def disable_eth_methods(self, disabled_method_list: Sequence[str]):
         for api in disabled_method_list:
@@ -946,7 +954,13 @@ class ConfluxClient(BaseCfx, Eth):
             account_address, contract_address, gas_limit, gas_price, storage_limit, block_identifier
         )
     
-    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs):
+    @overload
+    def get_logs(self, filter_params: FilterParams) -> List[LogReceipt]:...
+    
+    @overload
+    def get_logs(self, filter_params: None=None, **kwargs) -> List[LogReceipt]:...
+    
+    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs) -> List[LogReceipt]:
         if filter_params is None:
             filter_params = cast(FilterParams, keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs))
             return self._get_logs(filter_params)

@@ -1,4 +1,3 @@
-from multiprocessing.sharedctypes import Value
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -10,8 +9,12 @@ from typing import (
     cast,
 )
 
-from eth_abi.codec import ABICodec
-from web3 import Web3 as OriWeb3
+from eth_abi.codec import (
+    ABICodec
+)
+from web3 import (
+    Web3 as OriWeb3
+)
 from web3.providers.base import (
     BaseProvider,
 )
@@ -24,6 +27,13 @@ from web3._utils.empty import (
 )
 from web3.module import (
     Module,
+)
+
+from cfx_address import (
+    Base32Address
+)
+from cfx_account import (
+    Account
 )
 from conflux_web3.types import (
     MiddlewareOnion
@@ -57,7 +67,7 @@ class Web3(OriWeb3):
     
     def __init__(
         self,
-        provider: Optional[BaseProvider] = None,
+        provider: BaseProvider,
         middlewares: Optional[Sequence[Any]] = None,
         modules: Optional[Dict[str, Union[Type[Module], Sequence[Any]]]] = None,
         # external_modules: Optional[Dict[str, Union[Type[Module], Sequence[Any]]]] = None,
@@ -65,27 +75,22 @@ class Web3(OriWeb3):
         **kwargs,
     ):
         """
-        _summary_
+        initialize a ``Web3`` instance to interact with the blockchain
+        
+        >>> w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:12537"))
+        >>> w3 = Web3(Web3.HTTPProvider("https://test.confluxrpc.com"))
+        >>> w3 = Web3(Web3.HTTPProvider("https://main.confluxrpc.com"))
 
         Parameters
         ----------
-        provider : Optional[BaseProvider], optional
-            _description_, by default None
+        provider : BaseProvider
+            ``provider`` decides on how to connect to the blockchain, 
         middlewares : Optional[Sequence[Any]], optional
-            _description_, by default None
+            middlewares to use, recommended not to specify
         modules : Optional[Dict[str, Union[Type[Module], Sequence[Any]]]], optional
-            _description_, by default None
-        cns : Union[CNS, None]
-            cns value, by default cast(CNS, empty)
-            if cns is not empty: (including None)
-                w3.cns = cns
-            else:
-                init w3.cns with default setting
-
-        Raises
-        ------
-        ValueError
-            _description_
+            modules to use, recommended not to specify
+        cns : CNS, optional
+            a cns object. If cns is not specified, w3.cns will be inited with default setting
         """        
         # ConfluxClient as eth provider, default middlewares as [] rather than None
         # OriWeb3.__init__(self, provider=provider, middlewares=middlewares, modules={
@@ -93,6 +98,7 @@ class Web3(OriWeb3):
         # })
         if middlewares is None:
             middlewares = conflux_default_middlewares(self)
+        # TODO: finish provider default value logic
         self.manager = self.RequestManager(self, provider, middlewares)
         # this codec gets used in the module initialization,
         # so it needs to come before attach_modules
@@ -118,9 +124,8 @@ class Web3(OriWeb3):
         self.__setattr__("eth", self.cfx)
         
         # provide easy access
-        Web3.account = self.cfx.account
-        Web3.account.set_w3(self)
-        Web3.address = self.cfx.address
+        # self.account = self.cfx.account
+        # self.address = self.cfx.address
         
         # ens argument is remained for compatibility
         # but it is not allowed to specify ens AND cns at the same time
@@ -142,6 +147,14 @@ class Web3(OriWeb3):
         self.cns = cns
         
         # TODO: set contract
+        
+    @property
+    def account(self) -> Account:
+        return self.cfx.account
+        
+    @property
+    def address(self) -> Type[Base32Address]:
+        return self.cfx.address
 
     @property
     def api(self) -> str:
@@ -157,12 +170,13 @@ class Web3(OriWeb3):
         return self._ens # type: ignore
     
     @cns.setter
-    def cns(self, new_cns: Union[CNS, "Empty"]) -> None:
+    def cns(self, new_cns: CNS) -> None:
+        # TODO: check middlewares, modules and default account if cns is inited in this way
         self._ens = new_cns
         
     @ens.setter
-    def ens(self, new_cns: Union[CNS, "Empty"]) -> None:
-        self._ens = new_cns
+    def ens(self, new_cns: CNS) -> None:
+        self.cns = new_cns
 
     @property
     def middleware_onion(self) -> MiddlewareOnion:
