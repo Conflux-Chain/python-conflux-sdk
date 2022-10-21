@@ -16,7 +16,7 @@ from conflux_web3.types import RPCEndpoint
 CONFLUX_SIMPLE_CACHE_RPC_WHITELIST = cast(
     Set[RPCEndpoint],
     {
-        "cfx_chainId",
+        # "cfx_chainId", this is not a supported api
         "cfx_gasPrice"
     },
 )

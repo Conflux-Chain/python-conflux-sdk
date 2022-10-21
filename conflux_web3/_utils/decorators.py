@@ -1,12 +1,23 @@
 import functools
 from typing import (
     Any,
-    Callable
+    Callable,
+    NoReturn,
+    Optional,
+    TypeVar,
+    Union,
+    overload,
+)
+from typing_extensions import (
+    ParamSpec,
 )
 
 from conflux_web3.exceptions import (
     DisabledException
 )
+
+T = TypeVar("T")
+P = ParamSpec("P")
 
 
 def temp_alter_module_variable(module: Any, varname: str, new_var: Any, condition: Callable[..., bool]):
@@ -18,8 +29,8 @@ def temp_alter_module_variable(module: Any, varname: str, new_var: Any, conditio
         new_var (Any): _description_
         condition (Callable[..., Boolean]): _description_
     """
-    def inner(func):
-        def wrapper(*args, **kwargs):
+    def inner(func: Callable[P, T]) -> Callable[P, T]:
+        def wrapper(*args: P.args, **kwargs: P.kwargs):
             if condition(*args, **kwargs):
                 cache = getattr(module, varname)
                 module.__setattr__(varname, new_var)
@@ -30,14 +41,20 @@ def temp_alter_module_variable(module: Any, varname: str, new_var: Any, conditio
         return wrapper
     return inner
 
+@overload
+def use_instead(func: None=None, *, origin: str="This web3.eth api", substitute: Optional[str]=None) -> Callable[..., Callable[..., NoReturn]]: ...
 
+@overload
+def use_instead(func: Callable[..., Any], *, origin: str="This web3.eth api", substitute: Optional[str]=None) -> Callable[..., NoReturn]: ...
 
-def use_instead(func=None, *, origin="This web3.eth api", substitute=None):
+def use_instead(
+    func: Optional[Callable[..., Any]]=None, *, origin: str="This web3.eth api", substitute: Optional[str]=None
+) -> Union[Callable[..., Callable[..., NoReturn]], Callable[..., NoReturn]]:
     if func is None:
-        return functools.partial(use_instead, substitute=substitute)
+        return functools.partial(use_instead, origin=origin, substitute=substitute) # type: ignore
     
     @functools.wraps(func)
-    def inner(*args, **kwargs):
+    def inner(*args: Any, **kwargs: Any) -> NoReturn:
         if substitute is None:
             raise DisabledException(f"{origin} is not valid in Conflux Network."
                             "Check https://developer.confluxnetwork.org/conflux-doc/docs/json_rpc/#migrating-from-ethereum-json-rpc for more information")

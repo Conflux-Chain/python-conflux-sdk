@@ -17,11 +17,7 @@ import functools
 import warnings
 from hexbytes import HexBytes
 
-from toolz import (
-    keyfilter,
-    merge,
-    dissoc,
-)
+from cytoolz import ( keyfilter, merge, dissoc,) # type:ignore
 from eth_typing.encoding import (
     HexStr
 )
@@ -99,7 +95,6 @@ from conflux_web3.types import (
     PoSEpochRewardInfo,
     DAOVoteInfo,
     SupplyInfo,
-    PendingInfo,
     PendingTransactionsInfo,
     TransactionPaymentInfo,
 )
@@ -155,7 +150,7 @@ class BaseCfx(BaseEth):
             if self.w3.cns:
                 self.w3.cns.w3.cfx.default_account = normalized_address
     
-    def remove_default_account(self):
+    def remove_default_account(self) -> None:
         self._default_account = empty
         if self.w3.cns:
             self.w3.cns.w3.cfx.remove_default_account()
@@ -172,14 +167,14 @@ class BaseCfx(BaseEth):
     
     def estimate_gas_and_collateral_munger(
         self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None
-    ) -> Sequence[Union[TxParam, EpochNumberParam]]:
+    ) -> Tuple[TxParam, Optional[EpochNumberParam]]:
         if "from" not in transaction and self.default_account:
             transaction = assoc(transaction, "from", self.default_account)
 
         if block_identifier is None:
-            params = [transaction]
+            params = (transaction, self._default_block)
         else:
-            params = [transaction, block_identifier]
+            params = (transaction, block_identifier)
 
         return params
     
@@ -222,7 +217,7 @@ class BaseCfx(BaseEth):
         mungers=[default_account_munger]
     )
     
-    _get_balance: ConfluxMethod[Callable[..., Drip]] = ConfluxMethod(
+    _get_balance: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Drip]] = ConfluxMethod(
         RPC.cfx_getBalance,
         # mungers=[default_account_munger]
     )
@@ -456,13 +451,12 @@ class BaseCfx(BaseEth):
         if address is not None:
             kwargs["address"] = address
         return super().contract(**kwargs)  # type: ignore
-    
 
 class ConfluxClient(BaseCfx, Eth):
     """RPC entry defined provides friendlier APIs for users
     """
     account: Account
-    defaultContractFactory = ConfluxContract
+    defaultContractFactory: Type[ConfluxContract] = ConfluxContract
     
     def __init__(self, w3: "Web3") -> None:
         super().__init__(w3)
@@ -477,46 +471,69 @@ class ConfluxClient(BaseCfx, Eth):
         
     def disable_eth_methods(self, disabled_method_list: Sequence[str]):
         for api in disabled_method_list:
+            always_returns_zero: Callable[..., Literal[0]] = lambda *args, **kwargs: 0
             self.__setattr__(
                 api,
                 use_instead(origin=api)(
-                    lambda *args, **kwargs: 0    
+                    always_returns_zero
                 ),
             )
-    
-    @use_instead
+            
     @property
+    @use_instead
     def syncing(self):
+        """
+        Unsupported API
+        """
         pass
     
-    @use_instead
     @property
+    @use_instead
     def coinbase(self):
+        """
+        # WARNING: Unsupported API
+        """
         pass
+
     
-    @use_instead
     @property
+    @use_instead
     def mining(self):
+        """
+        # WARNING: Unsupported API
+        """
         pass
     
-    @use_instead
     @property
+    @use_instead
     def hashrate(self):
+        """
+        # WARNING: Unsupported API
+        """
         pass
     
+    @property
     @use_instead(origin="web3.eth.block_number", substitute="web3.cfx.epoch_number")
-    @property
     def block_number(self):
+        """
+        # WARNING: Unsupported API, use `web3.cfx.epoch_number` instead
+        """
         pass
     
-    @use_instead
     @property
+    @use_instead
     def max_priority_fee(self):
+        """
+        # WARNING: Unsupported API
+        """
         pass
     
-    @use_instead
     @property
+    @use_instead
     def get_work(self):
+        """
+        # WARNING: Unsupported API
+        """
         pass
     
     def get_status(self) -> NodeStatus:
@@ -556,10 +573,18 @@ class ConfluxClient(BaseCfx, Eth):
         return self._epoch_number(epochTag)
     
     @property
+    @functools.cache
     def chain_id(self) -> int:
-        """We don't use functools.cached_property here in case provider changes network.
-        Always get status to avoid unexpected circumstances
         """
+        Get the chain id of the current network.
+        This property is cached and won't be changed unless it is deleted
+
+        Returns
+        -------
+        int
+            chain id of the blockchain, 1 for conflux testnet and 1029 for conflux mainnet
+        """
+
         return self._get_status()["chainId"]
 
     @property
@@ -570,7 +595,7 @@ class ConfluxClient(BaseCfx, Eth):
     #     return 
     
     def get_balance(self,
-                    address: AddressParam, 
+                    address: Union["Base32Address", str], 
                     block_identifier: Optional[EpochNumberParam] = None) -> CFX:
         return self._get_balance(address, block_identifier).to(CFX)
     
@@ -583,7 +608,7 @@ class ConfluxClient(BaseCfx, Eth):
     def call(self, 
              transaction: TxParam, 
              block_identifier: Optional[EpochNumberParam]=None, 
-             **kwargs):
+             **kwargs: Dict[str, Any]):
         """
         Args:
             transaction (TxParam): _description_
@@ -958,11 +983,11 @@ class ConfluxClient(BaseCfx, Eth):
     def get_logs(self, filter_params: FilterParams) -> List[LogReceipt]:...
     
     @overload
-    def get_logs(self, filter_params: None=None, **kwargs) -> List[LogReceipt]:...
+    def get_logs(self, filter_params: None=None, **kwargs: Dict[str, Any]) -> List[LogReceipt]:...
     
-    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs) -> List[LogReceipt]:
+    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs: Dict[str, Any]) -> List[LogReceipt]:
         if filter_params is None:
-            filter_params = cast(FilterParams, keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs))
+            filter_params = cast(FilterParams, keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs)) # type: ignore
             return self._get_logs(filter_params)
         else:
             if len(kwargs.keys()) != 0:

@@ -1,0 +1,16 @@
+[tool.pyright]
+
+typeCheckingMode = "strict"
+exclude=["build/*"]
+venv="venv"
+reportUnknownMemberType = "information"
+reportUnknownVariableType = "warning"
+reportUnknownArgumentType = "information"
+reportMissingTypeArgument = "information"
+reportUnusedImport = "information"
+reportUnnecessaryIsInstance = "information"
+reportIncompatibleMethodOverride = "information"
+reportIncompatibleVariableOverride = "information"
+reportMissingTypeStubs = "information"
+reportPrivateImportUsage = "information"
+reportPrivateUsage = "information"
