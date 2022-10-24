@@ -58,6 +58,7 @@ def list_embedded_contract_names():
     pass
 
 # TODO: normalize metadata["bin"] to metadata["bytecode"]
+# TODO: return type as TypedDict
 def get_contract_metadata(
     contract_name: str, 
     chain_id: Optional[int]=None, 
