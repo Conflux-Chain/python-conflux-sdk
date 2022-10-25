@@ -68,8 +68,6 @@ from conflux_web3._utils.disabled_eth_apis import (
 from conflux_web3.types import (
     _Hash32,
     Drip,
-    CFX,
-    GDrip,
     EpochLiteral,
     EpochNumberParam,
     AddressParam,
@@ -558,8 +556,8 @@ class ConfluxClient(BaseCfx, Eth):
         return self._get_status()
     
     @property
-    def gas_price(self) -> GDrip:
-        return self._gas_price().to(GDrip)
+    def gas_price(self) -> Drip:
+        return self._gas_price()
     
     @property
     def accounts(self) -> Tuple[Base32Address]:
@@ -596,13 +594,13 @@ class ConfluxClient(BaseCfx, Eth):
     
     def get_balance(self,
                     address: Union["Base32Address", str], 
-                    block_identifier: Optional[EpochNumberParam] = None) -> CFX:
-        return self._get_balance(address, block_identifier).to(CFX)
+                    block_identifier: Optional[EpochNumberParam] = None) -> Drip:
+        return self._get_balance(address, block_identifier)
     
     def get_staking_balance(self,
                     address: Union[Base32Address, str], 
-                    block_identifier: Optional[EpochNumberParam] = None) -> CFX:
-        return self._get_staking_balance(address, block_identifier).to(CFX)
+                    block_identifier: Optional[EpochNumberParam] = None) -> Drip:
+        return self._get_staking_balance(address, block_identifier)
     
     
     def call(self, 

@@ -4,8 +4,8 @@ import pytest
 from conflux_web3 import Web3
 from conflux_web3.types import (
     BlockData,
+    Drip,
     GDrip,
-    CFX,
 )
 from conflux_web3.contract.metadata import get_contract_metadata
 from tests._test_helpers.type_check import TypeValidator
@@ -66,7 +66,7 @@ class TestStatusQuery:
     def test_gas_price(self, w3: Web3):
         gas_price = w3.cfx.gas_price
         assert gas_price >= GDrip(1)
-        assert isinstance(gas_price, GDrip)
+        assert isinstance(gas_price, Drip)
 
     def test_client_version(self, w3: Web3):
         assert w3.cfx.client_version
@@ -112,7 +112,7 @@ class TestAccountQuery:
         balance = w3.cfx.get_balance(address, w3.cfx.epoch_number-5)
         # the balance is supposed to be non-zero
         assert balance > 0
-        assert isinstance(balance, CFX)
+        assert isinstance(balance, Drip)
 
     # def test_get_balance_empty_param(self, w3: Web3, use_testnet):
     #     # TODO: remove use_testnet if statement after testnet node is repaired
@@ -124,7 +124,7 @@ class TestAccountQuery:
     def test_get_staking_balance(self, w3: Web3, address):
         staking_balance = w3.cfx.get_staking_balance(address, w3.cfx.epoch_number-5)
         assert staking_balance >= 0
-        assert isinstance(staking_balance, CFX)
+        assert isinstance(staking_balance, Drip)
         # TODO: use staking balance contract
         
     def test_get_code(self, w3: Web3, contract_address):
