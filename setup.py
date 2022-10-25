@@ -88,7 +88,8 @@ setup(
         "web3==6.0.0b5",
         "cfx-address>=1.0.0b13",
         "cfx-account>=0.1.0b6",
-        "cfx-utils>=1.0.0b10"
+        "cfx-utils>=1.0.0b10",
+        "cached_property==1.5.2",
         # "eth-account>=0.6.0,<0.7.0"
     ],  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'

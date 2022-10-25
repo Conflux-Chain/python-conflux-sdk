@@ -1,4 +1,5 @@
 import functools
+import sys
 from typing import (
     Any,
     Callable,
@@ -15,6 +16,11 @@ from typing_extensions import (
 from conflux_web3.exceptions import (
     DisabledException
 )
+
+if sys.version_info < (3, 8):
+    from cached_property import cached_property
+else:
+    from functools import cached_property
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -62,3 +68,9 @@ def use_instead(
             raise DisabledException(f"{origin} is not valid in Conflux Network, "
                             f"use {substitute} instead")
     return inner
+
+__all__ = [
+    "cached_property",
+    "use_instead",
+    "temp_alter_module_variable",
+]

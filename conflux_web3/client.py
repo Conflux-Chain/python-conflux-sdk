@@ -59,6 +59,9 @@ from cfx_account import (
     LocalAccount,
 )
 
+from conflux_web3._utils.decorators import (
+    cached_property
+)
 from conflux_web3._utils.rpc_abi import (
     RPC
 )
@@ -463,7 +466,7 @@ class ConfluxClient(BaseCfx, Eth):
         self.disable_eth_methods(disabled_method_list)
     
     # lazy initialize self.address
-    @functools.cached_property
+    @cached_property
     def address(self) -> Type[Base32Address]:
         return get_base32_address_factory(self.chain_id)
         
@@ -570,8 +573,7 @@ class ConfluxClient(BaseCfx, Eth):
     def epoch_number_by_tag(self, epochTag: EpochLiteral) -> EpochNumber:
         return self._epoch_number(epochTag)
     
-    @property
-    @functools.cache
+    @cached_property
     def chain_id(self) -> int:
         """
         Get the chain id of the current network.
