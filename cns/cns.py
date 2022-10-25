@@ -73,7 +73,7 @@ class CNS(ENS):
     def __init__(
         self,
         provider: "BaseProvider" = cast("BaseProvider", default),
-        addr: Optional[Base32Address]=None,
+        addr: Optional[Union[Base32Address, str]]=None,
         middlewares: Optional[Sequence[Tuple["Middleware", str]]] = None,
         default_account: Optional[Base32Address] = None,
     ) -> None:

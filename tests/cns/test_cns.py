@@ -3,6 +3,7 @@ import sys
 import pytest
 from conflux_web3 import Web3
 from cns import CNS
+from cfx_account import LocalAccount
 from conflux_web3.exceptions import (
     NameServiceNotSet
 )
@@ -20,13 +21,23 @@ def test_cns(w3: Web3, use_testnet, ens_name, ens_account):
         if ens_account:
             assert ns.address(ens_name) == ens_account.address
 
+def test_cns_from_address(use_testnet: bool, ens_name: str, ens_account: LocalAccount):
+    if use_testnet:
+        provider = Web3.HTTPProvider("https://test.confluxrpc.com")
+        cns = CNS(provider, "cfxtest:acen57mpbzvs774tk6kffcsbkef3m4mn5eh0nxy4jx")
+        assert cns.address(ens_name) == ens_account.address
+        w3 = Web3(provider, cns=cns)
+        assert w3.cns.address(ens_name) == ens_account.address
+
+    
+
 def test_cns_with_rpc(w3: Web3, use_testnet: bool, ens_name):
     if use_testnet:
         balance = w3.cfx.get_balance(ens_name)
         assert balance >= 0
     else:
         with pytest.raises(NameServiceNotSet):
-            balance = w3.cfx.get_balance("hello.web3")
+            balance = w3.cfx.get_balance("hello45678oiuytrrtyuiytredcv.web3")
             
 def test_cns_usage_as_contract_param(w3: Web3, to_test_cns_write_api, account, ens_name):
     if to_test_cns_write_api:
