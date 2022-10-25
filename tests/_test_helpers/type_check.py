@@ -1,16 +1,21 @@
 from typing import (
     Any,
+    ForwardRef,
+    Literal,
     Type,
     TypedDict, 
     get_args, 
     get_origin, 
-    Union
+    Union,
 )
+import typing
+import sys
 from typing_extensions import (
     is_typeddict,
 )
 import collections.abc
 import warnings
+
 from cfx_address import Base32Address
 
 import conflux_web3.types
@@ -56,23 +61,34 @@ class TypeValidator:
         if get_origin(field_type) is Union:
             return any(TypeValidator.isinstance(val, t)
                         for t in get_args(field_type))
-        elif TypeValidator._is_list_like_type(field_type):
+        if get_origin(field_type) is Literal:
+            return val in get_args(field_type)
+        if TypeValidator._is_list_like_type(field_type):
             return all(
                 TypeValidator.isinstance(v, get_args(field_type)[0])
                 for v in val
             )
+        if sys.version_info >= (3, 10):
+            # NewType becomes a class after python3.10
+            if type(field_type) == typing.NewType:
+                return isinstance(val, field_type.__supertype__)
         elif type(field_type).__name__ == "function":
             return isinstance(val, field_type.__supertype__)
-        elif type(field_type) is type:
+        if type(field_type) is type:
             # for sake of debug
             if isinstance(val, field_type):
                 return True
             return False
+        if type(field_type) is ForwardRef:
+            return type(val).__name__ == field_type.__forward_arg__
+        if type(field_type) is typing._GenericAlias: # type: ignore
+            return TypeValidator.isinstance(val, get_origin(field_type))
         else:
-            # TODO: do fine grained check
-            warnings.warn("complex type check")
-            # raise Exception("unexpected exception")
-            return True
+            if isinstance(val, field_type):
+                return True
+            return False
+            # warnings.warn("complex type check")
+            # return True
 
     @staticmethod
     def validate_typed_dict(value_to_validate: Any, typed_dict_class: Union[str, Type[TypedDict]]):

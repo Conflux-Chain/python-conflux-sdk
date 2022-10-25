@@ -12,6 +12,9 @@ from eth_utils.toolz import (
     merge,  # type: ignore
 )
 
+from cfx_utils.token_unit import (
+    Drip
+)
 from conflux_web3.exceptions import (
     NoWeb3Exception
 )
@@ -27,7 +30,8 @@ TRANSACTION_DEFAULTS = {
     "nonce": lambda w3, tx, estimate=None: w3.cfx.get_next_nonce(tx['from']),
     "gas": lambda w3, tx, estimate=None: estimate["gasLimit"],
     "storageLimit": lambda w3, tx, estimate=None: estimate["storageCollateralized"],
-    "gasPrice": lambda w3, tx, estimate=None: w3.cfx.gas_price,
+    # convert to int value
+    "gasPrice": lambda w3, tx, estimate=None: w3.cfx.gas_price.to(Drip).value,
     "chainId": lambda w3, tx, estimate=None: w3.cfx.chain_id,
     "epochHeight": lambda w3, tx, estimate=None: w3.cfx.epoch_number,
 }

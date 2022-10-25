@@ -17,6 +17,7 @@ CONFLUX_SIMPLE_CACHE_RPC_WHITELIST = cast(
     Set[RPCEndpoint],
     {
         "cfx_chainId",
+        "cfx_gasPrice"
     },
 )
 

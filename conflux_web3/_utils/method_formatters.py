@@ -64,6 +64,9 @@ from conflux_web3._utils.rpc_abi import (
 from conflux_web3.middleware.pending import (
     TransactionHash
 )
+from conflux_web3.types import (
+    Drip,
+)
 
 STANDARD_NORMALIZERS = [
     abi_bytes_to_hex,
@@ -78,6 +81,9 @@ def to_hash32(val, variable_length=False):
 
 def from_trust_to_base32(val):
     return Base32Address(val, _from_trust=True)
+
+def from_hex_to_drip(val):
+    return Drip(val, 16)
 
 transaction_param_formatter = compose(
     remove_key_if('to', lambda txn: txn['to'] in {'', b'', None}),  # type: ignore
@@ -214,8 +220,8 @@ RECEIPT_FORMATTERS = {
     "epochNumber": to_integer_if_hex,
     "from": from_trust_to_base32,
     "to": apply_formatter_if(is_not_null, from_trust_to_base32),
-    "gasUsed": to_integer_if_hex,
-    "gasFee": to_integer_if_hex,
+    "gasUsed": from_hex_to_drip,
+    "gasFee": from_hex_to_drip,
     # "gasCoveredBySponsor": bool,
     "storageCollateralized": to_integer_if_hex,
     # "storageCoveredBySponsor": bool,
@@ -238,7 +244,7 @@ TRANSACTION_DATA_FORMATTERS = {
     "epochHeight": apply_formatter_if(is_not_null, to_integer_if_hex),
     "from": from_trust_to_base32,
     "gas": to_integer_if_hex,
-    "gasPrice": to_integer_if_hex,
+    "gasPrice": from_hex_to_drip,
     "hash": to_hash32, # 
     "nonce": to_integer_if_hex,
     "r": apply_formatter_if(is_not_null, to_hexbytes(32, variable_length=True)), # type: ignore
@@ -248,7 +254,7 @@ TRANSACTION_DATA_FORMATTERS = {
     "to": apply_formatter_if(is_not_null, from_trust_to_base32),
     "transactionIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
     "v": apply_formatter_if(is_not_null, to_integer_if_hex),
-    "value": to_integer_if_hex,
+    "value": from_hex_to_drip,
 }
 transaction_data_formatter = apply_formatters_to_dict(TRANSACTION_DATA_FORMATTERS)
 
@@ -272,7 +278,7 @@ BLOCK_FORMATTERS = {
     "epochNumber": apply_formatter_if(is_not_null, to_integer_if_hex),
     "blockNumber": apply_formatter_if(is_not_null, to_integer_if_hex),
     "gasLimit": to_integer_if_hex,
-    "gasUsed": apply_formatter_if(is_not_null, to_integer_if_hex),
+    "gasUsed": apply_formatter_if(is_not_null, from_hex_to_drip),
     "timestamp": to_integer_if_hex,
     "difficulty": to_integer_if_hex,
     "powQuality": apply_formatter_if(is_not_null, HexBytes),
@@ -312,22 +318,22 @@ STORAGE_ROOT_FORMATTERS = {
 storage_root_formatter = apply_formatters_to_dict(STORAGE_ROOT_FORMATTERS)
 
 SPONSOR_INFO_FORMATTERS = {
-    "sponsorBalanceForCollateral": to_integer_if_hex,
-    "sponsorBalanceForGas": to_integer_if_hex,
-    "sponsorGasBound": to_integer_if_hex,
+    "sponsorBalanceForCollateral": from_hex_to_drip,
+    "sponsorBalanceForGas": from_hex_to_drip,
+    "sponsorGasBound": from_hex_to_drip,
     "sponsorForCollateral": from_trust_to_base32,
     "sponsorForGas": from_trust_to_base32,
 }
 
 ACCOUNT_INFO_FORMATTERS = {
-    "accumulatedInterestReturn": to_integer_if_hex,
+    "accumulatedInterestReturn": from_hex_to_drip,
     "address": from_trust_to_base32,
     "admin": apply_formatter_if(is_not_null, from_trust_to_base32),
-    "balance": to_integer_if_hex,
+    "balance": from_hex_to_drip,
     "codeHash": to_hash32,
     "collateralForStorage": to_integer_if_hex,
     "nonce": to_integer_if_hex,
-    "stakingBalance": to_integer_if_hex
+    "stakingBalance": from_hex_to_drip,
 }
 
 DEPOSIT_INFO_FORMATTERS = {
@@ -344,21 +350,21 @@ VOTE_INFO_FORMATTERS = {
 BLOCK_REWARD_INFO_FORMATTERS = {
     "blockHash": to_hash32,
     "author": from_trust_to_base32,
-    "totalReward": to_integer_if_hex, # Drip
-    "baseReward": to_integer_if_hex, # Drip
-    "txFee": to_integer_if_hex, # Drip
+    "totalReward": from_hex_to_drip,
+    "baseReward": from_hex_to_drip,
+    "txFee": from_hex_to_drip,
 }
 
 POS_ECONOMICS_FORMATTERS = {
-    "distributablePosInterest": to_integer_if_hex, # Drip
+    "distributablePosInterest": from_hex_to_drip,
     "lastDistributeBlock": to_integer_if_hex,
-    "totalPosStakingTokens": to_integer_if_hex, # Drip
+    "totalPosStakingTokens": from_hex_to_drip,
 }
 
 POS_ACCOUNT_REWARDS_FORMATTERS = {
     # "posAddress": hexaddress
     "powAddress": from_trust_to_base32,
-    "reward": to_integer_if_hex # drip
+    "reward": from_hex_to_drip
 }
 
 POS_REWARDS_INFO_FORMATTERS = {
@@ -369,16 +375,16 @@ POS_REWARDS_INFO_FORMATTERS = {
 }
 
 DAO_INFO_FORMATTERS = {
-    "powBaseReward": to_integer_if_hex,
+    "powBaseReward": from_hex_to_drip,
     "interestRate": to_integer_if_hex,
 }
 
 SUPPLY_INFO_FORMATTERS = {
-    "totalCirculating": to_integer_if_hex,
-    "totalCollateral": to_integer_if_hex,
-    "totalIssued": to_integer_if_hex,
-    "totalStaking": to_integer_if_hex,
-    "totalEspaceTokens": to_integer_if_hex,
+    "totalCirculating": from_hex_to_drip,
+    "totalCollateral": from_hex_to_drip,
+    "totalIssued": from_hex_to_drip,
+    "totalStaking": from_hex_to_drip,
+    "totalEspaceTokens": from_hex_to_drip,
 }
 
 PENDING_INFO_FORMATTERS = {
@@ -403,9 +409,9 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     RPC.cfx_call: HexBytes,
     RPC.cfx_estimateGasAndCollateral: apply_formatters_to_dict(ESTIMATE_FORMATTERS),
     RPC.cfx_getConfirmationRiskByHash: fixed64_to_float,
-    RPC.cfx_gasPrice: to_integer_if_hex,
-    RPC.cfx_getBalance: to_integer_if_hex,
-    RPC.cfx_getStakingBalance: to_integer_if_hex,
+    RPC.cfx_gasPrice: from_hex_to_drip,
+    RPC.cfx_getBalance: from_hex_to_drip,
+    RPC.cfx_getStakingBalance: from_hex_to_drip,
     RPC.cfx_getNextNonce: to_integer_if_hex,
     RPC.cfx_getBlockByHash: apply_formatter_if(is_not_null, block_formatter),
     RPC.cfx_getBlockByEpochNumber: apply_formatter_if(is_not_null, block_formatter),

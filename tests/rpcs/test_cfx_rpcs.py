@@ -2,7 +2,11 @@ from hexbytes import HexBytes
 import pytest
 
 from conflux_web3 import Web3
-from conflux_web3.types import BlockData
+from conflux_web3.types import (
+    BlockData,
+    Drip,
+    GDrip,
+)
 from conflux_web3.contract.metadata import get_contract_metadata
 from tests._test_helpers.type_check import TypeValidator
 
@@ -61,8 +65,8 @@ class TestStatusQuery:
 
     def test_gas_price(self, w3: Web3):
         gas_price = w3.cfx.gas_price
-        assert gas_price >= 10**9
-        assert isinstance(gas_price, int)
+        assert gas_price >= GDrip(1)
+        assert isinstance(gas_price, Drip)
 
     def test_client_version(self, w3: Web3):
         assert w3.cfx.client_version
@@ -108,17 +112,19 @@ class TestAccountQuery:
         balance = w3.cfx.get_balance(address, w3.cfx.epoch_number-5)
         # the balance is supposed to be non-zero
         assert balance > 0
+        assert isinstance(balance, Drip)
 
-    def test_get_balance_empty_param(self, w3: Web3, use_testnet):
-        # TODO: remove use_testnet if statement after testnet node is repaired
-        if use_testnet:
-            return
-        with pytest.raises(ValueError):
-            w3.cfx.get_balance()
+    # def test_get_balance_empty_param(self, w3: Web3, use_testnet):
+    #     # TODO: remove use_testnet if statement after testnet node is repaired
+    #     if use_testnet:
+    #         return
+    #     with pytest.raises(TypeError):
+    #         w3.cfx.get_balance()
             
     def test_get_staking_balance(self, w3: Web3, address):
         staking_balance = w3.cfx.get_staking_balance(address, w3.cfx.epoch_number-5)
         assert staking_balance == 0
+        assert isinstance(staking_balance, Drip)
         # TODO: use staking balance contract
         
     def test_get_code(self, w3: Web3, contract_address):
@@ -315,39 +321,12 @@ class TestBlock:
             block = preprocess_block_data(block, use_testnet)
             TypeValidator.validate_typed_dict(block, "BlockData")
 
-class TestPending:
-    @pytest.fixture(scope="class")
-    def future_tx(self, moduled_w3: Web3):
-        nonce = moduled_w3.cfx.get_next_nonce(moduled_w3.cfx.default_account)
-        hash = moduled_w3.cfx.send_transaction({
-            "to": moduled_w3.account.create().address,
-            "value": 100,
-            "nonce": nonce + 1
-        })
-        yield hash
-        moduled_w3.cfx.send_transaction({
-            "to": moduled_w3.account.create().address,
-            "value": 100,
-            "nonce": nonce
-        })
-        hash.executed()
-        
-    
-    def test_get_account_pending_info(self, w3: Web3, address, future_tx):
-        account_pending_info = w3.cfx.get_account_pending_info(address)
-        TypeValidator.validate_typed_dict(account_pending_info, "PendingInfo")
-    
-    def test_get_account_pending_transactions(self, w3: Web3, address, future_tx):
-        nonce = w3.cfx.get_next_nonce(address)
-        info = w3.cfx.get_account_pending_transactions(address, nonce, 1)
-        assert info["firstTxStatus"] == {"pending": "futureNonce"}
-        assert info["pendingCount"] == 1
-        for tx in info["pendingTransactions"]:
-            TypeValidator.validate_typed_dict(tx, "TxData")
-
 def test_check_balance_against_transaction(w3: Web3, address, contract_address):
     payment_info = w3.cfx.check_balance_against_transaction(
         address, contract_address, 10000, 10**9, 0, w3.cfx.epoch_number_by_tag("latest_state")
     )
     TypeValidator.validate_typed_dict(payment_info, "TransactionPaymentInfo")
-    
+    payment_info = w3.cfx.check_balance_against_transaction(
+        address, contract_address, 10000, GDrip(1), 0, w3.cfx.epoch_number_by_tag("latest_state")
+    )
+    TypeValidator.validate_typed_dict(payment_info, "TransactionPaymentInfo")

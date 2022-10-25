@@ -83,10 +83,7 @@ def moduled_w3(node_url: str, node: LocalNode, account) -> Web3:
     # account = Account.from_key(secret_key, )
     provider = Web3.HTTPProvider(node_url)
     w3 = Web3(provider=provider)
-    w3.cfx.default_account = account.get_base32_address(w3.cfx.chain_id)
-    w3.middleware_onion.add(
-        Wallet(account)
-    )
+    w3.cfx.default_account = account
     return w3
 
 @pytest.fixture(scope="session")
