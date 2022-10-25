@@ -8,7 +8,9 @@ from conflux_web3.exceptions import (
 )
 
 @pytest.fixture
-def to_test_cns_write_api(use_testnet):
+def to_test_cns_write_api(use_testnet: bool) -> bool:
+    # currently we only support cns write api on testnet
+    # so we only do tests on python3.8 to avoid nonce problems
     return sys.version_info.minor == 8 and use_testnet
 
 def test_cns(w3: Web3, use_testnet, ens_name, ens_account):
@@ -89,4 +91,3 @@ def test_cns_default_account(w3: Web3, use_testnet, account):
     if use_testnet:
         w3.cfx.default_account = account
         assert w3.cfx.default_account == w3.ens.w3.cfx.default_account
-    
