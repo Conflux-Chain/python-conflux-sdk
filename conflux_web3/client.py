@@ -570,8 +570,8 @@ class ConfluxClient(BaseCfx, Eth):
     def epoch_number(self) -> EpochNumber:
         return self._epoch_number(None)
     
-    def epoch_number_by_tag(self, epochTag: EpochLiteral) -> EpochNumber:
-        return self._epoch_number(epochTag)
+    def epoch_number_by_tag(self, epoch_tag: EpochLiteral) -> EpochNumber:
+        return self._epoch_number(epoch_tag)
     
     @cached_property
     def chain_id(self) -> int:
