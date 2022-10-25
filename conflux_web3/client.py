@@ -136,7 +136,7 @@ class BaseCfx(BaseEth):
     
 
     @default_account.setter
-    def default_account(self, account: Union[AddressParam, LocalAccount]) -> None:
+    def default_account(self, account: Union[Base32Address, str, LocalAccount]) -> None:
         """set default account address
         """
         if isinstance(account, LocalAccount):
@@ -367,7 +367,7 @@ class BaseCfx(BaseEth):
 
     @overload  
     def contract(
-        self, address: AddressParam, *, name: Optional[str]=None, with_deployment_info: Optional[bool]=None, **kwargs: Any
+        self, address: Union[Base32Address, str], *, name: Optional[str]=None, with_deployment_info: Optional[bool]=None, **kwargs: Any
     ) -> ConfluxContract:
         ...
 
@@ -397,7 +397,7 @@ class BaseCfx(BaseEth):
 
     def contract(
         self,
-        address: Optional[AddressParam] = None,
+        address: Optional[Union[Base32Address, str]] = None,
         *,
         name: Optional[str] = None,
         with_deployment_info: Optional[bool] = None,
@@ -413,7 +413,7 @@ class BaseCfx(BaseEth):
 
         Parameters
         ----------
-        address : Optional[AddressParam], optional
+        address : Optional[Union[Base32Address, str]], optional
             the address of the contract, by default None
         name : Optional[str], optional
             the name of the contract, which is used to specify abi, bytecode, or deployed contract address, by default None
@@ -600,7 +600,7 @@ class ConfluxClient(BaseCfx, Eth):
         return self._get_balance(address, block_identifier).to(CFX)
     
     def get_staking_balance(self,
-                    address: AddressParam, 
+                    address: Union[Base32Address, str], 
                     block_identifier: Optional[EpochNumberParam] = None) -> CFX:
         return self._get_staking_balance(address, block_identifier).to(CFX)
     
@@ -619,10 +619,10 @@ class ConfluxClient(BaseCfx, Eth):
         """
         return self._call(transaction, block_identifier)
     
-    def get_next_nonce(self, address: Optional[AddressParam]=None, block_identifier: Optional[EpochNumberParam] = None) -> int:
+    def get_next_nonce(self, address: Optional[Union[Base32Address, str]]=None, block_identifier: Optional[EpochNumberParam] = None) -> int:
         return self._get_next_nonce(address, block_identifier)
 
-    def get_transaction_count(self, address: Optional[AddressParam]=None, block_identifier: Optional[EpochNumberParam] = None) -> int:
+    def get_transaction_count(self, address: Optional[Union[Base32Address, str]]=None, block_identifier: Optional[EpochNumberParam] = None) -> int:
         return self.get_next_nonce(address, block_identifier)
 
     def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None) -> EstimateResult:
@@ -712,15 +712,15 @@ class ConfluxClient(BaseCfx, Eth):
                 "index": int,
                 "blockHash": _Hash32,
                 "epochNumber": int,
-                "from": AddressParam,
-                "to": AddressParam,
+                "from": Union[Base32Address, str],
+                "to": Union[Base32Address, str],
                 "gasUsed": int,
                 "gasFee": Drip,
                 "gasCoveredBySponsor": bool,
                 "storageCollateralized": Storage,
                 "storageCoveredBySponsor": bool,
                 "storageReleased": List[Storage],
-                "contractCreated": Union[AddressParam, None],
+                "contractCreated": Union[Base32Address, str, None],
                 
                 "stateRoot": _Hash32,
                 "outcomeStatus": int,
@@ -883,42 +883,42 @@ class ConfluxClient(BaseCfx, Eth):
         return self.get_block_by_epoch_number(block_identifier, full_transactions) # type: ignore
     
     def get_code(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> HexBytes:
         return self._get_code(address, block_identifier)
     
     def get_storage_at(
-        self, address: AddressParam, storage_position: int, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], storage_position: int, block_identifier: Optional[EpochNumberParam] = None
     ) -> Union[HexBytes, None]:
         return self._get_storage_at(address, storage_position, block_identifier)
     
     def get_storage_root(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> Union[StorageRoot, None]:
         return self._get_storage_root(address, block_identifier)
     
     def get_collateral_for_storage(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> Storage:
         return self._get_collateral_for_storage(address, block_identifier)
     
     def get_sponsor_info(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> SponsorInfo:
         return self._get_sponsor_info(address, block_identifier)
     
     def get_account(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> AccountInfo:
         return self._get_account(address, block_identifier)
     
     def get_deposit_list(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> Sequence[DepositInfo]:
         return self._get_deposit_list(address, block_identifier)
     
     def get_vote_list(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> Sequence[VoteInfo]:
         return self._get_vote_list(address, block_identifier)
     
@@ -956,19 +956,19 @@ class ConfluxClient(BaseCfx, Eth):
         return self._get_supply_info()
     
     def get_account_pending_info(
-        self, address: AddressParam
+        self, address: Union[Base32Address, str]
     ) -> PendingInfo:
         return self._get_account_pending_info(address)
     
     def get_account_pending_transactions(
-        self, address: AddressParam, start_nonce: Optional[int]=None, limit: Optional[int]=None
+        self, address: Union[Base32Address, str], start_nonce: Optional[int]=None, limit: Optional[int]=None
     ) -> PendingTransactionsInfo:
         return self._get_account_pending_transactions(address, start_nonce, limit)
     
     def check_balance_against_transaction(
         self,
-        account_address: AddressParam,
-        contract_address: AddressParam, 
+        account_address: Union[Base32Address, str],
+        contract_address: Union[Base32Address, str], 
         gas_limit: int,
         gas_price: Union[Drip, AbstractDerivedTokenUnit[Drip], int],
         storage_limit: Union[Storage, int],

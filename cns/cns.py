@@ -89,9 +89,9 @@ class CNS(ENS):
         # if addr is None, propriate address will be automatically selected
         # see conflux_web3.contract.metadata.DEPLOYMENT_INFO for more infomation
         if addr:
-            self.ens = cast("ConfluxContract", self.w3.cfx.contract(addr, name="ENS"))
+            self.ens = self.w3.cfx.contract(addr, name="ENS")
         else:
-            self.ens = cast("ConfluxContract", self.w3.cfx.contract(name="ENS", with_deployment_info=True))
+            self.ens = self.w3.cfx.contract(name="ENS", with_deployment_info=True)
         
         self._resolver_contract = self.w3.cfx.contract(name="RESOLVER", with_deployment_info=False)
         self._reverse_resolver_contract = self.w3.cfx.contract(name="REVERSE_RESOLVER", with_deployment_info=False)
@@ -101,7 +101,7 @@ class CNS(ENS):
         address = self._resolve(name, "addr")
         return cast(Base32Address, address)
     
-    def owner(self, name: str, wrapped=False) -> Base32Address:
+    def owner(self, name: str, wrapped: bool=False) -> Base32Address:
         """
         returns the owner of the name.
         pass wrapped = True to know the owner of the name if the the name is wrapped by a NameWrapper
@@ -129,7 +129,7 @@ class CNS(ENS):
     def setup_owner(
         self,
         name: str,
-        new_owner: "AddressParam" = cast(Base32Address, default),
+        new_owner: Union[Base32Address, str] = cast(Base32Address, default),
         transact: Optional["TxParam"] = None,
         wrapped: bool = False
     ) -> Optional[Base32Address]:
@@ -149,7 +149,7 @@ class CNS(ENS):
     def setup_address(
         self,
         name: str,
-        address: Union["AddressParam", None] = cast(Base32Address, default),
+        address: Union[Base32Address, str, None] = cast(Base32Address, default),
         transact: Optional["TxParam"] = None,
         wrapped: bool = False
     ) -> Optional["TransactionHash"]:
@@ -162,7 +162,7 @@ class CNS(ENS):
         ----------
         name : str
             name to setup
-        address : Union[AddressParam, None], optional
+        address : Union[Base32Address, str, None], optional
             name will point to this address.
             If ``None``, erase the record. 
             If not specified, name will point to the sender of the transaction
