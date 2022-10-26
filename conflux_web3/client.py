@@ -129,7 +129,7 @@ class BaseCfx(BaseEth):
     
     @property
     def default_account(self) -> Base32Address:
-        """default account ADDRESS rather than a local account with private key
+        """default account address, this address will be used as default `from` address if transaction `from` field is empty
         """
         return self._default_account # type: ignore
     

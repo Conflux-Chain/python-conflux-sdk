@@ -85,10 +85,10 @@ setup(
                   "cfxpm": ["py.typed"]},
     url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
-        "web3==6.0.0b5",
-        "cfx-address>=1.0.0b13",
-        "cfx-account>=0.1.0b6",
-        "cfx-utils>=1.0.0b10",
+        "web3==6.0.0b7",
+        "cfx-address>=1.0.0b14",
+        "cfx-account>=0.1.0b7",
+        "cfx-utils>=1.0.0b12",
         "cached_property==1.5.2",
         # "eth-account>=0.6.0,<0.7.0"
     ],  # add any additional packages that

@@ -109,7 +109,7 @@ def cfx_get_event_data(
     )
 
     decoded_topic_data = [
-        abi_codec.decode_single(topic_type, topic_data)
+        abi_codec.decode([topic_type], topic_data)[0]
         for topic_type, topic_data in zip(log_topic_types, log_topics)
     ]
     normalized_topic_data = map_abi_data(
