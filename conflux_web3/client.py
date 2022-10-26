@@ -13,11 +13,10 @@ from typing import (
     cast,
     overload
 )
-import functools
 import warnings
 from hexbytes import HexBytes
 
-from cytoolz import ( keyfilter, merge, dissoc,) # type:ignore
+from cytoolz import ( keyfilter, merge ) # type:ignore
 from eth_typing.encoding import (
     HexStr
 )
@@ -49,7 +48,6 @@ from cfx_utils.token_unit import (
 )
 from cfx_address import (
     Base32Address,
-    validate_base32
 )
 from cfx_address.address import (
     get_base32_address_factory,
@@ -412,6 +410,18 @@ class BaseCfx(BaseEth):
                 (1) "name" parameter specified and corresponding contract has deployment info 
                 (2) with_deployment_info is not False
 
+        >>> from conflux_web3.dev import get_mainnet_web3
+        >>> w3 = get_mainnet_web3()
+        >>> from conflux_web3.contract import get_contract_metadata
+        >>> abi = get_contract_metadata("ERC20")["abi"]
+        >>> bytecode = get_contract_metadata("ERC20")["bytecode"]
+        >>> erc20_factory = w3.cfx.contract(abi=abi, bytecode=bytecode)
+
+        >>> c1 = w3.cfx.contract(name="AdminControl")
+        >>> assert c1.address # address is added by default
+        >>> c2 = w3.cfx.contract(name="AdminControl", with_deployment_info=False)
+        >>> assert not c2.address # address is not added by explicitly specified
+
         Parameters
         ----------
         address : Optional[Union[Base32Address, str]], optional
@@ -430,19 +440,6 @@ class BaseCfx(BaseEth):
         -------
         Union[Type[ConfluxContract], ConfluxContract]
             returns a contract factory or contract
-            
-        >>> from conflux_web3.dev import get_mainnet_web3
-        >>> w3 = get_mainnet_web3()
-        >>> from conflux_web3.contract import get_contract_metadata
-        >>> abi = get_contract_metadata("ERC20")["abi"]
-        >>> bytecode = get_contract_metadata("ERC20")["bytecode"]
-        >>> erc20_factory = w3.cfx.contract(abi=abi, bytecode=bytecode)
-
-        >>> c1 = w3.cfx.contract(name="AdminControl")
-        >>> assert c1.address
-        >>> c2 = w3.cfx.contract(name="AdminControl", with_deployment_info=False)
-        >>> assert not c2.address
-
         """        
         metadata = {}
         if name is not None:
@@ -539,38 +536,90 @@ class ConfluxClient(BaseCfx, Eth):
     
     def get_status(self) -> NodeStatus:
         """
-        Returns:
-            AttributeDict: node status
-            e.g.
-            {
-                "bestHash": "0xe4bf02ad95ad5452c7676d3dfc2e57fde2a70806c2e68231c58c77cdda5b7c6c",
-                "chainId": "0x1",
-                "networkId": "0x1",
-                "blockNumber": "0x1a80325",
-                "epochNumber": "0xaf28ab",
-                "latestCheckpoint": "0xada520",
-                "latestConfirmed": "0xaf2885",
-                "latestState": "0xaf28a7",
-                "latestFinalized": "0x2a420c",
-                "ethereumSpaceChainId": "0x22b9",
-                "pendingTxNumber": "0x0"
-            },
-        """
+        get the blockchain status from the provider
+        
+        >>> w3.cfx.get_status()
+        AttributeDict({'bestHash': HexBytes('0xb91109cc301209921b33533f8ae228615016b9104e8229ddaad55b370fe586d3'),
+            'chainId': 1,
+            'ethereumSpaceChainId': 71,
+            'networkId': 1,
+            'epochNumber': 97105091,
+            'blockNumber': 124293823,
+            'pendingTxNumber': 69,
+            'latestCheckpoint': 97000000,
+            'latestConfirmed': 97105034,
+            'latestState': 97105087,
+            'latestFinalized': 97104660})
+        >>> w3.cfx.get_status().chainId # support but not recommended because of missing type hints
+        1
+        >>> w3.cfx.get_status()['chainId'] # recommended
+        1
+
+        Returns
+        -------
+        NodeStatus
+            a dict representing node status
+        """        
         return self._get_status()
     
     @property
     def gas_price(self) -> Drip:
+        """
+        Get the current gas price
+        
+        >>> w3.cfx.gas_price
+        1000000000 Drip
+        >>> w3.cfx.gas_price.value
+        1000000000
+        >>> w3.cfx.gas_price.to("GDrip")
+        1 GDrip
+
+        Returns
+        -------
+        Drip
+            gas price wrapped by Drip, which can be used as transaction value or gas price
+        """        
         return self._gas_price()
     
     @property
     def accounts(self) -> Tuple[Base32Address]:
+        """
+        Returns the accounts controlled by the provider 
+        ## this method is not supported by public rpcs
+
+        Returns
+        -------
+        Tuple[Base32Address]
+            a Tuple containing the address of the accounts
+        """
         return self._accounts()
     
     @property
     def epoch_number(self) -> EpochNumber:
+        """
+        Returns latest_mined epoch number
+
+        Returns
+        -------
+        EpochNumber
+            latest mined epoch number
+        """
         return self._epoch_number(None)
     
     def epoch_number_by_tag(self, epoch_tag: EpochLiteral) -> EpochNumber:
+        """
+        Returns the epoch numebr with the provided epoch tag
+
+        Parameters
+        ----------
+        epoch_tag : EpochLiteral
+            String "latest_mined", "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest"
+
+        Returns
+        -------
+        EpochNumber
+            the epoch number corrensponding to the epoch tag
+        """        
         return self._epoch_number(epoch_tag)
     
     @cached_property
@@ -584,7 +633,6 @@ class ConfluxClient(BaseCfx, Eth):
         int
             chain id of the blockchain, 1 for conflux testnet and 1029 for conflux mainnet
         """
-
         return self._get_status()["chainId"]
 
     @property
@@ -595,42 +643,60 @@ class ConfluxClient(BaseCfx, Eth):
     #     return 
     
     def get_balance(self,
-                    address: Union["Base32Address", str], 
+                    address: Union[Base32Address, str], 
                     block_identifier: Optional[EpochNumberParam] = None) -> Drip:
+        """
+        Returns the balance of the given account, identified by its address.
+
+        >>> balance = w3.cfx.get_balance("cfx:type.user:aarc9abycue0hhzgyrr53m6cxedgccrmmyybjgh4xg")
+        >>> balance
+        "1000000000000000000 Drip"
+        >>> balance.value
+        1000000000000000000
+        >>> balance.to("CFX")
+        "1 CFX"
+
+        Parameters
+        ----------
+        address : Union[Base32Address, str]
+            the address of the account 
+        block_identifier : Optional[EpochNumberParam], optional
+            integer epoch number, or the string "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest", by default None
+
+        Returns
+        -------
+        Drip
+            balance wrapped by Drip
+        """        
         return self._get_balance(address, block_identifier)
     
     def get_staking_balance(self,
                     address: Union[Base32Address, str], 
                     block_identifier: Optional[EpochNumberParam] = None) -> Drip:
+        """
+        Returns the staking balance of the given account, identified by its address.
+
+        Parameters
+        ----------
+        address : Union[Base32Address, str]
+            the address of the account 
+        block_identifier : Optional[EpochNumberParam], optional
+            integer epoch number, or the string "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest", by default None
+
+        Returns
+        -------
+        Drip
+            balance wrapped by Drip
+        """        
         return self._get_staking_balance(address, block_identifier)
     
     
     def call(self, 
              transaction: TxParam, 
              block_identifier: Optional[EpochNumberParam]=None, 
-             **kwargs: Dict[str, Any]):
+             **kwargs: Dict[str, Any]) -> Any:
         """
-        Args:
-            transaction (TxParam): _description_
-            block_identifier (Optional[EpochNumberParam], optional): _description_. Defaults to None.
-            kwargs is provided for web3 internal api compatiblity, they will be ignored
-        Returns:
-            _type_: _description_
-        """
-        return self._call(transaction, block_identifier)
-    
-    def get_next_nonce(self, address: Optional[Union[Base32Address, str]]=None, block_identifier: Optional[EpochNumberParam] = None) -> int:
-        return self._get_next_nonce(address, block_identifier)
-
-    def get_transaction_count(self, address: Optional[Union[Base32Address, str]]=None, block_identifier: Optional[EpochNumberParam] = None) -> int:
-        return self.get_next_nonce(address, block_identifier)
-
-    def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None) -> EstimateResult:
-        return self._estimate_gas_and_collateral(transaction, block_identifier)
-
-    def estimate_gas(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam] = None) -> EstimateResult:
-        """
-        Compatibility API for conflux. Equivalent to estimate_gas_and_collateral
+        Virtually calls a contract, returns the output data. The transaction will not be added to the blockchain.
 
         Parameters
         ----------
@@ -638,7 +704,7 @@ class ConfluxClient(BaseCfx, Eth):
             {
                 "chainId": int,
                 "data": Union[bytes, HexStr],
-                "from": Base32Address,
+                "from": Union[Base32Address, str],
                 "gas": int,
                 "gasPrice": Drip,
                 "nonce": Nonce,
@@ -648,35 +714,217 @@ class ConfluxClient(BaseCfx, Eth):
                 "storageLimit": int
             }
         block_identifier : Optional[EpochNumberParam], optional
-            _description_, by default None
+            integer epoch number, or the string "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest", by default None
+
+        Returns
+        -------
+        Any
+        """        
+        return self._call(transaction, block_identifier)
+    
+    def get_next_nonce(self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None) -> int:
+        """
+        Returns the next nonce that should be used by the given account when sending a transaction.
+
+        Parameters
+        ----------
+        address : Union[Base32Address, str]
+            the address of the account
+        block_identifier : Optional[EpochNumberParam], optional
+            integer epoch number, or the string "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest", by default None
+
+        Returns
+        -------
+        int
+        """        
+        return self._get_next_nonce(address, block_identifier)
+
+    def get_transaction_count(self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None) -> int:
+        """
+        Compatibility API for conflux. Equivalent to `get_next_nonce`
+        """        
+        return self.get_next_nonce(address, block_identifier)
+
+    def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None) -> EstimateResult:
+        """
+        Virtually executes a transaction, returns an estimate for the size of storage collateralized and the gas used by the transaction. The transaction will not be added to the blockchain.
+        For most cases, you don't need to invoke this api to fill the transaction fields unless you need to manually sign the transactions.
+
+        >>> w3.cfx.estimate_gas_and_collateral({"to": "cfx:type.contract:acc7uawf5ubtnmezvhu9dhc6sghea0403y2dgpyfjp"})
+        >>> {"gasLimit": 21000, "gasUsed": 21000, "storageCollateralized": 0}
+
+        Parameters
+        ----------
+        transaction: TxParam
+            {
+                "chainId": int,
+                "data": Union[bytes, HexStr],
+                "from": Union[Base32Address, str],
+                "gas": int,
+                "gasPrice": Drip,
+                "nonce": Nonce,
+                "to": Base32Address,
+                "value": Drip,
+                "epochHeight": int,
+                "storageLimit": int
+            }
+        block_identifier : Optional[EpochNumberParam], optional
+            integer epoch number, or the string "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest", by default None
 
         Returns
         -------
         EstimateResult
-        
-        e.g.
-        {
-            "gasLimit": 28000,
-            "gasUsed": 21000,
-            "storageCollateralized": 0
-        }
+        """        
+        return self._estimate_gas_and_collateral(transaction, block_identifier)
+
+    def estimate_gas(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam] = None) -> EstimateResult:
+        """
+        Compatibility API for conflux. Equivalent to `estimate_gas_and_collateral`
         """        
         return self.estimate_gas_and_collateral(transaction, block_identifier)
 
     def send_raw_transaction(self, raw_transaction: Union[HexStr, bytes]) -> TransactionHash:
+        """
+        Sends a signed transaction into the network for processing
+        
+        >>> tx_hash = w3.cfx.send_raw_transaction("0xf86eea8201a28207d0830f4240943838197c0c88d0d5b13b67e1bfdbdc132d4842e389056bc75e2d631000008080a017b8b26f473820475edc49bd153660e56b973b5985bbdb2828fceacb4c91f389a03452f9a69da34ef35acc9c554d7b1d63e9041141674b42c3abb1b57b9f83a2d3")
+        >>> tx_hash.executed() # equivalent to w3.cfx.wait_for_transaction_receipt(tx_hash)
+
+        Parameters
+        ----------
+        raw_transaction : Union[HexStr, bytes]
+            a signed transaction as hex string or bytes
+
+        Returns
+        -------
+        TransactionHash
+            the hash of the transaction in bytes and wrapped by TransactionHash object which provides chained operations
+        """        
         # TODO: remove pending middleware and changes here
         return cast(TransactionHash, self._send_raw_transaction(raw_transaction))
     
     def send_transaction(self, transaction: TxParam) -> TransactionHash:
+        """
+        Send a transaction by using transaction params. 
+        ## The node MUST support cfx_sendTransaction rpc (which is typically not supported by public rpc services)
+        ## or account is added to w3.wallet
+        
+        >>> account = w3.account.create()
+        >>> w3.wallet.add_account(account)
+        >>> w3.cfx.send_transaction({
+        ...    "to": w3.address.zero_address(),
+        ...    "from": account.address,
+        ...    "value": 100,
+        ... }).executed()
+
+        Parameters
+        ----------
+        transaction : TxParam
+            {
+                "chainId": int,
+                "data": Union[bytes, HexStr],
+                "from": Union[Base32Address, str],
+                "gas": int,
+                "gasPrice": Drip,
+                "nonce": Nonce,
+                "to": Base32Address,
+                "value": Drip,
+                "epochHeight": int,
+                "storageLimit": int
+            }
+
+        Returns
+        -------
+        TransactionHash
+            the hash of the transaction in bytes and wrapped by TransactionHash object which provides chained operations
+        """        
         # TODO: remove pending middleware and changes here
         return cast(TransactionHash, self._send_transaction(transaction))
     
     def get_transaction_receipt(self, transaction_hash: _Hash32) -> TxReceipt:
+        """
+        Returns a transaction receipt, identified by the corresponding transaction hash.
+        
+        >>> w3.cfx.get_transaction_receipt("0x5ffa11a44c6db42cc30967d4de5949b17ee319c4aba72f3380c60136993a8980")
+        AttributeDict({'transactionHash': HexBytes('0x5ffa11a44c6db42cc30967d4de5949b17ee319c4aba72f3380c60136993a8980'),
+            'index': 227,
+            'blockHash': HexBytes('0xceda961d541c78fa2c99907620bb2b13707f72b004b7c70362a5642177e6aae2'),
+            'epochNumber': 97108737,
+            'from': 'cfxtest:aaksxj04phv0hp02jh3cbym9vghwkzap867jagb043',
+            'to': 'cfxtest:aaksxj04phv0hp02jh3cbym9vghwkzap867jagb043',
+            'gasUsed': 21000,
+            'gasFee': 21000000000000 Drip,
+            'contractCreated': None,
+            'logs': [],
+            'logsBloom': HexBytes('0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'),
+            'stateRoot': HexBytes('0x89dd70006e4714eb81a210a20badf4c37adc7fcbe992b8458460876fcac38ea3'),
+            'outcomeStatus': 0,
+            'txExecErrorMsg': None,
+            'gasCoveredBySponsor': False,
+            'storageCoveredBySponsor': False,
+            'storageCollateralized': 0,
+            'storageReleased': []})
+
+        Parameters
+        ----------
+        transaction_hash : _Hash32
+            the hash of the transaction, could be byte or hex string
+
+        Returns
+        -------
+        TxReceipt
+            the receipt of the transaction
+        """        
         return self._get_transaction_receipt(transaction_hash)
     
     def wait_till_transaction_mined(
         self, transaction_hash: _Hash32, timeout: float = 60, poll_latency: float = 0.5
     ) -> TxData:
+        """
+        Returns information about a transaction when it is mined.
+        If TxData is returned, the transaction is found contained in a block, but might not be executed.
+        (Transaction will only be executed after 5 epochs)
+        
+        >>> w3.cfx.wait_till_transaction_mined("0x5ffa11a44c6db42cc30967d4de5949b17ee319c4aba72f3380c60136993a8980")
+        AttributeDict({'hash': HexBytes('0x5ffa11a44c6db42cc30967d4de5949b17ee319c4aba72f3380c60136993a8980'),
+            'nonce': 8230,
+            'blockHash': HexBytes('0xceda961d541c78fa2c99907620bb2b13707f72b004b7c70362a5642177e6aae2'),
+            'transactionIndex': 227,
+            'from': 'cfxtest:aaksxj04phv0hp02jh3cbym9vghwkzap867jagb043',
+            'to': 'cfxtest:aaksxj04phv0hp02jh3cbym9vghwkzap867jagb043',
+            'value': 0 Drip,
+            'gasPrice': 1000000000 Drip,
+            'gas': 21000,
+            'contractCreated': None,
+            'data': HexBytes('0x'),
+            'storageLimit': 0,
+            'epochHeight': 97108719,
+            'chainId': 1,
+            'status': 0,
+            'v': 1,
+            'r': HexBytes('0x1d16cb28acf3973df4f4cc29ffffdba5d36ca1e38f1904f64780fa505691c1b7'),
+            's': HexBytes('0x1549267bc4f60af38d23112b47a54dc36481e77eb44dd5ee2c3277810c1c6297')})
+
+
+        Parameters
+        ----------
+        transaction_hash : _Hash32
+            the hash of the transaction, could be byte or hex string
+        timeout : float, optional
+            maximum wait time before timeout in seconds, by default 60
+        poll_latency : float, optional
+            time interval to query transaction status in seconds, by default 0.5
+
+        Returns
+        -------
+        TxData
+            the transaction data as a dict
+
+        Raises
+        ------
+        TimeExhausted
+            if timeout
+        """        
         try:
             with Timeout(timeout) as _timeout:
                 while True:
@@ -698,36 +946,8 @@ class ConfluxClient(BaseCfx, Eth):
     def wait_for_transaction_receipt(
         self, transaction_hash: _Hash32, timeout: float = 300, poll_latency: float = 0.5
     ) -> TxReceipt:
-        """_summary_
-
-        Args:
-            transaction_hash (_Hash32): _description_
-            timeout (float, optional): _description_. Defaults to 300.
-            poll_latency (float, optional): _description_. Defaults to 0.5.
-
-        Returns:
-            TxReceipt
-            {
-                "transactionHash": _Hash32,
-                "index": int,
-                "blockHash": _Hash32,
-                "epochNumber": int,
-                "from": Union[Base32Address, str],
-                "to": Union[Base32Address, str],
-                "gasUsed": int,
-                "gasFee": Drip,
-                "gasCoveredBySponsor": bool,
-                "storageCollateralized": Storage,
-                "storageCoveredBySponsor": bool,
-                "storageReleased": List[Storage],
-                "contractCreated": Union[Base32Address, str, None],
-                
-                "stateRoot": _Hash32,
-                "outcomeStatus": int,
-                "logsBloom": HexBytes,
-                
-                "logs": List[LogReceipt]
-            },
+        """
+        Alias for `wait_till_transaction_executed`
         """
         try:
             receipt = cast(TxReceipt, super().wait_for_transaction_receipt(transaction_hash, timeout, poll_latency)) # type: ignore
@@ -743,12 +963,104 @@ class ConfluxClient(BaseCfx, Eth):
     def wait_till_transaction_executed(
         self, transaction_hash: _Hash32, timeout: float = 300, poll_latency: float = 0.5
     ) -> TxReceipt:
+        """
+        Returns transaction receipt after it is executed.
+        If TxReceipt is returned, the transaction is found executed successfully
+        
+        >>> w3.cfx.wait_till_transaction_executed("0x5ffa11a44c6db42cc30967d4de5949b17ee319c4aba72f3380c60136993a8980")
+        AttributeDict({'transactionHash': HexBytes('0x5ffa11a44c6db42cc30967d4de5949b17ee319c4aba72f3380c60136993a8980'),
+            'index': 227,
+            'blockHash': HexBytes('0xceda961d541c78fa2c99907620bb2b13707f72b004b7c70362a5642177e6aae2'),
+            'epochNumber': 97108737,
+            'from': 'cfxtest:aaksxj04phv0hp02jh3cbym9vghwkzap867jagb043',
+            'to': 'cfxtest:aaksxj04phv0hp02jh3cbym9vghwkzap867jagb043',
+            'gasUsed': 21000,
+            'gasFee': 21000000000000 Drip,
+            'contractCreated': None,
+            'logs': [],
+            'logsBloom': HexBytes('0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'),
+            'stateRoot': HexBytes('0x89dd70006e4714eb81a210a20badf4c37adc7fcbe992b8458460876fcac38ea3'),
+            'outcomeStatus': 0,
+            'txExecErrorMsg': None,
+            'gasCoveredBySponsor': False,
+            'storageCoveredBySponsor': False,
+            'storageCollateralized': 0,
+            'storageReleased': []})
+
+        Parameters
+        ----------
+        transaction_hash : _Hash32
+            the hash of the transaction, could be byte or hex string
+        timeout : float, optional
+            maximum wait time before timeout in seconds, by default 300
+        poll_latency : float, optional
+            time interval to query transaction status in seconds, by default 0.5
+
+        Returns
+        -------
+        TxReceipt
+            transaction receipt as a dict
+
+        Raises
+        ------
+        TimeExhausted
+            if timeout
+        RuntimeError
+            if transaction is not executed successfully
+        """  
         return self.wait_for_transaction_receipt(transaction_hash, timeout, poll_latency)
         
     
     def wait_till_transaction_confirmed(
         self, transaction_hash: _Hash32, timeout: float = 600, poll_latency: float = 0.5
     ) -> TxReceipt:
+        """
+        Returns transaction receipt after a transaction is confirmed.
+        If TxReceipt is returned, the chances that the transaction execution result to be reverted is tiny.
+        But there are still chances that the transaction might be reverted.
+        ## Developers should use `wait_till_transaction_finalized` if the transaction is REALLY IMPORTANT.
+        
+        >>> w3.cfx.get_transaction_receipt("0x5ffa11a44c6db42cc30967d4de5949b17ee319c4aba72f3380c60136993a8980")
+        AttributeDict({'transactionHash': HexBytes('0x5ffa11a44c6db42cc30967d4de5949b17ee319c4aba72f3380c60136993a8980'),
+            'index': 227,
+            'blockHash': HexBytes('0xceda961d541c78fa2c99907620bb2b13707f72b004b7c70362a5642177e6aae2'),
+            'epochNumber': 97108737,
+            'from': 'cfxtest:aaksxj04phv0hp02jh3cbym9vghwkzap867jagb043',
+            'to': 'cfxtest:aaksxj04phv0hp02jh3cbym9vghwkzap867jagb043',
+            'gasUsed': 21000,
+            'gasFee': 21000000000000 Drip,
+            'contractCreated': None,
+            'logs': [],
+            'logsBloom': HexBytes('0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'),
+            'stateRoot': HexBytes('0x89dd70006e4714eb81a210a20badf4c37adc7fcbe992b8458460876fcac38ea3'),
+            'outcomeStatus': 0,
+            'txExecErrorMsg': None,
+            'gasCoveredBySponsor': False,
+            'storageCoveredBySponsor': False,
+            'storageCollateralized': 0,
+            'storageReleased': []})
+
+        Parameters
+        ----------
+        transaction_hash : _Hash32
+            the hash of the transaction, could be byte or hex string
+        timeout : float, optional
+            maximum wait time before timeout in seconds, by default 600
+        poll_latency : float, optional
+            time interval to query transaction status in seconds, by default 0.5
+
+        Returns
+        -------
+        TxReceipt
+            transaction receipt as a dict
+
+        Raises
+        ------
+        TimeExhausted
+            if timeout
+        RuntimeError
+            if transaction is not executed successfully
+        """  
         try:
             with Timeout(timeout) as _timeout:
                 while True:
@@ -772,7 +1084,31 @@ class ConfluxClient(BaseCfx, Eth):
     def wait_till_transaction_finalized(
         self, transaction_hash: _Hash32, timeout: float = 1200, poll_latency: float = 0.5
     ) -> TxReceipt:
-        warnings.warn("10 ~ 15 minutes are required to finalize a transaction", UserWarning)
+        """
+        Returns transaction receipt after a transaction is finalized by PoS chain.
+        It will take 5 ~ 10 minutes to finalize a transaction but the finalized transaction won't be reverted.
+        It is recommended for developers to use this api to confirm important transactions.
+
+        Parameters
+        ----------
+        transaction_hash : _Hash32
+            the hash of the transaction, could be byte or hex string
+        timeout : float, optional
+            maximum wait time before timeout in seconds, by default 1200
+        poll_latency : float, optional
+            time interval to query transaction status in seconds, by default 0.5
+
+        Returns
+        -------
+        TxReceipt
+            transaction receipt as a dict
+
+        Raises
+        ------
+        TimeExhausted
+            If timeout
+        """        
+        warnings.warn("5 ~ 10 minutes are required to finalize a transaction", UserWarning)
         try:
             with Timeout(timeout) as _timeout:
                 while True:
@@ -794,86 +1130,282 @@ class ConfluxClient(BaseCfx, Eth):
             )
     
     def get_transaction_by_hash(self, transaction_hash: _Hash32) -> TxData:
+        """
+        Returns information about a transaction, identified by its hash.
+        ## Note: the transaction is not mined if `blockHash` field is None
+        
+        >>> w3.cfx.get_transaction_by_hash('0x5ffa11a44c6db42cc30967d4de5949b17ee319c4aba72f3380c60136993a8980')
+        AttributeDict({'hash': HexBytes('0x5ffa11a44c6db42cc30967d4de5949b17ee319c4aba72f3380c60136993a8980'),
+            'nonce': 8230,
+            'blockHash': HexBytes('0xceda961d541c78fa2c99907620bb2b13707f72b004b7c70362a5642177e6aae2'),
+            'transactionIndex': 227,
+            'from': 'cfxtest:aaksxj04phv0hp02jh3cbym9vghwkzap867jagb043',
+            'to': 'cfxtest:aaksxj04phv0hp02jh3cbym9vghwkzap867jagb043',
+            'value': 0 Drip,
+            'gasPrice': 1000000000 Drip,
+            'gas': 21000,
+            'contractCreated': None,
+            'data': HexBytes('0x'),
+            'storageLimit': 0,
+            'epochHeight': 97108719,
+            'chainId': 1,
+            'status': 0,
+            'v': 1,
+            'r': HexBytes('0x1d16cb28acf3973df4f4cc29ffffdba5d36ca1e38f1904f64780fa505691c1b7'),
+            's': HexBytes('0x1549267bc4f60af38d23112b47a54dc36481e77eb44dd5ee2c3277810c1c6297')})
+
+
+        Parameters
+        ----------
+        transaction_hash : _Hash32
+            the hash of the transaction, could be byte or hex string
+
+        Returns
+        -------
+        TxData
+            transaction data as a dict
+        """        
         return self._get_transaction_by_hash(transaction_hash)
     
     # same as web3.py
     def get_transaction(self, transaction_hash: _Hash32) -> TxData:
+        """Alias for `get_transaction_by_hash`
+        """
         return self.get_transaction_by_hash(transaction_hash)
     
     def get_block_by_hash(
         self, block_hash: _Hash32, full_transactions: bool=False
-    ) -> BlockData:
+    ) -> Union[BlockData, None]:
+        """
+        Returns information about a block, identified by its hash.
+
+        >>> w3.cfx.get_block_by_hash("0x4752f93f61b43e3b09bcbcd36871d4894ac64254df367fa9d7a6253cfb618ece")
+        AttributeDict({'hash': HexBytes('0x4752f93f61b43e3b09bcbcd36871d4894ac64254df367fa9d7a6253cfb618ece'),
+            'parentHash': HexBytes('0x06a695ab273255341f24f955ce696d45007df4df66f0c61b1818965926c2e808'),
+            'height': 97111729,
+            'miner': 'cfxtest:aanpu16mtgc7dke5xhuktyfyef8f00pz8a2z5mc14g',
+            'deferredStateRoot': HexBytes('0xeaf792fff684ce3f04c84614442ab38e8bb4622bacba1c01e857449ef97425f2'),
+            'deferredReceiptsRoot': HexBytes('0x09f8709ea9f344a810811a373b30861568f5686e649d6177fd92ea2db7477508'),
+            'deferredLogsBloomHash': HexBytes('0xd397b3b043d87fcd6fad1291ff0bfd16401c274896d8c63a923727f077b8e0b5'),
+            'blame': 0,
+            'transactionsRoot': HexBytes('0x6058a7cf739d94882638cada6e15a4f3b53b757c7195c5cafd04c2061f6de00d'),
+            'epochNumber': 97111729,
+            'blockNumber': 124302546,
+            'gasLimit': 30000000,
+            'gasUsed': 75291,
+            'timestamp': 1666755747,
+            'difficulty': 57822922,
+            'powQuality': HexBytes('0x04ebbe82'),
+            'refereeHashes': [],
+            'adaptive': False,
+            'nonce': HexBytes('0x14b30ccfa7cf95b2'),
+            'size': 311,
+            'custom': [HexBytes('0x02')],
+            'posReference': HexBytes('0x2bac96d8e4205badeab4138d1f7b671a436a68ab50c54e7b154243cbf0c9205b'),
+            'transactions': [HexBytes('0x70d17ef32c0544075078cb1ca777dab3728d443f00826cf3d05b9c01b76b5f5c')]})
+                    
+        Parameters
+        ----------
+        block_hash : _Hash32
+            hash of a block
+        full_transactions : bool, optional
+            if true, it returns the full transaction objects. If false, only the hashes of the transactions are returned, by default False
+
+        Returns
+        -------
+        Union[BlockData, None]
+            the block data as a dict, or None if no block was found
+        """        
         return self._get_block_by_hash(block_hash, full_transactions)
     
     def get_block_by_epoch_number(
         self, epoch_number_param: EpochNumberParam, full_transactions: bool=False
     ) -> BlockData:
+        """
+        Returns information about a pivot block, identified by its epoch number.
+
+        >>> w3.cfx.get_block_by_epoch_number(97111729)
+        AttributeDict({'hash': HexBytes('0x4752f93f61b43e3b09bcbcd36871d4894ac64254df367fa9d7a6253cfb618ece'),
+            'parentHash': HexBytes('0x06a695ab273255341f24f955ce696d45007df4df66f0c61b1818965926c2e808'),
+            'height': 97111729,
+            'miner': 'cfxtest:aanpu16mtgc7dke5xhuktyfyef8f00pz8a2z5mc14g',
+            'deferredStateRoot': HexBytes('0xeaf792fff684ce3f04c84614442ab38e8bb4622bacba1c01e857449ef97425f2'),
+            'deferredReceiptsRoot': HexBytes('0x09f8709ea9f344a810811a373b30861568f5686e649d6177fd92ea2db7477508'),
+            'deferredLogsBloomHash': HexBytes('0xd397b3b043d87fcd6fad1291ff0bfd16401c274896d8c63a923727f077b8e0b5'),
+            'blame': 0,
+            'transactionsRoot': HexBytes('0x6058a7cf739d94882638cada6e15a4f3b53b757c7195c5cafd04c2061f6de00d'),
+            'epochNumber': 97111729,
+            'blockNumber': 124302546,
+            'gasLimit': 30000000,
+            'gasUsed': 75291,
+            'timestamp': 1666755747,
+            'difficulty': 57822922,
+            'powQuality': HexBytes('0x04ebbe82'),
+            'refereeHashes': [],
+            'adaptive': False,
+            'nonce': HexBytes('0x14b30ccfa7cf95b2'),
+            'size': 311,
+            'custom': [HexBytes('0x02')],
+            'posReference': HexBytes('0x2bac96d8e4205badeab4138d1f7b671a436a68ab50c54e7b154243cbf0c9205b'),
+            'transactions': [HexBytes('0x70d17ef32c0544075078cb1ca777dab3728d443f00826cf3d05b9c01b76b5f5c')]})
+
+        Parameters
+        ----------
+        epoch_number_param : EpochNumberParam
+            the epoch number, or the string "latest_mined", "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest"
+        full_transactions : bool, optional
+            if true, it returns the full transaction objects. If false, only the hashes of the transactions are returned, by default False
+
+        Returns
+        -------
+        BlockData
+            the block data as a dict
+        """        
         return self._get_block_by_epoch_number(epoch_number_param, full_transactions)
     
     def get_block_by_block_number(
         self, block_number: int, full_transactions: bool=False
     ) -> BlockData:
+        """
+        Returns information about a block, identified by its block number.
+
+        >>> w3.cfx.get_block_by_block_number(124302546)
+        AttributeDict({'hash': HexBytes('0x4752f93f61b43e3b09bcbcd36871d4894ac64254df367fa9d7a6253cfb618ece'),
+            'parentHash': HexBytes('0x06a695ab273255341f24f955ce696d45007df4df66f0c61b1818965926c2e808'),
+            'height': 97111729,
+            'miner': 'cfxtest:aanpu16mtgc7dke5xhuktyfyef8f00pz8a2z5mc14g',
+            'deferredStateRoot': HexBytes('0xeaf792fff684ce3f04c84614442ab38e8bb4622bacba1c01e857449ef97425f2'),
+            'deferredReceiptsRoot': HexBytes('0x09f8709ea9f344a810811a373b30861568f5686e649d6177fd92ea2db7477508'),
+            'deferredLogsBloomHash': HexBytes('0xd397b3b043d87fcd6fad1291ff0bfd16401c274896d8c63a923727f077b8e0b5'),
+            'blame': 0,
+            'transactionsRoot': HexBytes('0x6058a7cf739d94882638cada6e15a4f3b53b757c7195c5cafd04c2061f6de00d'),
+            'epochNumber': 97111729,
+            'blockNumber': 124302546,
+            'gasLimit': 30000000,
+            'gasUsed': 75291,
+            'timestamp': 1666755747,
+            'difficulty': 57822922,
+            'powQuality': HexBytes('0x04ebbe82'),
+            'refereeHashes': [],
+            'adaptive': False,
+            'nonce': HexBytes('0x14b30ccfa7cf95b2'),
+            'size': 311,
+            'custom': [HexBytes('0x02')],
+            'posReference': HexBytes('0x2bac96d8e4205badeab4138d1f7b671a436a68ab50c54e7b154243cbf0c9205b'),
+            'transactions': [HexBytes('0x70d17ef32c0544075078cb1ca777dab3728d443f00826cf3d05b9c01b76b5f5c')]})
+
+        Parameters
+        ----------
+        epoch_number_param : EpochNumberParam
+            the epoch number, or the string "latest_mined", "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest"
+        full_transactions : bool, optional
+            if true, it returns the full transaction objects. If false, only the hashes of the transactions are returned, by default False
+
+        Returns
+        -------
+        BlockData
+            the block data as a dict
+        """  
         return self._get_block_by_block_number(block_number, full_transactions)
     
     def get_best_block_hash(self) -> HexBytes:
+        """
+        Returns the best block hash, which is the block hash of the latest pivot block
+
+        Returns
+        -------
+        HexBytes
+            best block hash in bytes
+        """        
         return self._get_best_block_hash()
     
     def get_blocks_by_epoch(self, epoch_number_param: EpochNumberParam) -> Sequence[HexBytes]:
+        """
+        Returns the block hashes in the specified epoch.
+
+        Parameters
+        ----------
+        epoch_number_param : EpochNumberParam
+            the epoch number, or the string "latest_mined", "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest"
+
+        Returns
+        -------
+        Sequence[HexBytes]
+            a list of block hash in bytes
+        """        
         return self._get_blocks_by_epoch(epoch_number_param)
     
     def get_skipped_blocks_by_epoch(self, epoch_number_param: EpochNumberParam) -> Sequence[HexBytes]:
+        """
+        Returns the list of non-executed blocks in an epoch. By default, Conflux only executes the last 200 blocks in each epoch (note that under normal circumstances, epochs should be much smaller).
+
+        Parameters
+        ----------
+        epoch_number_param : EpochNumberParam
+            the epoch number, or the string "latest_mined", "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest"
+
+        Returns
+        -------
+        Sequence[HexBytes]
+            a list of block hash in bytes
+        """        
         return self._get_skipped_blocks_by_epoch(epoch_number_param)
 
     def get_block_by_hash_with_pivot_assumptions(self, block_hash: _Hash32, assumed_pivot_hash: _Hash32, epoch_number: int) -> BlockData:
+        """
+        Returns the requested block if the provided pivot hash is correct, returns an error otherwise.
+
+        Parameters
+        ----------
+        block_hash : _Hash32
+            block hash
+        assumed_pivot_hash : _Hash32
+            assumed pivot hash
+        epoch_number : int
+            integer epoch number
+
+        Returns
+        -------
+        BlockData
+            returns block data if pivot hash is correct
+        """        
         return self._get_block_by_hash_with_pivot_assumptions(block_hash, assumed_pivot_hash, epoch_number)
     
     def get_confirmation_risk_by_hash(self, block_hash: _Hash32) -> float:
+        """
+        Returns the confirmation risk of a given block, identified by its hash
+
+        Parameters
+        ----------
+        block_hash : _Hash32
+            block hash
+
+        Returns
+        -------
+        float
+            the confirmation risk in float
+        """        
         return self._get_confirmation_risk_by_hash(block_hash)
     
     def get_block(self, block_identifier: Union[_Hash32, EpochNumberParam], full_transactions: bool = False) -> BlockData:
         """
-        a simple wrapper combining web3.cfx.get_block_by_hash and web3.cfx.get_block_by_epoch_number
+        a simple wrapper combining `get_block_by_hash` and `get_block_by_epoch_number`
+        # note: DON'T USE *BLOCK NUMBER* as the parameter. A number will be considered as epoch number
+        
+        >>> block_data = w3.cfx.get_block(97112003)
+        >>> block_data_ = w3.cfx.get_block("0x1aa5c0d8d6778bd72ac842a52fd26042458b4f70a4d969dfa0d80f81f5eac790")
+        >>> assert block_data == block_data_
 
         Parameters
         ----------
         block_identifier : Union[_Hash32, EpochNumberParam]
             block hash or epoch number parameter(e.g. string "latest_state" or epoch number)
-            # note: DON'T USE BLOCK NUMBER as the parameter #
         full_transactions : bool, optional
             whether the return block data contains full transaction info or just transaction hash, by default False
 
         Returns
         -------
         BlockData
-            e.g.
-            {
-                "adaptive": false,
-                "blame": 0,
-                "deferredLogsBloomHash": "0xd397b3b043d87fcd6fad1291ff0bfd16401c274896d8c63a923727f077b8e0b5",
-                "deferredReceiptsRoot": "0x522717233b96e0a03d85f02f8127aa0e23ef2e0865c95bb7ac577ee3754875e4",
-                "deferredStateRoot": "0xd449df4ba49f5ab02abf261e976197beecf93c5198a6f0b6bd2713d84115c4ec",
-                "difficulty": "0xeee440",
-                "epochNumber": "0x1394cb",
-                "gasLimit": "0xb2d05e00",
-                "gasUsed": "0xad5ae8",
-                "hash": "0x692373025c7315fa18b2d02139d08e987cd7016025920f59ada4969c24e44e06",
-                "height": "0x1394c9",
-                "miner": "CFX:TYPE.USER:AARC9ABYCUE0HHZGYRR53M6CXEDGCCRMMYYBJGH4XG",
-                "nonce": "0x329243b1063c6773",
-                "parentHash": "0xd1c2ff79834f86eb4bc98e0e526de475144a13719afba6385cf62a4023c02ae3",
-                "powQuality": "0x2ab0c3513",
-                "refereeHashes": [
-                "0xcc103077ede14825a5667bddad79482d7bbf1f1a658fed6894fa0e9287fc6be1"
-                ],
-                "size": "0x180",
-                "timestamp": "0x5e8d32a1",
-                "transactions": [
-                "0xedfa5b9c38ba51e791cc72b8f75ff758533c8c38f426eddee3fd95d984dd59ff"
-                ],
-                "custom": ["0x12"],
-                "transactionsRoot": "0xfb245dae4539ea49812e822adbffa9dd2ee9b3de8f3d9a7d186d351dcc9a6ed4",
-                "posReference": "0xd1c2ff79834f86eb4bc98e0e526de475144a13719afba6385cf62a4023c02ae3",
-            } 
         """
         # TODO: more fine-grained munger
         if block_identifier == "latest":
@@ -985,7 +1517,30 @@ class ConfluxClient(BaseCfx, Eth):
     @overload
     def get_logs(self, filter_params: None=None, **kwargs: Dict[str, Any]) -> List[LogReceipt]:...
     
-    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs: Dict[str, Any]) -> List[LogReceipt]:
+    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs: Any) -> List[LogReceipt]:
+        """
+        Returns logs matching the filter provided.
+        It is accepted to pass filter_params as a dict or by direclty specifying field name (but cannot mix)
+        
+        >>> logs = w3.cfx.get_logs({"fromEpoch": 97134060, "toEpoch: 97134160"})
+        >>> assert logs == w3.cfx.get_logs(fromEpoch=97134060, toEpoch=97134160})
+
+        Parameters
+        ----------
+        filter_params : Optional[FilterParams], optional
+            FilterParams is a dict with optional fields:
+                fromEpoch: EpochNumberParam
+                toEpoch: EpochNumberParam
+                blockHashes: Sequence[_Hash32]
+                address: Union[Base32Address, List[Base32Address]]
+                topics: Sequence[Optional[Union[_Hash32, Sequence[_Hash32]]]]
+            visit https://developer.confluxnetwork.org/conflux-doc/docs/json_rpc/#cfx_getlogs for more information
+
+        Returns
+        -------
+        List[LogReceipt]
+            a list of LogReceipt. It is recommended to read https://github.com/Conflux-Chain/python-conflux-sdk/blob/v1/examples/04-interact_with_contracts_and_logs.py to know how to process the returned logs
+        """        
         if filter_params is None:
             filter_params = cast(FilterParams, keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs)) # type: ignore
             return self._get_logs(filter_params)
@@ -993,4 +1548,3 @@ class ConfluxClient(BaseCfx, Eth):
             if len(kwargs.keys()) != 0:
                 raise ValueError("Redundant Param: FilterParams as get_logs first parameter is already provided")
             return self._get_logs(filter_params)
-
