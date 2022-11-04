@@ -3,7 +3,6 @@ from typing import (
     Any,
     Callable,
     List,
-    Literal,
     Optional,
     Sequence,
     Tuple,
@@ -12,6 +11,9 @@ from typing import (
     Dict,
     cast,
     overload
+)
+from typing_extensions import (
+    Literal
 )
 import warnings
 from hexbytes import HexBytes
@@ -139,13 +141,15 @@ class BaseCfx(BaseEth):
         """set default account address
         """
         if isinstance(account, LocalAccount):
-            self._default_account = (normalized_address := Base32Address(account.address))
+            normalized_address = Base32Address(account.address)
+            self._default_account = normalized_address
             if (self.w3.wallet is not None and account.address not in self.w3.wallet):
                 self.w3.wallet.add_account(account)
             if self.w3.cns:
                 self.w3.cns.w3.cfx.default_account = normalized_address
         else:
-            self._default_account = (normalized_address := Base32Address(resolve_if_cns_name(self.w3, account)))
+            normalized_address = Base32Address(resolve_if_cns_name(self.w3, account))
+            self._default_account = normalized_address
             if self.w3.cns:
                 self.w3.cns.w3.cfx.default_account = normalized_address
     

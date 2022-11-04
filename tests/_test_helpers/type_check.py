@@ -1,22 +1,19 @@
 from typing import (
     Any,
     ForwardRef,
-    Literal,
     Type,
-    TypedDict, 
-    get_args, 
-    get_origin, 
     Union,
 )
 import typing
 import sys
 from typing_extensions import (
+    Literal,
+    TypedDict, 
+    get_args,
+    get_origin, 
     is_typeddict,
 )
 import collections.abc
-import warnings
-
-from cfx_address import Base32Address
 
 import conflux_web3.types
 

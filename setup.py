@@ -87,7 +87,7 @@ setup(
     install_requires=[
         "web3==6.0.0b7",
         "cfx-address>=1.0.0b14",
-        "cfx-account>=0.1.0b7",
+        "cfx-account>=0.1.0b8",
         "cfx-utils>=1.0.0b12",
         "cached_property==1.5.2",
         # "eth-account>=0.6.0,<0.7.0"

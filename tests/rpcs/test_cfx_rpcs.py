@@ -190,12 +190,12 @@ class TestNonce:
         nonce = w3.cfx.get_transaction_count(address)
         assert nonce >= 0
 
-    def test_get_next_nonce_empty_param(self, w3: Web3, use_testnet):
-        # TODO: remove use_testnet if statement after testnet node is repaired
-        if use_testnet:
-            return
-        with pytest.raises(ValueError):
-            w3.cfx.get_next_nonce()
+    # def test_get_next_nonce_empty_param(self, w3: Web3, use_testnet):
+    #     # TODO: remove use_testnet if statement after testnet node is repaired
+    #     if use_testnet:
+    #         return
+    #     with pytest.raises(ValueError):
+    #         w3.cfx.get_next_nonce()
 
 def test_get_tx(moduled_w3: Web3, contract_address):
     """test get_transaction(_by_hash) and get_transaction_receipt

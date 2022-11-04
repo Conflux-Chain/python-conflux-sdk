@@ -1,8 +1,10 @@
 from typing import (
     List,
-    TypedDict,
     Union,
     Sequence,
+)
+from typing_extensions import (
+    TypedDict,
 )
 from tests._test_helpers.type_check import (
     TypeValidator

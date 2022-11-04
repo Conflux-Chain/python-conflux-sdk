@@ -104,8 +104,9 @@ class LocalNode(BaseNode):
         self._node_name = node_name
         self._url = f"http://{LOCAL_HOST}:{PORT}"
         self._client = docker.from_env()
+        container = get_existed_container(self._client, self._node_name)
         
-        if container := get_existed_container(self._client, self._node_name):
+        if container:
             self._container = container
         else:
             pull_image(self._client, self._image_name)
@@ -166,8 +167,8 @@ class LocalTestnetNode(LocalNode):
         self._node_name = node_name
         self._url = f"http://{LOCAL_HOST}:{TESTNET_HOST_PORT}"
         self._client = docker.from_env()
-        
-        if container := get_existed_container(self._client, self._node_name):
+        container = get_existed_container(self._client, self._node_name)
+        if container:
             self._container = container
         else:
             pull_image(self._client, self._image_name)

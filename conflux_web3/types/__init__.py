@@ -3,13 +3,15 @@ from typing import (
     Any,
     Callable,
     List,
-    Literal,
     NewType,
     Optional,
     Sequence,
-    TypedDict,
     Union,
     Dict
+)
+from typing_extensions import (
+    Literal,
+    TypedDict,
 )
 from hexbytes import HexBytes
 

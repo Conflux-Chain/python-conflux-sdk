@@ -100,7 +100,8 @@ def get_contract_metadata(
             metadata = json.load(f)
         metadata = keyfilter(lambda x: x in ["abi", "bytecode"], metadata)
     except ContractMetadataNotFound as e:
-        if abi := getattr(abis, contract_name, None):
+        abi = getattr(abis, contract_name, None)
+        if abi:
             metadata = {
                 "abi": abi
             }
