@@ -21,3 +21,4 @@ legacy_tests
 note*.ipynb
 share
 main*.py
+*.bk.py

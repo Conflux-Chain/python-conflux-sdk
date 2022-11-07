@@ -1,5 +1,18 @@
 # Change Logs
 
+## 1.0.0-dev7
+
+* type hints: migrate to `Pylance`; add `py.typed`
+* fix: cns recursive import problem
+* feature: default network id by using `web3.address`
+* feature: support python3.7
+* doc: add inline documents for frequently used RPCs
+* change: recover `estimate_gas_and_collateral`, `gas_price` returned token units
+
+## 1.0.0-dev6
+
+* bug fix: include the contract metadata in the release
+
 ## 1.0.0-dev4
 
 * Response containing "address" from rpc is wrapped by `Base32Address`
