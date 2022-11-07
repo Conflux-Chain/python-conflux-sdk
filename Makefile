@@ -11,6 +11,9 @@ build: clean
 publish: 
 	twine upload dist/* --repository conflux-web3
 
+doc:
+	python3 gen_py_doc.py
+
 # gen-docs:
 # 	cd ./docs && \
 # 	sphinx-apidoc -o ./source ../cfx_address -f -M --separate && \
