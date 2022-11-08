@@ -144,3 +144,12 @@ def test_wallet_operators():
     assert account.address in wallet
     # __getitem__
     assert wallet[account.address]
+
+def test_wallet_pop():
+    wallet = Wallet()
+    account = Account.create()
+    wallet.add_account(
+        account
+    )
+    assert wallet.pop(account.address).address == account.address
+    assert account.address not in wallet

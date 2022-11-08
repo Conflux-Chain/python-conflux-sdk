@@ -172,6 +172,12 @@ class Wallet:
             return True
         except KeyError:
             return False
+    
+    def pop(self, address: str) -> LocalAccount:
+        if self._chain_id is None:
+            return self._accounts_map.pop(normalize_to(address, None))
+        else:
+            return self._accounts_map.pop(address)
 
 
 def construct_sign_and_send_raw_middleware(
