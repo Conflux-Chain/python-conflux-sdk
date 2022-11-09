@@ -12,6 +12,7 @@ publish:
 	twine upload dist/* --repository conflux-web3
 
 doc:
+	rm -rf examples/py
 	python3 gen_py_doc.py
 
 # gen-docs:

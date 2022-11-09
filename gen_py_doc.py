@@ -7,6 +7,8 @@ src_files = os.listdir(ipynb_dir)
 
 for file in src_files:
     code = json.load(open(os.path.join(ipynb_dir, file)))
+    if not os.path.exists(py_dir):
+        os.mkdir(py_dir)
     py_file = open(f"{os.path.join(py_dir, file.replace('ipynb', 'py'))}", "w+")
 
     for cell in code['cells']:
