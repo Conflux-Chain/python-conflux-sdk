@@ -7,10 +7,9 @@
 # preparation: import and init w3 instance
 from conflux_web3 import Web3
 
-# we use a new w3 object for the following presentation
 w3 = Web3(Web3.HTTPProvider("https://test.confluxrpc.com"))
 
-# prepared constants
+# prepare constants
 transaction_hash = "0x10a721e2654523a7ff682c1c8d3f868a9fdf78a3be1858bbe1f06147128d6d94"
 epoch = 98943500
 

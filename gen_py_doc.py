@@ -6,6 +6,8 @@ py_dir = "./examples/py"
 src_files = os.listdir(ipynb_dir)
 
 for file in src_files:
+    if not file.endswith(".ipynb"):
+        continue
     code = json.load(open(os.path.join(ipynb_dir, file)))
     if not os.path.exists(py_dir):
         os.mkdir(py_dir)
