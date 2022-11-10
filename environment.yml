@@ -1,5 +1,5 @@
 name: python 3.8
 dependencies:
   - python=3.8
-  - conflux-web3
+  - conflux-web3=1.0.0b7
   - py-solc-x
