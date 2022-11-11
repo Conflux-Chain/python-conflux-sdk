@@ -1,0 +1,15 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: README
+parts:
+- caption: Examples
+  chapters:
+  - file: examples/01-quickstart
+  - file: examples/02-address_account_and_wallet
+  - file: examples/03-trace_transaction_status
+  - file: examples/04-query_data_via_RPC
+  - file: examples/05-interact_with_contracts_and_process_logs
+  - file: examples/10-send_raw_transaction
+  - file: examples/11-construct_transaction_from_scratch

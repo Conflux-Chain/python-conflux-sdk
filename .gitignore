@@ -4,7 +4,6 @@
 .env
 build
 dist
-docs/*
 tests/__pycache__
 venv*/
 conflux/__init__.pyc
