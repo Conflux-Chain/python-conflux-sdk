@@ -21,3 +21,4 @@ note*.ipynb
 share
 main*.py
 *.bk.py
+docs/*/_build
