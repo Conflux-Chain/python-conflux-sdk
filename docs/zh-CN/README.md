@@ -7,23 +7,23 @@
 [README](/README.md) | [中文文档](/docs/zh-CN/README.md)
 
 - [Introduction](#introduction)
-  - [Overview](#overview)
+  - [概览](#概览)
   - [Quickstart](#quickstart)
-  - [Documentations](#documentations)
-    - [Run Code Examples Online!](#run-code-examples-online)
-    - [Localization](#localization)
+  - [文档](#文档)
+    - [在线运行示例代码](#在线运行示例代码)
+    - [本地化](#本地化)
 
 
-## Overview
+## 概览
 
-Python-conflux-sdk helps to interact with Conflux network using python. It is built over [web3.py](https://github.com/ethereum/web3.py) and most of its APIs are consistent with [web3.py](https://github.com/ethereum/web3.py).
+Python-conflux-sdk 帮助开发者使用 python 与 Conflux 区块链交互，本库基于 [web3.py](https://github.com/ethereum/web3.py) 构建且大部分 API 与 `web3.py` 兼容。
 
 ## Quickstart
 
-Requirements: python version >= 3.7
+安装需求: python >= 3.7
 
 ```bash
-$ pip3 install conflux-web3
+pip3 install conflux-web3
 ```
 
 ```python
@@ -41,10 +41,10 @@ w3.cfx.send_transaction({
 }).executed()
 ```
 
-Or you can also use API as you do in `web3.py`: 
+您也可以按照 `web3.py` 的API风格使用本SDK： 
 
 ``` python
-# modified from https://web3py.readthedocs.io/en/stable/middleware.html#signing
+# 由 https://web3py.readthedocs.io/en/stable/middleware.html#signing 修改而来
 from conflux_web3 import Web3
 w3 = Web3("https://test.confluxrpc.com")
 from conflux_web3.middleware import construct_sign_and_send_raw_middleware
@@ -60,17 +60,17 @@ transaction = {
 w3.eth.send_transaction(transaction)
 ```
 
-## Documentations
+## 文档
 
-More detailed code examples are provided in the [documentation](https://python-conflux-sdk.readthedocs.io/en/latest/README.html).
+更详细的文档与用例可以参考 [文档](https://python-conflux-sdk.readthedocs.io/zh-CN/latest/README.html).
 
-### Run Code Examples Online!
+### 在线运行示例代码
 
-All code examples can be run online in [mybinder](https://mybinder.org/). You can click `🚀` -> `Binder` on the top bar to activate the running environment. All dependencies wil be installed and the example can be run immediately.
+文档中提供的示例代码可以通过[mybinder](https://mybinder.org/)在线运行. 您可以依次点击代码示例页顶部的 `🚀` -> `Binder` 来启动环境。环境中已配置好运行代码的必备依赖，因此相关代码可以直接运行。
 
-### Localization
+### 本地化
 
-Currently this documentation supports:
+当前的文档支持两种语言:
 
-* English version
-* Chinese version
+* 英文版本
+* 中文版本
