@@ -4,7 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/python-conflux-sdk/badge/?version=latest)](https://python-conflux-sdk.readthedocs.io/en/latest/?badge=latest)
 [![gitlocalized ](https://gitlocalize.com/repo/8175/whole_project/badge.svg)](https://gitlocalize.com/repo/8175/whole_project?utm_source=badge)
 
-[README](/README.md) | [中文文档](/docs/zh-CN/README.md)
+[README](https://python-conflux-sdk.readthedocs.io/en/latest/README.html) | [中文文档](https://python-conflux-sdk.readthedocs.io/zh_CN/latest/README.html)
 
 - [Introduction](#introduction)
   - [Overview](#overview)
@@ -74,3 +74,5 @@ Currently this documentation supports:
 
 * English version
 * Chinese version
+
+And welcome to provide translation in [GitLocalize](https://gitlocalize.com/repo/8175).

@@ -4,7 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/python-conflux-sdk/badge/?version=latest)](https://python-conflux-sdk.readthedocs.io/en/latest/?badge=latest)
 [![gitlocalized ](https://gitlocalize.com/repo/8175/whole_project/badge.svg)](https://gitlocalize.com/repo/8175/whole_project?utm_source=badge)
 
-[README](/README.md) | [中文文档](/docs/zh-CN/README.md)
+[README](https://python-conflux-sdk.readthedocs.io/en/latest/README.html) | [中文文档](https://python-conflux-sdk.readthedocs.io/zh_CN/latest/README.html)
 
 - [Introduction](#introduction)
   - [概览](#概览)
@@ -41,7 +41,7 @@ w3.cfx.send_transaction({
 }).executed()
 ```
 
-您也可以按照 `web3.py` 的API风格使用本SDK： 
+您也可以按照 `web3.py` 的 API 风格使用本 SDK： 
 
 ``` python
 # 由 https://web3py.readthedocs.io/en/stable/middleware.html#signing 修改而来
@@ -62,11 +62,11 @@ w3.eth.send_transaction(transaction)
 
 ## 文档
 
-更详细的文档与用例可以参考 [文档](https://python-conflux-sdk.readthedocs.io/zh-CN/latest/README.html).
+更详细的文档与用例可以参考 [文档](https://python-conflux-sdk.readthedocs.io/zh-CN/latest/README.html)。
 
 ### 在线运行示例代码
 
-文档中提供的示例代码可以通过[mybinder](https://mybinder.org/)在线运行. 您可以依次点击代码示例页顶部的 `🚀` -> `Binder` 来启动环境。环境中已配置好运行代码的必备依赖，因此相关代码可以直接运行。
+文档中提供的示例代码可以通过[mybinder](https://mybinder.org/)在线运行。 您可以依次点击代码示例页顶部的 `🚀` -> `Binder` 来启动环境。环境中已配置好运行代码的必备依赖，因此相关代码可以直接运行。
 
 ### 本地化
 
@@ -74,3 +74,5 @@ w3.eth.send_transaction(transaction)
 
 * 英文版本
 * 中文版本
+
+欢迎您通过 [GitLocalize](https://gitlocalize.com/repo/8175) 为我们提供翻译。
