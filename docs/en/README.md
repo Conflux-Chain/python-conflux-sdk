@@ -57,7 +57,7 @@ transaction = {
     'to': w3.address.zero_address(),
     'value': 22,
 }
-w3.eth.send_transaction(transaction)
+w3.cfx.send_transaction(transaction)
 ```
 
 ## Documentations
