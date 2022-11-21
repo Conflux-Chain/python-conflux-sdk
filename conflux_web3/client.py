@@ -17,10 +17,7 @@ import functools
 import warnings
 from hexbytes import HexBytes
 
-from toolz import (
-    keyfilter,
-    merge
-)
+from cytoolz import ( keyfilter, merge, dissoc,) # type:ignore
 from eth_typing.encoding import (
     HexStr
 )
@@ -51,14 +48,20 @@ from cfx_utils.token_unit import (
     AbstractDerivedTokenUnit
 )
 from cfx_address import (
-    Base32Address as CfxAddress,
+    Base32Address,
     validate_base32
 )
-from cfx_account import Account as CfxAccount
-from cfx_account.account import (
-    LocalAccount
+from cfx_address.address import (
+    get_base32_address_factory,
+)
+from cfx_account import (
+    Account,
+    LocalAccount,
 )
 
+from conflux_web3._utils.decorators import (
+    cached_property
+)
 from conflux_web3._utils.rpc_abi import (
     RPC
 )
@@ -93,7 +96,6 @@ from conflux_web3.types import (
     PoSEpochRewardInfo,
     DAOVoteInfo,
     SupplyInfo,
-    PendingInfo,
     PendingTransactionsInfo,
     TransactionPaymentInfo,
 )
@@ -115,6 +117,9 @@ from conflux_web3.middleware.pending import (
 from conflux_web3._utils.decorators import (
     use_instead,
 )
+from conflux_web3._utils.cns import (
+    resolve_if_cns_name,
+)
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
@@ -132,21 +137,27 @@ class BaseCfx(BaseEth):
     
 
     @default_account.setter
-    def default_account(self, account: Union[AddressParam, LocalAccount, Empty]) -> None:
+    def default_account(self, account: Union[Base32Address, str, LocalAccount]) -> None:
         """set default account address
         """
         if isinstance(account, LocalAccount):
-            self._default_account = Base32Address(account.address)
+            self._default_account = (normalized_address := Base32Address(account.address))
             if (self.w3.wallet is not None and account.address not in self.w3.wallet):
                 self.w3.wallet.add_account(account)
+            if self.w3.cns:
+                self.w3.cns.w3.cfx.default_account = normalized_address
         else:
-            self._default_account = Base32Address(account) # type: ignore
+            self._default_account = (normalized_address := Base32Address(resolve_if_cns_name(self.w3, account)))
+            if self.w3.cns:
+                self.w3.cns.w3.cfx.default_account = normalized_address
     
-    def remove_default_account(self):
+    def remove_default_account(self) -> None:
         self._default_account = empty
+        if self.w3.cns:
+            self.w3.cns.w3.cfx.remove_default_account()
     
     def send_transaction_munger(self, transaction: TxParam) -> Tuple[TxParam]:
-        if 'from' not in transaction and self.default_account :
+        if 'from' not in transaction and self.default_account:
             transaction = assoc(transaction, 'from', self.default_account)
         if 'value' in transaction:
             transaction['value'] = to_int_if_drip_units(transaction['value'])
@@ -157,14 +168,14 @@ class BaseCfx(BaseEth):
     
     def estimate_gas_and_collateral_munger(
         self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None
-    ) -> Sequence[Union[TxParam, EpochNumberParam]]:
+    ) -> Tuple[TxParam, Optional[EpochNumberParam]]:
         if "from" not in transaction and self.default_account:
             transaction = assoc(transaction, "from", self.default_account)
 
         if block_identifier is None:
-            params = [transaction]
+            params = (transaction, self._default_block)
         else:
-            params = [transaction, block_identifier]
+            params = (transaction, block_identifier)
 
         return params
     
@@ -207,7 +218,7 @@ class BaseCfx(BaseEth):
         mungers=[default_account_munger]
     )
     
-    _get_balance: ConfluxMethod[Callable[..., Drip]] = ConfluxMethod(
+    _get_balance: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Drip]] = ConfluxMethod(
         RPC.cfx_getBalance,
         # mungers=[default_account_munger]
     )
@@ -275,39 +286,39 @@ class BaseCfx(BaseEth):
     )
     
     
-    _get_code: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], HexBytes]] = ConfluxMethod(
+    _get_code: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], HexBytes]] = ConfluxMethod(
         RPC.cfx_getCode
     )
     
-    _get_storage_at: ConfluxMethod[Callable[[AddressParam, int, EpochNumberParam], Union[HexBytes, None]]] = ConfluxMethod(
+    _get_storage_at: ConfluxMethod[Callable[[AddressParam, int, Optional[EpochNumberParam]], Union[HexBytes, None]]] = ConfluxMethod(
         RPC.cfx_getStorageAt
     )
     
-    _get_storage_root: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Union[HexBytes, None]]] = ConfluxMethod(
+    _get_storage_root: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Union[StorageRoot, None]]] = ConfluxMethod(
         RPC.cfx_getStorageRoot
     )
     
-    _get_collateral_for_storage: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Storage]] = ConfluxMethod(
+    _get_collateral_for_storage: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Storage]] = ConfluxMethod(
         RPC.cfx_getCollateralForStorage
     )
     
-    _get_admin: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Union[Base32Address, None]]] = ConfluxMethod(
+    _get_admin: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Union[Base32Address, None]]] = ConfluxMethod(
         RPC.cfx_getAdmin
     )
     
-    _get_sponsor_info: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], SponsorInfo]] = ConfluxMethod(
+    _get_sponsor_info: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], SponsorInfo]] = ConfluxMethod(
         RPC.cfx_getSponsorInfo
     )
     
-    _get_account: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], AccountInfo]] = ConfluxMethod(
+    _get_account: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], AccountInfo]] = ConfluxMethod(
         RPC.cfx_getAccount
     )
     
-    _get_deposit_list: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Sequence[DepositInfo]]] = ConfluxMethod(
+    _get_deposit_list: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Sequence[DepositInfo]]] = ConfluxMethod(
         RPC.cfx_getDepositList
     )
     
-    _get_vote_list: ConfluxMethod[Callable[[AddressParam, EpochNumberParam], Sequence[VoteInfo]]] = ConfluxMethod(
+    _get_vote_list: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], Sequence[VoteInfo]]] = ConfluxMethod(
         RPC.cfx_getVoteList
     )
     
@@ -354,89 +365,176 @@ class BaseCfx(BaseEth):
     _get_logs: ConfluxMethod[Callable[[FilterParams], List[LogReceipt]]] = ConfluxMethod(
         RPC.cfx_getLogs
     )
-    
+
+    @overload  
+    def contract(
+        self, address: Union[Base32Address, str], *, name: Optional[str]=None, with_deployment_info: Optional[bool]=None, **kwargs: Any
+    ) -> ConfluxContract:
+        ...
+
     @overload
     def contract(
-        self, address: None = None, **kwargs: Any
+        self, address: None=None, *, name: None=None, with_deployment_info: Optional[bool]=None, **kwargs: Any
     ) -> Type[ConfluxContract]:
-        ...  # noqa: E704,E501
-
-    @overload  # noqa: F811
+        ...
+    
+    @overload  
     def contract(
-        self, address: AddressParam, **kwargs: Any
-    ) -> ConfluxContract:
-        ...  # noqa: E704,E501
+        self, address: None=None, *, name: str=..., with_deployment_info: None=None, **kwargs: Any  
+    ) -> Union[Type[ConfluxContract], ConfluxContract]:
+        ...
+    
+    @overload  
+    def contract(
+        self, address: None=None, *, name: str=..., with_deployment_info: Literal[False]=..., **kwargs: Any 
+    ) -> Type[ConfluxContract]:
+        ...
 
-    def contract(  # noqa: F811
+    @overload  
+    def contract(
+        self, address: None=None, *, name: str=..., with_deployment_info: Literal[True]=..., **kwargs: Any
+    ) -> ConfluxContract:
+        ...
+
+    def contract(
         self,
-        address: Optional[AddressParam] = None,
+        address: Optional[Union[Base32Address, str]] = None,
+        *,
         name: Optional[str] = None,
+        with_deployment_info: Optional[bool] = None,
         **kwargs: Any,
     ) -> Union[Type[ConfluxContract], ConfluxContract]:
+        """
+        Produce a contract factory (address is not specified) or a contract(address is not specified).
+        Address is specified by:
+            1. explicitly using address param
+            2. embedded contract deployment info if 
+                (1) "name" parameter specified and corresponding contract has deployment info 
+                (2) with_deployment_info is not False
+
+        Parameters
+        ----------
+        address : Optional[Union[Base32Address, str]], optional
+            the address of the contract, by default None
+        name : Optional[str], optional
+            the name of the contract, which is used to specify abi, bytecode, or deployed contract address, by default None
+        with_deployment_info : Optional[bool], optional
+            whether address will be specified if name parameter is provided, 
+            if True, the address will always be specified if name argument is provided
+            if False, the address will never be specified if name argument is provided
+            if None, the address will be specified depending on if corresponding address exists
+            by default None
+        **kwargs: Dict[str, Any]
+            used to specify abi and bytecode argument
+        Returns
+        -------
+        Union[Type[ConfluxContract], ConfluxContract]
+            returns a contract factory or contract
+            
+        >>> from conflux_web3.dev import get_mainnet_web3
+        >>> w3 = get_mainnet_web3()
+        >>> from conflux_web3.contract import get_contract_metadata
+        >>> abi = get_contract_metadata("ERC20")["abi"]
+        >>> bytecode = get_contract_metadata("ERC20")["bytecode"]
+        >>> erc20_factory = w3.cfx.contract(abi=abi, bytecode=bytecode)
+
+        >>> c1 = w3.cfx.contract(name="AdminControl")
+        >>> assert c1.address
+        >>> c2 = w3.cfx.contract(name="AdminControl", with_deployment_info=False)
+        >>> assert not c2.address
+
+        """        
         metadata = {}
         if name is not None:
-            metadata = get_contract_metadata(name, self.chain_id) # type: ignore
+            metadata = get_contract_metadata(name, self.chain_id, with_deployment_info) # type: ignore
             # the latter one shares greater priority when merging
             kwargs = merge(metadata, kwargs)
         if address is not None:
             kwargs["address"] = address
         return super().contract(**kwargs)  # type: ignore
-    
 
 class ConfluxClient(BaseCfx, Eth):
     """RPC entry defined provides friendlier APIs for users
     """
-    # an instance of CfxAccount, which means the class variable won't be changed
-    account = CfxAccount()
-    address = CfxAddress
-    defaultContractFactory = ConfluxContract
+    account: Account
+    defaultContractFactory: Type[ConfluxContract] = ConfluxContract
     
     def __init__(self, w3: "Web3") -> None:
         super().__init__(w3)
+        self.account = Account()
+        self.account.set_w3(w3)
         self.disable_eth_methods(disabled_method_list)
+    
+    # lazy initialize self.address
+    @cached_property
+    def address(self) -> Type[Base32Address]:
+        return get_base32_address_factory(self.chain_id)
         
     def disable_eth_methods(self, disabled_method_list: Sequence[str]):
         for api in disabled_method_list:
+            always_returns_zero: Callable[..., Literal[0]] = lambda *args, **kwargs: 0
             self.__setattr__(
                 api,
                 use_instead(origin=api)(
-                    lambda *args, **kwargs: 0    
+                    always_returns_zero
                 ),
             )
-    
-    @use_instead
+            
     @property
+    @use_instead
     def syncing(self):
+        """
+        Unsupported API
+        """
         pass
     
-    @use_instead
     @property
+    @use_instead
     def coinbase(self):
+        """
+        # WARNING: Unsupported API
+        """
         pass
+
     
-    @use_instead
     @property
+    @use_instead
     def mining(self):
+        """
+        # WARNING: Unsupported API
+        """
         pass
     
-    @use_instead
     @property
+    @use_instead
     def hashrate(self):
+        """
+        # WARNING: Unsupported API
+        """
         pass
     
+    @property
     @use_instead(origin="web3.eth.block_number", substitute="web3.cfx.epoch_number")
-    @property
     def block_number(self):
+        """
+        # WARNING: Unsupported API, use `web3.cfx.epoch_number` instead
+        """
         pass
     
-    @use_instead
     @property
+    @use_instead
     def max_priority_fee(self):
+        """
+        # WARNING: Unsupported API
+        """
         pass
     
-    @use_instead
     @property
+    @use_instead
     def get_work(self):
+        """
+        # WARNING: Unsupported API
+        """
         pass
     
     def get_status(self) -> NodeStatus:
@@ -470,16 +568,23 @@ class ConfluxClient(BaseCfx, Eth):
     
     @property
     def epoch_number(self) -> EpochNumber:
-        return self._epoch_number()
+        return self._epoch_number(None)
     
-    def epoch_number_by_tag(self, epochTag: EpochLiteral) -> EpochNumber:
-        return self._epoch_number(epochTag)
+    def epoch_number_by_tag(self, epoch_tag: EpochLiteral) -> EpochNumber:
+        return self._epoch_number(epoch_tag)
     
-    @property
+    @cached_property
     def chain_id(self) -> int:
-        """We don't use functools.cached_property here in case provider changes network.
-        Always get status to avoid unexpected circumstances
         """
+        Get the chain id of the current network.
+        This property is cached and won't be changed unless it is deleted
+
+        Returns
+        -------
+        int
+            chain id of the blockchain, 1 for conflux testnet and 1029 for conflux mainnet
+        """
+
         return self._get_status()["chainId"]
 
     @property
@@ -490,12 +595,12 @@ class ConfluxClient(BaseCfx, Eth):
     #     return 
     
     def get_balance(self,
-                    address: AddressParam, 
+                    address: Union["Base32Address", str], 
                     block_identifier: Optional[EpochNumberParam] = None) -> Drip:
         return self._get_balance(address, block_identifier)
     
     def get_staking_balance(self,
-                    address: AddressParam, 
+                    address: Union[Base32Address, str], 
                     block_identifier: Optional[EpochNumberParam] = None) -> Drip:
         return self._get_staking_balance(address, block_identifier)
     
@@ -503,7 +608,7 @@ class ConfluxClient(BaseCfx, Eth):
     def call(self, 
              transaction: TxParam, 
              block_identifier: Optional[EpochNumberParam]=None, 
-             **kwargs):
+             **kwargs: Dict[str, Any]):
         """
         Args:
             transaction (TxParam): _description_
@@ -514,10 +619,10 @@ class ConfluxClient(BaseCfx, Eth):
         """
         return self._call(transaction, block_identifier)
     
-    def get_next_nonce(self, address: Optional[AddressParam]=None, block_identifier: Optional[EpochNumberParam] = None) -> int:
+    def get_next_nonce(self, address: Optional[Union[Base32Address, str]]=None, block_identifier: Optional[EpochNumberParam] = None) -> int:
         return self._get_next_nonce(address, block_identifier)
 
-    def get_transaction_count(self, address: Optional[AddressParam]=None, block_identifier: Optional[EpochNumberParam] = None) -> int:
+    def get_transaction_count(self, address: Optional[Union[Base32Address, str]]=None, block_identifier: Optional[EpochNumberParam] = None) -> int:
         return self.get_next_nonce(address, block_identifier)
 
     def estimate_gas_and_collateral(self, transaction: TxParam, block_identifier: Optional[EpochNumberParam]=None) -> EstimateResult:
@@ -560,11 +665,11 @@ class ConfluxClient(BaseCfx, Eth):
 
     def send_raw_transaction(self, raw_transaction: Union[HexStr, bytes]) -> TransactionHash:
         # TODO: remove pending middleware and changes here
-        return self._send_raw_transaction(raw_transaction)
+        return cast(TransactionHash, self._send_raw_transaction(raw_transaction))
     
     def send_transaction(self, transaction: TxParam) -> TransactionHash:
         # TODO: remove pending middleware and changes here
-        return self._send_transaction(transaction)
+        return cast(TransactionHash, self._send_transaction(transaction))
     
     def get_transaction_receipt(self, transaction_hash: _Hash32) -> TxReceipt:
         return self._get_transaction_receipt(transaction_hash)
@@ -607,15 +712,15 @@ class ConfluxClient(BaseCfx, Eth):
                 "index": int,
                 "blockHash": _Hash32,
                 "epochNumber": int,
-                "from": AddressParam,
-                "to": AddressParam,
-                "gasUsed": Drip,
+                "from": Union[Base32Address, str],
+                "to": Union[Base32Address, str],
+                "gasUsed": int,
                 "gasFee": Drip,
                 "gasCoveredBySponsor": bool,
                 "storageCollateralized": Storage,
                 "storageCoveredBySponsor": bool,
                 "storageReleased": List[Storage],
-                "contractCreated": Union[AddressParam, None],
+                "contractCreated": Union[Base32Address, str, None],
                 
                 "stateRoot": _Hash32,
                 "outcomeStatus": int,
@@ -769,48 +874,51 @@ class ConfluxClient(BaseCfx, Eth):
                 "transactionsRoot": "0xfb245dae4539ea49812e822adbffa9dd2ee9b3de8f3d9a7d186d351dcc9a6ed4",
                 "posReference": "0xd1c2ff79834f86eb4bc98e0e526de475144a13719afba6385cf62a4023c02ae3",
             } 
-        """        
-        if isinstance(block_identifier, bytes) or is_hash32_str(block_identifier):
+        """
+        # TODO: more fine-grained munger
+        if block_identifier == "latest":
+            block_identifier = "latest_state"  
+        elif isinstance(block_identifier, bytes) or is_hash32_str(block_identifier):
             return self.get_block_by_hash(block_identifier, full_transactions) # type: ignore
         return self.get_block_by_epoch_number(block_identifier, full_transactions) # type: ignore
     
     def get_code(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> HexBytes:
         return self._get_code(address, block_identifier)
     
     def get_storage_at(
-        self, address: AddressParam, storage_position: int, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], storage_position: int, block_identifier: Optional[EpochNumberParam] = None
     ) -> Union[HexBytes, None]:
         return self._get_storage_at(address, storage_position, block_identifier)
     
     def get_storage_root(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
-    ) -> StorageRoot:
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
+    ) -> Union[StorageRoot, None]:
         return self._get_storage_root(address, block_identifier)
     
     def get_collateral_for_storage(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> Storage:
         return self._get_collateral_for_storage(address, block_identifier)
     
     def get_sponsor_info(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> SponsorInfo:
         return self._get_sponsor_info(address, block_identifier)
     
     def get_account(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> AccountInfo:
         return self._get_account(address, block_identifier)
     
     def get_deposit_list(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> Sequence[DepositInfo]:
         return self._get_deposit_list(address, block_identifier)
     
     def get_vote_list(
-        self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None
+        self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> Sequence[VoteInfo]:
         return self._get_vote_list(address, block_identifier)
     
@@ -848,19 +956,19 @@ class ConfluxClient(BaseCfx, Eth):
         return self._get_supply_info()
     
     def get_account_pending_info(
-        self, address: AddressParam
+        self, address: Union[Base32Address, str]
     ) -> PendingInfo:
         return self._get_account_pending_info(address)
     
     def get_account_pending_transactions(
-        self, address: AddressParam, start_nonce: Optional[int]=None, limit: Optional[int]=None
+        self, address: Union[Base32Address, str], start_nonce: Optional[int]=None, limit: Optional[int]=None
     ) -> PendingTransactionsInfo:
         return self._get_account_pending_transactions(address, start_nonce, limit)
     
     def check_balance_against_transaction(
         self,
-        account_address: AddressParam,
-        contract_address: AddressParam, 
+        account_address: Union[Base32Address, str],
+        contract_address: Union[Base32Address, str], 
         gas_limit: int,
         gas_price: Union[Drip, AbstractDerivedTokenUnit[Drip], int],
         storage_limit: Union[Storage, int],
@@ -871,9 +979,15 @@ class ConfluxClient(BaseCfx, Eth):
             account_address, contract_address, gas_limit, gas_price, storage_limit, block_identifier
         )
     
-    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs):
+    @overload
+    def get_logs(self, filter_params: FilterParams) -> List[LogReceipt]:...
+    
+    @overload
+    def get_logs(self, filter_params: None=None, **kwargs: Dict[str, Any]) -> List[LogReceipt]:...
+    
+    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs: Dict[str, Any]) -> List[LogReceipt]:
         if filter_params is None:
-            filter_params = keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs) # type: ignore
+            filter_params = cast(FilterParams, keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs)) # type: ignore
             return self._get_logs(filter_params)
         else:
             if len(kwargs.keys()) != 0:

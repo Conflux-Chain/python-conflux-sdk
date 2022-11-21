@@ -26,6 +26,9 @@ from cfx_address.utils import validate_network_id as validate_chain_id
 from cfx_address.utils import (
     normalize_to
 )
+from conflux_web3._utils.cns import (
+    resolve_if_cns_name,
+)
 from conflux_web3._utils.rpc_abi import (
     RPC
 )
@@ -130,8 +133,10 @@ class Wallet:
             transaction = params[0]
             if "from" not in transaction:
                 return make_request(method, params)
-            elif transaction.get("from") not in self:
-                return make_request(method, params)
+            else:
+                transaction["from"] = resolve_if_cns_name(w3, transaction["from"])
+                if transaction.get("from") not in self:
+                    return make_request(method, params)
             
             account = self[transaction["from"]]
             raw_tx = account.sign_transaction(transaction).rawTransaction

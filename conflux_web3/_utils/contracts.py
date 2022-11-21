@@ -24,11 +24,15 @@ from web3._utils.normalizers import (
     abi_string_to_text,
 )
 
+from conflux_web3._utils.normalizers import (
+    abi_cns_resolver
+)
+
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
 # this api is used to hook web3._utils.contracts.encode_abi
-# hook is activated in conflux_web3._hook
+# hook is activated in _web3_hook
 def cfx_encode_abi(
     web3: "Web3", abi: ABIFunction, arguments: Sequence[Any], data: Optional[HexStr] = None
 ) -> HexStr:
@@ -47,7 +51,7 @@ def cfx_encode_abi(
 
     # abi_ens_resolver and abi_address_to_hex are eliminated
     normalizers = [
-        # abi_ens_resolver(web3),
+        abi_cns_resolver(web3), # type: ignore
         # abi_address_to_hex,
         abi_bytes_to_bytes,
         abi_string_to_text,

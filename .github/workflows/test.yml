@@ -5,7 +5,7 @@ name: Python package
 
 on:
   push:
-    branches: [ "dev", "v1" ]
+    branches: [ "dev", "v1", "cns"]
 
 jobs:
   build:
@@ -30,4 +30,11 @@ jobs:
         pytest tests
     - name: Run test on testnet
       run: |
-        export TESTNET_URL=${{secrets.TESTNET_URL}} && export USE_TESTNET=1 && export TEST_FINALIZATION=1 && pytest tests
+        export TESTNET_URL=${{secrets.TESTNET_URL}} &&
+        export USE_TESTNET=1 &&
+        export ENS_ACCOUNT_NAME=${{secrets.ENS_ACCOUNT_NAME}} &&
+        export ENS_ACCOUNT_SECRET=${{secrets.ENS_ACCOUNT_SECRET}} &&
+        pytest tests
+    - name: test finalization api
+      run: |
+        export USE_TESTNET=1 && export TEST_FINALIZATION=1 && pytest tests/middleware/test_pending.py

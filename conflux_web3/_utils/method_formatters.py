@@ -220,7 +220,7 @@ RECEIPT_FORMATTERS = {
     "epochNumber": to_integer_if_hex,
     "from": from_trust_to_base32,
     "to": apply_formatter_if(is_not_null, from_trust_to_base32),
-    "gasUsed": from_hex_to_drip,
+    "gasUsed": to_integer_if_hex,
     "gasFee": from_hex_to_drip,
     # "gasCoveredBySponsor": bool,
     "storageCollateralized": to_integer_if_hex,
@@ -278,7 +278,7 @@ BLOCK_FORMATTERS = {
     "epochNumber": apply_formatter_if(is_not_null, to_integer_if_hex),
     "blockNumber": apply_formatter_if(is_not_null, to_integer_if_hex),
     "gasLimit": to_integer_if_hex,
-    "gasUsed": apply_formatter_if(is_not_null, from_hex_to_drip),
+    "gasUsed": apply_formatter_if(is_not_null, to_integer_if_hex),
     "timestamp": to_integer_if_hex,
     "difficulty": to_integer_if_hex,
     "powQuality": apply_formatter_if(is_not_null, HexBytes),
@@ -338,12 +338,12 @@ ACCOUNT_INFO_FORMATTERS = {
 
 DEPOSIT_INFO_FORMATTERS = {
     "accumulatedInterestRate": to_integer_if_hex,
-    "amount": to_integer_if_hex,
+    "amount": from_hex_to_drip,
     "depositTime": to_integer_if_hex,
 }
 
 VOTE_INFO_FORMATTERS = {
-    "amount": to_integer_if_hex,
+    "amount": from_hex_to_drip,
     "unlockBlockNumber": to_integer_if_hex,
 }
 

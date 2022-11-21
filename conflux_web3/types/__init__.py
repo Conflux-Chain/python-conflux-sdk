@@ -110,7 +110,7 @@ TxReceipt = TypedDict(
         "epochNumber": int,
         "from": Base32Address,
         "to": Base32Address,
-        "gasUsed": Drip,
+        "gasUsed": int,
         "gasFee": Drip,
         "gasCoveredBySponsor": bool,
         "storageCollateralized": Storage,
@@ -165,7 +165,7 @@ class BlockData(TypedDict):
     epochNumber: Union[int, None]
     blockNumber: Union[int, None]
     gasLimit: int
-    gasUsed: Union[Drip, None]
+    gasUsed: Union[int, None]
     timestamp: int
     difficulty: int
     powQuality: Union[HexBytes, None]
@@ -204,7 +204,7 @@ class AccountInfo(TypedDict):
     admin: Base32Address
     
 class DepositInfo(TypedDict):
-    accumulatedInterestRate: Drip
+    accumulatedInterestRate: int
     amount: Drip
     depositTime: int # assumed blockNumber
     
@@ -265,3 +265,5 @@ class TransactionPaymentInfo(TypedDict):
     isBalanceEnough: bool
     willPayCollateral: bool
     willPayTxFee: bool
+
+# TODO: add __all__ here

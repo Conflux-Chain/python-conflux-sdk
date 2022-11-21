@@ -1,8 +1,16 @@
 # Change Logs
 
-## 1.0.0-dev4 (intended)
+## 1.0.0-dev4
 
-* Response containing "address" from rpc is wrapped by Base32Address
+* Response containing "address" from rpc is wrapped by `Base32Address`
+  * including contract return values
+* Introduces token unit `CFX`, `GDrip` and `Drip`
+  * responses are formatted using Drip/GDrip/CFX
+  * Drip/GDrip/CFX can be used as gas price or value
+* CNS support
+  * available by using `w3.cns` or `w3.ens`
+  * supports name service resolve as web3.py (as receiver/sender/parameter)
+  * (unstable) supports `w3.cns.setup_address` and `w3.cns.setup_owner`
 
 ## 1.0.0-dev3
 

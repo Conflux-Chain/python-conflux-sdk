@@ -3,3 +3,12 @@ class NoWeb3Exception(Exception):
 
 class DisabledException(Exception):
     pass
+
+class DeploymentInfoNotFound(Exception):
+    pass
+
+class ContractMetadataNotFound(Exception):
+    pass
+
+class NameServiceNotSet(Exception):
+    pass

@@ -16,6 +16,9 @@ from web3.types import (
     CallOverride
 )
 
+from cfx_utils.token_unit import (
+    to_int_if_drip_units
+)
 from cfx_address import (
     Base32Address
 )
@@ -29,6 +32,9 @@ from conflux_web3._utils.contracts import (
 )
 from conflux_web3._utils.transactions import (
     fill_transaction_defaults,
+)
+from conflux_web3._utils.normalizers import (
+    addresses_to_verbose_base32
 )
 
 if TYPE_CHECKING:
@@ -96,7 +102,10 @@ class ConfluxContractFunction(ContractFunction):
         return call_contract_function(
             self.w3,
             self.address, # type: ignore
-            self._return_data_normalizers, # type: ignore
+            # self._return_data_normalizers,
+            [
+                addresses_to_verbose_base32(self.w3.cfx.chain_id), # type: ignore
+            ],
             self.function_identifier,
             call_transaction,
             block_identifier, # type: ignore
@@ -109,6 +118,8 @@ class ConfluxContractFunction(ContractFunction):
         )
 
     def transact(self, transaction: Optional[TxParam] = None) -> "TransactionHash":
+        if transaction and "value" in transaction:
+            transaction["value"] = to_int_if_drip_units(transaction["value"])
         return super().transact(transaction) # type: ignore
 
 

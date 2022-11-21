@@ -37,6 +37,9 @@ from conflux_web3.types import (
     EpochNumberParam,
     EpochLiteral,
 )
+from conflux_web3._utils.cns import (
+    resolve_if_cns_name
+)
 from conflux_web3.contract.function import (
     ConfluxContractFunction,
     ConfluxContractFunctions,
@@ -54,27 +57,27 @@ from conflux_web3.contract.constructor import (
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
-# used to hook web3.contract.parse_block_identifier
-# hook is activated in conflux_web3._hook
-def cfx_parse_block_identifier(
-    w3: "Web3", block_identifier: EpochNumberParam
-) -> EpochNumberParam:
-    if isinstance(block_identifier, int):
-        return block_identifier
-    elif block_identifier in EpochLiteral.__args__: # type: ignore
-        return block_identifier
-    elif isinstance(block_identifier, bytes) or is_hex_encoded_block_hash(
-        block_identifier
-    ):
-        # r = 
-        # assert r is not None
-        return w3.cfx.get_block_by_hash(block_identifier)["epochNumber"] # type: ignore
-    else:
-        raise InvalidEpochNumebrParam
+# # used to hook web3.contract.parse_block_identifier
+# # hook is activated in _web3_hook
+# def cfx_parse_block_identifier(
+#     w3: "Web3", block_identifier: EpochNumberParam
+# ) -> EpochNumberParam:
+#     if isinstance(block_identifier, int):
+#         return block_identifier
+#     elif block_identifier in EpochLiteral.__args__: # type: ignore
+#         return block_identifier
+#     elif isinstance(block_identifier, bytes) or is_hex_encoded_block_hash(
+#         block_identifier
+#     ):
+#         # r = 
+#         # assert r is not None
+#         return w3.cfx.get_block_by_hash(block_identifier)["epochNumber"] # type: ignore
+#     else:
+#         raise InvalidEpochNumebrParam
 
 
 class ConfluxContract(Contract):
-    address: AddressParam
+    address: Base32Address
     w3: 'Web3'
     functions: ConfluxContractFunctions
     caller: "ConfluxContractCaller"
@@ -93,18 +96,19 @@ class ConfluxContract(Contract):
 
         # address should match chainId
         if address:
+            address = resolve_if_cns_name(self.w3, address)
             validate_address_agaist_network_id(address, self.w3.cfx.chain_id, True)
             address = Base32Address(address, self.w3.cfx.chain_id)
             if address.address_type != "contract" and address.address_type != "builtin":
                 raise Base32AddressNotMatch(f"expected an address of contract type or builtin type"
                                             f"receives {address} of {address.address_type}")
-            self.address = Base32Address(address, self.w3.cfx.chain_id)
+            self.address = Base32Address(address, self.w3.cfx.chain_id, verbose=True)
 
         if not self.address:
             raise TypeError("The address argument is required to instantiate a contract.")
 
         self.functions = ConfluxContractFunctions(self.abi, self.w3, self.address)
-        self.caller = ConfluxContractCaller(self.abi, self.w3, self.address) 
+        self.caller = ConfluxContractCaller(self.abi, self.w3, self.address)
         self.events = ConfluxContractEvents(self.abi, self.w3, self.address)
         self.fallback = Contract.get_fallback_function(self.abi, self.w3, ConfluxContractFunction, self.address) # type: ignore
         self.receive = Contract.get_receive_function(self.abi, self.w3, ConfluxContractFunction, self.address) # type: ignore

@@ -19,7 +19,7 @@ from web3.providers.base import (
 
 @pytest.fixture
 def w3_base():
-    return Web3(provider=BaseProvider(), middlewares=[])
+    return Web3(provider=BaseProvider(), middlewares=[], ens=None)
 
 
 @pytest.fixture

@@ -123,7 +123,7 @@ class TestAccountQuery:
             
     def test_get_staking_balance(self, w3: Web3, address):
         staking_balance = w3.cfx.get_staking_balance(address, w3.cfx.epoch_number-5)
-        assert staking_balance == 0
+        assert staking_balance >= 0
         assert isinstance(staking_balance, Drip)
         # TODO: use staking balance contract
         

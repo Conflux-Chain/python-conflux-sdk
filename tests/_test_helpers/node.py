@@ -18,6 +18,9 @@ from cfx_account import Account
 from conflux_web3 import (
     Web3,
 )
+from conflux_web3._utils.decorators import (
+    cached_property,
+)
 from tests._test_helpers.ENV_SETTING import (
     DEV_IMAGE_FULL_NAME,
     TESTNET_IMAGE_FULL_NAME,
@@ -115,7 +118,7 @@ class LocalNode(BaseNode):
                                                         })
             self._wait_for_start()
 
-    @functools.cached_property
+    @cached_property
     def secrets(self) -> List[str]:
         raw = self._container.exec_run("cat genesis_secret.txt").output.decode("utf-8")  # type: ignore
         secrets = raw.split("\n")
@@ -178,7 +181,7 @@ class LocalTestnetNode(LocalNode):
                                                         })
             self._wait_for_start()
     
-    @functools.cached_property
+    @cached_property
     def secrets(self) -> List[str]:
         secrets = [Account.create().privateKey]
         return secrets 
@@ -190,7 +193,7 @@ class RemoteTestnetNode(BaseNode):
     def __init__(self) -> None:
         self._url = os.environ.get("TESTNET_URL", None) or 'https://test.confluxrpc.com'
     
-    @functools.cached_property
+    @cached_property
     def secrets(self) -> List[str]:
         testnet_secret = os.environ.get("TESTNET_SECRET", None)
         if not testnet_secret:
