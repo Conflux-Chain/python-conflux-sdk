@@ -1,0 +1,30 @@
+name: coverage
+
+on:
+  pull_request:
+    branches: ["v1"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7"]
+    name: Test python API
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install requirements
+      run: pip install ".[tester]"
+    - name: Run tests and collect coverage
+      run:
+        export TESTNET_URL=${{secrets.TESTNET_URL}} &&
+        export USE_TESTNET=1 &&
+        export ENS_ACCOUNT_NAME=${{secrets.ENS_ACCOUNT_NAME}} &&
+        export ENS_ACCOUNT_SECRET=${{secrets.ENS_ACCOUNT_SECRET}} &&
+        pytest --cov tests
+    - name: Upload coverage reports to Codecov
+      run: |
+        curl -Os https://uploader.codecov.io/latest/linux/codecov
+        chmod +x codecov
+        ./codecov -t ${{secrets.CODECOV_TOKEN}}

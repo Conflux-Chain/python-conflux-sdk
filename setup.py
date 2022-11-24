@@ -14,7 +14,8 @@ extras_require = {
     'tester': [
         "docker>=5.0.0,<6",
         "pytest>=6.2.5,<7",
-        "typing_extensions"
+        "typing_extensions",
+        "pytest-cov",
         # "py-geth>=3.8.0,<4",
     ],
     'linter': [
