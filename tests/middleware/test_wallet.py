@@ -102,7 +102,8 @@ def test_default_wallet_middleware_adding(w3: Web3, account: LocalAccount):
 
 def test_wallet_duplicate_adding_warning(w3: Web3):
     with pytest.warns(UserWarning):
-        wallet = Wallet(random_account:=w3.account.create(), w3.cfx.chain_id)
+        random_account = w3.account.create()
+        wallet = Wallet(random_account, w3.cfx.chain_id)
         wallet.add_account(random_account)
 
 def test_wallet_chain_id_compatibility(w3: Web3):
@@ -127,17 +128,28 @@ def test_wallet_chain_id_compatibility(w3: Web3):
 
 def test_wallet_accounts_property():
     wallet = Wallet()
+    account = Account.create()
     wallet.add_account(
-        account := Account.create()
+        account
     )
     assert account.address in wallet.accounts
     
 def test_wallet_operators():
     wallet = Wallet()
+    account = Account.create()
     wallet.add_account(
-        account := Account.create()
+        account
     )
     # __contains__
     assert account.address in wallet
     # __getitem__
     assert wallet[account.address]
+
+def test_wallet_pop():
+    wallet = Wallet()
+    account = Account.create()
+    wallet.add_account(
+        account
+    )
+    assert wallet.pop(account.address).address == account.address
+    assert account.address not in wallet

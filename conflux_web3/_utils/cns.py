@@ -36,7 +36,8 @@ def validate_cns_existence(w3: "Web3"):
 def resolve_if_cns_name(w3: "Web3", cns_name: str) -> Union[str, Base32Address]:
     if is_cns_name(cns_name):
         validate_cns_existence(w3)
-        if addr := w3.cns.address(cns_name):
+        addr = w3.cns.address(cns_name)
+        if addr:
             return addr
         raise NameNotFound(f"{cns_name} resolve failed")
     return cns_name

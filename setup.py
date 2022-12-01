@@ -5,7 +5,7 @@ from setuptools import (
     setup,
 )
 
-VERSION = "1.0.0-beta.6"
+VERSION = "1.0.0-beta.7"
 DESCRIPTION = 'Python SDK for Conflux network'
 with open('./README.md') as readme:
     long_description = readme.read()
@@ -14,14 +14,15 @@ extras_require = {
     'tester': [
         "docker>=5.0.0,<6",
         "pytest>=6.2.5,<7",
-        "typing_extensions"
+        "typing_extensions",
+        "pytest-cov",
         # "py-geth>=3.8.0,<4",
     ],
     'linter': [
         "black>=22.1.0,<23.0",
         # "flake8==3.8.3",
         # "isort>=4.2.15,<4.3.5",
-        "mypy==0.910",
+        # "mypy==0.910",
         # "types-setuptools>=57.4.4,<58",
         # "types-requests>=2.26.1,<3",
         # "types-protobuf==3.19.13",
@@ -35,7 +36,8 @@ extras_require = {
         # "py-geth>=3.8.0,<4",
         # "py-solc>=0.4.0",
         # "pytest>=6.2.5,<7",
-        "sphinx>=4.2.0,<5",
+        # "sphinx>=4.2.0,<5",
+        "jupyter-book",
         # "sphinx_rtd_theme>=0.1.9",
         # "toposort>=1.4",
         # "towncrier==18.5.0",
@@ -85,10 +87,10 @@ setup(
                   "cfxpm": ["py.typed"]},
     url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
-        "web3==6.0.0b5",
-        "cfx-address>=1.0.0b13",
-        "cfx-account>=0.1.0b6",
-        "cfx-utils>=1.0.0b10",
+        "web3==6.0.0b7",
+        "cfx-address>=1.0.0b14",
+        "cfx-account>=0.1.0b8",
+        "cfx-utils>=1.0.0b12",
         "cached_property==1.5.2",
         # "eth-account>=0.6.0,<0.7.0"
     ],  # add any additional packages that

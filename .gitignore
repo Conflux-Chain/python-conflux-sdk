@@ -4,7 +4,6 @@
 .env
 build
 dist
-docs/*
 tests/__pycache__
 venv*/
 conflux/__init__.pyc
@@ -21,3 +20,5 @@ legacy_tests
 note*.ipynb
 share
 main*.py
+*.bk.py
+docs/*/_build

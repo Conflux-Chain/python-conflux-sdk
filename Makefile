@@ -11,6 +11,10 @@ build: clean
 publish: 
 	twine upload dist/* --repository conflux-web3
 
+doc:
+	jupyter-book config sphinx docs/en/
+	jupyter-book build docs/en/
+
 # gen-docs:
 # 	cd ./docs && \
 # 	sphinx-apidoc -o ./source ../cfx_address -f -M --separate && \

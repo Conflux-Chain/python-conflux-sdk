@@ -5,6 +5,8 @@ from typing import (
     Optional,
     Sequence,
     Union,
+    Callable,
+    Any,
 )
 import warnings
 
@@ -13,7 +15,8 @@ from eth_keys.datatypes import (
 )
 
 from cfx_utils.types import (
-    HexAddress
+    HexAddress,
+    TxDict,
 )
 from cfx_account.account import (
     LocalAccount,
@@ -22,8 +25,8 @@ from cfx_account.account import (
 from cfx_address import (
     Base32Address
 )
-from cfx_address.utils import validate_network_id as validate_chain_id
 from cfx_address.utils import (
+    validate_network_id as validate_chain_id,
     normalize_to
 )
 from conflux_web3._utils.cns import (
@@ -125,17 +128,17 @@ class Wallet:
         # any account added to wallet is a brand new object
         return Account.from_key(private_key, self._chain_id)
     
-    def __call__(self, make_request, w3: "Web3"):
-        def inner(method, params):
+    def __call__(self, make_request: Callable[..., Dict[str, Any]], w3: "Web3"):
+        def inner(method: str, params: Sequence[Any]):
             if method != RPC.cfx_sendTransaction:
                 return make_request(method, params)
             
-            transaction = params[0]
+            transaction: TxDict = params[0]
             if "from" not in transaction:
                 return make_request(method, params)
             else:
                 transaction["from"] = resolve_if_cns_name(w3, transaction["from"])
-                if transaction.get("from") not in self:
+                if transaction["from"] not in self:
                     return make_request(method, params)
             
             account = self[transaction["from"]]
@@ -163,12 +166,18 @@ class Wallet:
         else:
             return self._accounts_map[address]
     
-    def __contains__(self, address: str):
+    def __contains__(self, address: str) -> bool:
         try:
             self[address]
             return True
         except KeyError:
             return False
+    
+    def pop(self, address: str) -> LocalAccount:
+        if self._chain_id is None:
+            return self._accounts_map.pop(normalize_to(address, None))
+        else:
+            return self._accounts_map.pop(address)
 
 
 def construct_sign_and_send_raw_middleware(

@@ -1,0 +1,22 @@
+name: dev-localization
+
+on:
+  push:
+    branches: [ "dev" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v3
+    - name: Sync changes
+      run: |
+        git config --global user.email "17946284+darwintree@users.noreply.github.com" &&
+        git config --global user.name "localization bot" &&
+        git checkout -b dev-zh-CN &&
+        cp ./.readthedocs-zh-CN.yaml ./.readthedocs.yaml &&
+        git add . &&
+        git commit -m "doc: change .readthedocs.yaml to zh-CN version" && 
+        git push origin dev-zh-CN -f
