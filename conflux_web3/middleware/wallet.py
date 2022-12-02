@@ -124,7 +124,7 @@ class Wallet:
             if self._chain_id:
                 if local_account.network_id and local_account.network_id != self._chain_id:
                     raise ValueError("wallet's chain_id and local_account's chain_id is supposed to be consistent")
-            private_key = local_account._private_key
+            private_key = local_account.key
         # any account added to wallet is a brand new object
         return Account.from_key(private_key, self._chain_id)
     
