@@ -13,3 +13,4 @@ parts:
   - file: examples/05-interact_with_contracts_and_process_logs
   - file: examples/10-send_raw_transaction
   - file: examples/11-construct_transaction_from_scratch
+  - file: examples/12-sign_data_other_than_transactions
