@@ -2,11 +2,15 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Optional,
-    cast
+    cast,
+    List,
+    Callable,
+    Union,
 )
 
 from web3.contract import (
     Contract,
+    find_functions_by_identifier,
 )
 
 from web3._utils.blocks import (
@@ -19,6 +23,9 @@ from web3._utils.normalizers import (
 from web3._utils.datatypes import (
     PropertyCheckingFactory,
 )
+from web3.types import (
+    ABI
+)
 
 from cfx_address import (
     Base32Address,
@@ -30,6 +37,12 @@ from cfx_address.utils import (
 from cfx_utils.exceptions import (
     InvalidEpochNumebrParam,
     Base32AddressNotMatch,
+)
+from cfx_utils.decorators import (
+    combomethod,
+)
+from cfx_utils.types import (
+    ChecksumAddress,
 )
 from conflux_web3.types import (
     Base32Address,
@@ -163,3 +176,15 @@ class ConfluxContract(Contract):
             )
 
         return ConfluxContractConstructor(cls.w3, cls.abi, cls.bytecode, *args, **kwargs)
+
+    @combomethod
+    def find_functions_by_identifier(
+        cls,
+        contract_abi: ABI,
+        w3: "Web3",
+        address: Union[ChecksumAddress, Base32Address],
+        callable_check: Callable[..., Any],
+    ) -> List["ConfluxContractFunction"]:
+        return find_functions_by_identifier(  # type: ignore
+            contract_abi, w3, address, callable_check, ConfluxContractFunction # type: ignore
+        )
