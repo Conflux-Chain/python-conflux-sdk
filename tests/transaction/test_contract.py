@@ -176,13 +176,15 @@ def test_get_function_by_signature(w3: Web3, account: LocalAccount):
     from tests._test_helpers.ENV_SETTING import HELPER_DIR
     with open(os.path.join(HELPER_DIR, "amb_metadata.json")) as f:
         metadata = json.load(f)
-    contract = w3.cfx.contract(abi=metadata['abi'], bytecode=metadata["bytecode"])
+    contract = w3.cfx.contract(abi=metadata['abi'], bytecode=metadata["bin"])
     with pytest.raises(ValidationError):
-        contract.functions.identity("123456", True)
+        contract.functions.identity(account.address, True)
     
     w3.cfx.default_account = account
     contract_addr = contract.constructor().transact().executed()["contractCreated"]
     assert contract_addr
     contract = contract(contract_addr)
-    func = contract.get_function_by_signature('identity(uint256,bool)')
-    assert func(123456, True).call() == 123456
+    func = contract.get_function_by_signature('identity(address,bool)')
+    assert func(account.address, True).call() == account.address # returned address should be in Base32 format
+    assert contract.get_function_by_signature('identity(string,bool)')(account.address, True).call() == account.address
+    assert contract.get_function_by_signature('identity(string,bool)')("conflux", True).call() == "conflux"
