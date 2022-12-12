@@ -22,3 +22,5 @@ VOLUMES = {
         "mode": "rw",
     }
 }
+
+HELPER_DIR = os.path.dirname(__file__)

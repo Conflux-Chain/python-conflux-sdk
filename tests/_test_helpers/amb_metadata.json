@@ -1,0 +1,51 @@
+{
+    "abi": [
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "input",
+                    "type": "uint256"
+                },
+                {
+                    "name": "uselessFlag",
+                    "type": "bool"
+                }
+            ],
+            "name": "identity",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "input",
+                    "type": "int256"
+                },
+                {
+                    "name": "uselessFlag",
+                    "type": "bool"
+                }
+            ],
+            "name": "identity",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "int256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }
+    ],
+    "bytecode": "6060604052341561000f57600080fd5b61010e8061001e6000396000f3006060604052600436106049576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680636d79a1b214604e5780638eab230314608d575b600080fd5b3415605857600080fd5b60776004808035906020019091908035151590602001909190505060cc565b6040518082815260200191505060405180910390f35b3415609757600080fd5b60b66004808035906020019091908035151590602001909190505060d7565b6040518082815260200191505060405180910390f35b600082905092915050565b6000829050929150505600a165627a7a72305820511af64b1568569df54c96796cd442dcc044394a30bdddef6d421b4ead5db82c0029"
+}

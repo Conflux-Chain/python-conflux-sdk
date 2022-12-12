@@ -7,6 +7,7 @@
 from typing import (
     TYPE_CHECKING,
     Callable,
+    Dict
 )
 from cfx_utils.post_import_hook import (
     when_imported
@@ -90,6 +91,13 @@ def hook_encode_abi(mod):
             cfx_web3_condition
         )(mod.encode_abi)
 
+eth_to_cfx_tag_mapping: Dict[str, "EpochNumberParam"] = {
+    "pending": "pending",
+    "latest": "latest_state",
+    "safe": "latest_confirmed",
+    "finalized": "latest_finalized",
+}
+
 # used to hook web3.contract.parse_block_identifier
 # hook is activated in _web3_hook
 def cfx_parse_block_identifier(
@@ -105,6 +113,8 @@ def cfx_parse_block_identifier(
         # r = 
         # assert r is not None
         return w3.cfx.get_block_by_hash(block_identifier)["epochNumber"] # type: ignore
+    elif block_identifier in eth_to_cfx_tag_mapping:
+        return eth_to_cfx_tag_mapping[block_identifier]
     else:
         raise InvalidEpochNumebrParam
 
