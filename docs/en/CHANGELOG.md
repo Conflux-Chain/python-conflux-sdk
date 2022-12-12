@@ -1,5 +1,10 @@
 # Change Logs
 
+## 1.0.0-dev8
+
+* fix: error caused by `find_functions_by_identifier`
+* add more strict format checking for `is_cns_name`
+
 ## 1.0.0-dev7
 
 * type hints: migrate to `Pylance`; add `py.typed`
