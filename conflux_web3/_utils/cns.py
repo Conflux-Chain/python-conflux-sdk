@@ -27,7 +27,7 @@ def is_cns_name(value: Any) -> bool:
     if is_valid_base32(value):
         return False
     else:
-        return is_ens_name(value)
+        return is_ens_name(value) and "." in value
     
 def validate_cns_existence(w3: "Web3"):
     if w3.cns is empty:

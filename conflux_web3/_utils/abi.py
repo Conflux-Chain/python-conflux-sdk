@@ -6,6 +6,9 @@ from eth_abi.registry import (
 from eth_abi.decoding import (
     AddressDecoder
 )
+from eth_abi.exceptions import (
+    EncodingError
+)
 from web3._utils.abi import (
     build_default_registry, 
     AddressEncoder,
@@ -13,6 +16,9 @@ from web3._utils.abi import (
 from cfx_address import (
     Base32Address,
     validate_base32
+)
+from cfx_utils.exceptions import (
+    InvalidBase32Address
 )
 from conflux_web3._utils.cns import (
     is_cns_name
@@ -26,7 +32,10 @@ class Base32AddressEncoder(AddressEncoder):
     def validate_value(cls, value: Any) -> None:
         if is_cns_name(value):
             return
-        validate_base32(value)
+        try:
+            validate_base32(value)
+        except InvalidBase32Address:
+            raise EncodingError(InvalidBase32Address)
 
 class CfxAddressDecoder(AddressDecoder):
     decode_fn = lambda x: x
