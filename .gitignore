@@ -22,4 +22,5 @@ share
 main*.py
 *.bk.py
 docs/*/_build
+docs/*/_autosummary
 .coverage

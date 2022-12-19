@@ -464,14 +464,14 @@ class ConfluxClient(BaseCfx, Eth):
         super().__init__(w3)
         self.account = Account()
         self.account.set_w3(w3)
-        self.disable_eth_methods(disabled_method_list)
+        self._disable_eth_methods(disabled_method_list)
     
     # lazy initialize self.address
     @cached_property
     def address(self) -> Type[Base32Address]:
         return get_base32_address_factory(self.chain_id)
         
-    def disable_eth_methods(self, disabled_method_list: Sequence[str]):
+    def _disable_eth_methods(self, disabled_method_list: Sequence[str]):
         for api in disabled_method_list:
             always_returns_zero: Callable[..., Literal[0]] = lambda *args, **kwargs: 0
             self.__setattr__(
