@@ -1,5 +1,9 @@
 # Change Logs
 
+## 1.0.0
+
+* Release
+
 ## 1.0.0-dev8
 
 * fix: error caused by `find_functions_by_identifier`
