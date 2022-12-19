@@ -2,3 +2,4 @@ jupyter-book
 Jinja2<3.1
 conflux-web3
 web3===6.0.0b7
+sphinx-design
