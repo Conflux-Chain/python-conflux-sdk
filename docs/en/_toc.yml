@@ -20,3 +20,6 @@ parts:
   - file: types
   - file: util_types
   - file: token_unit
+  - file: cfx_address
+  - file: cfx_address.utils
+  - file: cfx_account

@@ -1,4 +1,4 @@
-.cfx apis
+conflux_web3.cfx apis
 =============
 
 .. autoclass:: conflux_web3.client.BaseCfx
