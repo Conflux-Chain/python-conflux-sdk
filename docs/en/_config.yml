@@ -29,5 +29,7 @@ sphinx:
   - 'sphinx.ext.viewcode'
   - 'sphinx.ext.napoleon'
   # - 'sphinx.ext.autosummary'
-  # config:
-  #   autosummary_generate: True
+  config:
+    # autosummary_generate: True
+    autoclass_content: "both"
+    copyright: "2023"

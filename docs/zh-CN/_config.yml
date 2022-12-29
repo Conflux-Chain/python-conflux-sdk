@@ -9,7 +9,7 @@ logo: ../logo.png
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
 execute:
-  execute_notebooks: cache
+  execute_notebooks: 'off'
 
 # Information about where the book exists on the web
 repository:
@@ -22,3 +22,14 @@ repository:
 html:
   use_issues_button: true
   use_repository_button: true
+
+sphinx:
+  extra_extensions:
+  - 'sphinx.ext.autodoc'
+  - 'sphinx.ext.viewcode'
+  - 'sphinx.ext.napoleon'
+  # - 'sphinx.ext.autosummary'
+  config:
+    # autosummary_generate: True
+    autoclass_content: "both"
+    copyright: "2023"
