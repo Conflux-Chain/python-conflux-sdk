@@ -48,7 +48,7 @@ class NodeStatus(TypedDict):
     """
     Node status as dict
 
-    Dict keys and corresponding value type
+    Parameters
     ----------
     | bestHash1111: bytes
     | chainId: int
@@ -93,7 +93,7 @@ class FilterParams(TypedDict, total=False):
     """
     Parameter dict to filter logs, more information at https://developer.confluxnetwork.org/conflux-doc/docs/json_rpc/#cfx_getlogs
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | fromEpoch: EpochNumberParam, optional
     | toEpoch: EpochNumberParam, optional
@@ -112,7 +112,7 @@ class TransactionLogReceipt(TypedDict):
     """
     Log receipt in transaction receipt
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | address: Base32Address
     | topics: Sequence[HexBytes]
@@ -127,7 +127,7 @@ class LogReceipt(TypedDict):
     """
     Full log receipt
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | address: Base32Address
     | topics: Sequence[HexBytes]
@@ -153,7 +153,7 @@ class TransactionEventData(TypedDict):
     """
     Transaction event data as a dict
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | address: Base32Address
     | args: Dict[str, Any]
@@ -177,7 +177,7 @@ class EventData(TransactionEventData, total=False):
     """
     Transaction event data
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | address: Base32Address
     | args: Dict[str, Any]
@@ -219,7 +219,7 @@ TxReceipt = TypedDict(
 """
 Transaction receipt as a dict
 
-Key and type of corresponding value
+Parameters
 ----------
 | "transactionHash": Hash32,
 | "index": int,
@@ -270,7 +270,7 @@ TxData = TypedDict(
 """
 Transaction data as a dict
 
-Key and type of corresponding value
+Parameters
 ----------
 | "blockHash": Union[None, Hash32],
 | "chainId": int,
@@ -296,7 +296,7 @@ class BlockData(TypedDict):
     """
     Block data as a dict
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | hash: Hash32
     | parentHash: Hash32
@@ -353,7 +353,7 @@ MiddlewareOnion = NamedElementOnion[str, Middleware]
 class StorageRoot(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | delta: Union[Hash32, Literal["TOMBSTONE", None]]
     | intermediate: Union[Hash32, Literal["TOMBSTONE", None]]
@@ -366,7 +366,7 @@ class StorageRoot(TypedDict):
 class SponsorInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | sponsorBalanceForCollateral: Drip
     | sponsorBalanceForGas: Drip
@@ -383,7 +383,7 @@ class SponsorInfo(TypedDict):
 class AccountInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | address: Base32Address
     | balance: Drip
@@ -406,7 +406,7 @@ class AccountInfo(TypedDict):
 class DepositInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | accumulatedInterestRate: int
     | amount: Drip
@@ -419,7 +419,7 @@ class DepositInfo(TypedDict):
 class VoteInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | amount: Drip
     | unlockBlockNumber: int
@@ -430,7 +430,7 @@ class VoteInfo(TypedDict):
 class BlockRewardInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | blockHash: Hash32
     | author: Base32Address
@@ -450,7 +450,7 @@ PoSEpochNumber = NewType("PoSEpochNumber", int)
 class PoSEconomicsInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | distributablePosInterest: Drip
     | lastDistributeBlock: PoSBlockNumber
@@ -463,7 +463,7 @@ class PoSEconomicsInfo(TypedDict):
 class PoSAccountRewardsInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | posAddress: Base32Address
     | powAddress: Base32Address
@@ -476,7 +476,7 @@ class PoSAccountRewardsInfo(TypedDict):
 class PoSEpochRewardInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | accountRewards: Sequence[PoSAccountRewardsInfo]
     | powEpochHash: Hash32
@@ -487,7 +487,7 @@ class PoSEpochRewardInfo(TypedDict):
 class DAOVoteInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | powBaseReward: Drip
     | interestRate: int
@@ -498,7 +498,7 @@ class DAOVoteInfo(TypedDict):
 class SupplyInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | totalIssued: Drip
     | totalCollateral: Drip
@@ -515,7 +515,7 @@ class SupplyInfo(TypedDict):
 class PendingInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | localNonce: Nonce
     | pendingNonce: Nonce
@@ -533,7 +533,7 @@ class PendingTransactionStatus(TypedDict):
 class PendingTransactionsInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | firstTxStatus: Union[PendingTransactionStatus, Literal["ready"]]
     | pendingCount: int
@@ -546,7 +546,7 @@ class PendingTransactionsInfo(TypedDict):
 class TransactionPaymentInfo(TypedDict):
     """
 
-    Key and type of corresponding value
+    Parameters
     ----------
     | isBalanceEnough: bool
     | willPayCollateral: bool

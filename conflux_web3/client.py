@@ -48,6 +48,16 @@ from cfx_utils.token_unit import (
     to_int_if_drip_units,
     AbstractDerivedTokenUnit
 )
+from cfx_utils.types import (
+    _Hash32,
+    Drip,
+    EpochLiteral,
+    EpochNumberParam,
+    AddressParam,
+    TxParam,
+    EpochNumber,
+    Storage,
+)
 from cfx_address import (
     Base32Address,
 )
@@ -69,14 +79,7 @@ from conflux_web3._utils.disabled_eth_apis import (
     disabled_method_list,
 )
 from conflux_web3.types import (
-    _Hash32,
-    Drip,
-    EpochLiteral,
-    EpochNumberParam,
-    AddressParam,
     EstimateResult,
-    Base32Address,
-    TxParam,
     TxReceipt,
     TxData,
     NodeStatus,
@@ -87,9 +90,7 @@ from conflux_web3.types import (
     AccountInfo,
     DepositInfo,
     VoteInfo,
-    Storage,
     StorageRoot,
-    EpochNumber,
     BlockRewardInfo,
     PendingInfo,
     PoSEconomicsInfo,
@@ -409,6 +410,7 @@ class BaseCfx(BaseEth):
         """
         Produce a contract factory (address is not specified) or a contract(address is not specified).
         Address is specified by:
+
             1. explicitly using address param
             2. embedded contract deployment info if 
                 (1) "name" parameter specified and corresponding contract has deployment info 
@@ -705,18 +707,6 @@ class ConfluxClient(BaseCfx, Eth):
         Parameters
         ----------
         transaction : TxParam
-            {
-                "chainId": int,
-                "data": Union[bytes, HexStr],
-                "from": Union[Base32Address, str],
-                "gas": int,
-                "gasPrice": Drip,
-                "nonce": Nonce,
-                "to": Base32Address,
-                "value": Drip,
-                "epochHeight": int,
-                "storageLimit": int
-            }
         block_identifier : Optional[EpochNumberParam], optional
             integer epoch number, or the string "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest", by default None
 
@@ -760,18 +750,6 @@ class ConfluxClient(BaseCfx, Eth):
         Parameters
         ----------
         transaction: TxParam
-            {
-                "chainId": int,
-                "data": Union[bytes, HexStr],
-                "from": Union[Base32Address, str],
-                "gas": int,
-                "gasPrice": Drip,
-                "nonce": Nonce,
-                "to": Base32Address,
-                "value": Drip,
-                "epochHeight": int,
-                "storageLimit": int
-            }
         block_identifier : Optional[EpochNumberParam], optional
             integer epoch number, or the string "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest", by default None
 
@@ -824,18 +802,6 @@ class ConfluxClient(BaseCfx, Eth):
         Parameters
         ----------
         transaction : TxParam
-            {
-                "chainId": int,
-                "data": Union[bytes, HexStr],
-                "from": Union[Base32Address, str],
-                "gas": int,
-                "gasPrice": Drip,
-                "nonce": Nonce,
-                "to": Base32Address,
-                "value": Drip,
-                "epochHeight": int,
-                "storageLimit": int
-            }
 
         Returns
         -------
@@ -1421,11 +1387,44 @@ class ConfluxClient(BaseCfx, Eth):
     def get_code(
         self, address: Union[Base32Address, str], block_identifier: Optional[EpochNumberParam] = None
     ) -> HexBytes:
+        """
+        Returns the code of the specified contract. If contract does not exist will return :const:`0x0`
+
+        Parameters
+        ----------
+        address : Union[Base32Address, str]
+            address of the contract
+        block_identifier : Optional[EpochNumberParam], optional
+            integer epoch number, or the string "latest_state", "latest_confirmed", 
+            "latest_checkpoint" or "earliest", by default None
+
+        Returns
+        -------
+        HexBytes
+            byte code of the contract, or :const:`0x` if the account has no code
+        """        
         return self._get_code(address, block_identifier)
     
     def get_storage_at(
         self, address: Union[Base32Address, str], storage_position: int, block_identifier: Optional[EpochNumberParam] = None
     ) -> Union[HexBytes, None]:
+        """
+        Returns storage entries from a given contract.
+
+        Parameters
+        ----------
+        address : Union[Base32Address, str]
+            address of the contract
+        storage_position : int
+            a storage position (refer to https://solidity.readthedocs.io/en/v0.7.1/internals/layout_in_storage.html for more info)
+        block_identifier : Optional[EpochNumberParam], optional
+            integer epoch number, or the string "latest_state", "latest_confirmed", "latest_checkpoint" or "earliest", by default None
+
+        Returns
+        -------
+        Union[HexBytes, None]
+            32 Bytes - the contents of the storage position, or :const:`None` if the contract does not exist
+        """        
         return self._get_storage_at(address, storage_position, block_identifier)
     
     def get_storage_root(
@@ -1525,19 +1524,13 @@ class ConfluxClient(BaseCfx, Eth):
         """
         Returns logs matching the filter provided.
         It is accepted to pass filter_params as a dict or by direclty specifying field name (but cannot mix)
-        
+
         >>> logs = w3.cfx.get_logs({"fromEpoch": 97134060, "toEpoch: 97134160"})
         >>> assert logs == w3.cfx.get_logs(fromEpoch=97134060, toEpoch=97134160})
 
         Parameters
         ----------
         filter_params : Optional[FilterParams], optional
-            FilterParams is a dict with optional fields:
-                fromEpoch: EpochNumberParam
-                toEpoch: EpochNumberParam
-                blockHashes: Sequence[_Hash32]
-                address: Union[Base32Address, List[Base32Address]]
-                topics: Sequence[Optional[Union[_Hash32, Sequence[_Hash32]]]]
             visit https://developer.confluxnetwork.org/conflux-doc/docs/json_rpc/#cfx_getlogs for more information
 
         Returns
