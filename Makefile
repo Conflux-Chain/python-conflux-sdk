@@ -17,7 +17,7 @@ rm-doc:
 gen-doc-config:
 	jupyter-book config sphinx docs/en/ > docs/en/conf.py
 
-# Note the first line relies on jupyterbook===0.11.3
+# Note the first line relies on jupyterbook==0.11.3
 doc: rm-doc gen-doc-config
 	jupyter-book build docs/en/
 
