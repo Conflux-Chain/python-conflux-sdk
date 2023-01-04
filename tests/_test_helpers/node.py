@@ -184,7 +184,7 @@ class LocalTestnetNode(LocalNode):
     
     @cached_property
     def secrets(self) -> List[str]:
-        secrets = [Account.create().privateKey]
+        secrets = [Account.create().key.hex()]
         return secrets 
     
     def _wait_for_embedded_tx_finished(self):
@@ -198,5 +198,5 @@ class RemoteTestnetNode(BaseNode):
     def secrets(self) -> List[str]:
         testnet_secret = os.environ.get("TESTNET_SECRET", None)
         if not testnet_secret:
-            return [Account.create().privateKey]
+            return [Account.create().key.hex()]
         return [testnet_secret]

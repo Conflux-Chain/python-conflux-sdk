@@ -2,6 +2,14 @@
 import itertools
 import pytest
 import uuid
+import threading
+
+from web3.types import (
+    RPCEndpoint,
+)
+from web3.utils.caching import (
+    SimpleCache,
+)
 
 from conflux_web3 import Web3
 from web3._utils.caching import (
@@ -37,27 +45,43 @@ def w3(w3_base, result_generator_middleware):
     w3_base.middleware_onion.add(result_generator_middleware)
     return w3_base
 
+def simple_cache_return_value_a():
+    _cache = SimpleCache()
+    _cache.cache(
+        generate_cache_key(f"{threading.get_ident()}:{('fake_endpoint', [1])}"),
+        {"result": "value-a"},
+    )
+    return _cache
+
 
 def test_simple_cache_middleware_pulls_from_cache(w3):
-    def cache_class():
-        return {
-            generate_cache_key(("fake_endpoint", [1])): {"result": "value-a"},
-        }
-
     w3.middleware_onion.add(
         construct_simple_cache_middleware(
-            cache_class=cache_class,
-            rpc_whitelist={"fake_endpoint"},
+            cache=simple_cache_return_value_a(),
+            rpc_whitelist={RPCEndpoint("fake_endpoint")},
         )
     )
 
     assert w3.manager.request_blocking("fake_endpoint", [1]) == "value-a"
 
+# def test_simple_cache_middleware_pulls_from_cache(w3):
+#     def cache_class():
+#         return {
+#             generate_cache_key(("fake_endpoint", [1])): {"result": "value-a"},
+#         }
+
+#     w3.middleware_onion.add(
+#         construct_simple_cache_middleware(
+#             rpc_whitelist={"fake_endpoint"},
+#         )
+#     )
+
+#     assert w3.manager.request_blocking("fake_endpoint", [1]) == "value-a"
+
 
 def test_simple_cache_middleware_populates_cache(w3):
     w3.middleware_onion.add(
         construct_simple_cache_middleware(
-            cache_class=dict,
             rpc_whitelist={"fake_endpoint"},
         )
     )
@@ -86,7 +110,6 @@ def test_simple_cache_middleware_does_not_cache_none_responses(w3_base):
 
     w3.middleware_onion.add(
         construct_simple_cache_middleware(
-            cache_class=dict,
             rpc_whitelist={"fake_endpoint"},
         )
     )
@@ -109,7 +132,6 @@ def test_simple_cache_middleware_does_not_cache_error_responses(w3_base):
 
     w3.middleware_onion.add(
         construct_simple_cache_middleware(
-            cache_class=dict,
             rpc_whitelist={"fake_endpoint"},
         )
     )
@@ -125,7 +147,6 @@ def test_simple_cache_middleware_does_not_cache_error_responses(w3_base):
 def test_simple_cache_middleware_does_not_cache_endpoints_not_in_whitelist(w3):
     w3.middleware_onion.add(
         construct_simple_cache_middleware(
-            cache_class=dict,
             rpc_whitelist={"fake_endpoint"},
         )
     )

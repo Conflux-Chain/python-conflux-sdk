@@ -16,6 +16,7 @@ extras_require = {
         "pytest>=6.2.5,<7",
         "typing_extensions",
         "pytest-cov",
+        "ipfshttpclient==0.8.0a2",
         # "py-geth>=3.8.0,<4",
     ],
     'linter': [
@@ -60,13 +61,17 @@ extras_require = {
         # "twine>=1.13,<2",
         # "pluggy==0.13.1",
         # "when-changed>=0.3.0,<0.4"
-    ]
+    ],
+    "ipfs": [
+        "ipfshttpclient==0.8.0a2",
+    ],
 }
 
 extras_require['dev'] = (
     extras_require['tester']
     + extras_require['linter']
     + extras_require['docs']
+    # + extras_require["ipfs"] ipfs is included in tester
     + extras_require['dev']
 )
 
@@ -87,11 +92,11 @@ setup(
                   "cfxpm": ["py.typed"]},
     url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
-        "web3==6.0.0b7",
+        "web3==6.0.0b9",
         "cfx-address>=1.0.0",
         "cfx-account>=1.0.0",
         "cfx-utils>=1.0.0",
-        "cached_property==1.5.2",
+        # "cached_property==1.5.2", # required by cfx-account
         # "eth-account>=0.6.0,<0.7.0"
     ],  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'
@@ -102,6 +107,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
     ]
