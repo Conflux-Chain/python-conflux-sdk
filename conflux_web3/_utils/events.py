@@ -97,7 +97,7 @@ def cfx_get_event_data(
             f"between event inputs: '{', '.join(duplicate_names)}'"
         )
 
-    decoded_log_data = abi_codec.decode_abi(log_data_types, log_data)
+    decoded_log_data = abi_codec.decode(log_data_types, log_data)
     
     return_normalizer = [
         lambda type_str, hex_address: (type_str, normalize_to(hex_address, chain_id, True)) if type_str == "address" \

@@ -1,12 +1,7 @@
 from typing import (
-    Any,
-    Dict,
     Set,
-    Type,
     cast,
 )
-import functools
-import lru
 
 from web3.middleware.cache import (
     construct_simple_cache_middleware
@@ -22,6 +17,5 @@ CONFLUX_SIMPLE_CACHE_RPC_WHITELIST = cast(
 )
 
 simple_cache_middleware = construct_simple_cache_middleware(
-    cache_class=cast(Type[Dict[Any, Any]], functools.partial(lru.LRU, 256)),
     rpc_whitelist=CONFLUX_SIMPLE_CACHE_RPC_WHITELIST,
 )
