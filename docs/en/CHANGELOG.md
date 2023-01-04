@@ -1,5 +1,10 @@
 # Change Logs
 
+## 1.0.1
+
+* Add API documents
+* Support python 3.11
+
 ## 1.0.0
 
 * Release
