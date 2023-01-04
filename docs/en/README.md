@@ -4,6 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/python-conflux-sdk/badge/?version=latest)](https://python-conflux-sdk.readthedocs.io/en/latest/?badge=latest)
 [![gitlocalized ](https://gitlocalize.com/repo/8175/whole_project/badge.svg)](https://gitlocalize.com/repo/8175/whole_project?utm_source=badge)
 [![codecov](https://codecov.io/github/Conflux-Chain/python-conflux-sdk/branch/dev/graph/badge.svg?token=GZ62V9QW0A)](https://codecov.io/github/Conflux-Chain/python-conflux-sdk)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/conflux-web3)
 
 [README](https://python-conflux-sdk.readthedocs.io/en/latest/README.html) | [中文文档](https://python-conflux-sdk.readthedocs.io/zh_CN/latest/README.html)
 
