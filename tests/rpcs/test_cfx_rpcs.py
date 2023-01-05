@@ -166,11 +166,10 @@ class TestAccountQuery:
         account_info = w3.cfx.get_account(address, w3.cfx.epoch_number_by_tag("latest_state"))
         TypeValidator.validate_typed_dict(account_info, "AccountInfo")
 
-    # TODO: remove comment after fix  
-    # def test_get_deposit_list(self, w3:Web3, address):
-    #     deposit_list = w3.cfx.get_deposit_list(address)
-    #     for deposit_info in deposit_list:
-    #         TypeValidator.validate_typed_dict(deposit_info, "DepositInfo")
+    def test_get_deposit_list(self, w3:Web3, address):
+        deposit_list = w3.cfx.get_deposit_list(address)
+        for deposit_info in deposit_list:
+            TypeValidator.validate_typed_dict(deposit_info, "DepositInfo")
     
     def test_get_vote_list(self, w3:Web3, address):
         vote_list = w3.cfx.get_vote_list(address, w3.cfx.epoch_number_by_tag("latest_state"))
