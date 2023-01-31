@@ -35,6 +35,6 @@ jobs:
         export ENS_ACCOUNT_NAME=${{secrets.ENS_ACCOUNT_NAME}} &&
         export ENS_ACCOUNT_SECRET=${{secrets.ENS_ACCOUNT_SECRET}} &&
         pytest tests
-    # - name: test finalization api
-    #   run: |
-    #     export USE_TESTNET=1 && export TEST_FINALIZATION=1 && pytest tests/middleware/test_pending.py
+    - name: test finalization api
+      run: |
+        export USE_TESTNET=1 && export TEST_FINALIZATION=1 && pytest tests/middleware/test_pending.py
