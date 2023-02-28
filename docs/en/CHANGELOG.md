@@ -1,5 +1,9 @@
 # Change Logs
 
+## 1.0.2
+
+* name service configuration
+
 ## 1.0.1
 
 * Add API documents
