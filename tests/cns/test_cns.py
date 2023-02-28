@@ -24,7 +24,7 @@ def test_cns(w3: Web3, use_testnet, ens_name, ens_account):
 def test_cns_from_address(use_testnet: bool, ens_name: str, ens_account: LocalAccount):
     if use_testnet:
         provider = Web3.HTTPProvider("https://test.confluxrpc.com")
-        cns = CNS(provider, "cfxtest:acen57mpbzvs774tk6kffcsbkef3m4mn5eh0nxy4jx")
+        cns = CNS(provider, "cfxtest:acemru7fu1u8brtyn3hrtae17kbcd4pd9u2m761bta")
         assert cns.address(ens_name) == ens_account.address
         w3 = Web3(provider, cns=cns)
         assert w3.cns.address(ens_name) == ens_account.address
