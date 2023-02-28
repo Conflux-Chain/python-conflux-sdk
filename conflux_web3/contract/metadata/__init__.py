@@ -45,7 +45,8 @@ DEPLOYMENT_INFO = {
         1029: "cfx:achc8nxj7r451c223m18w2dwjnmhkd6rxawrvkvsy2",
     },
     "ENS": {
-        1: "cfxtest:acen57mpbzvs774tk6kffcsbkef3m4mn5eh0nxy4jx",
+        1: "cfxtest:acemru7fu1u8brtyn3hrtae17kbcd4pd9u2m761bta",
+        1029: "cfx:acemru7fu1u8brtyn3hrtae17kbcd4pd9uwbspvnnm",
     }
 }
 
