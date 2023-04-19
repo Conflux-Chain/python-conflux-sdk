@@ -1,5 +1,9 @@
 # Change Logs
 
+## 1.1.0
+
+* bump web3.py to 6.2.0
+
 ## 1.0.2
 
 * name service configuration
