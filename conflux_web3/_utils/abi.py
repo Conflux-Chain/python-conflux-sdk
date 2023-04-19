@@ -10,7 +10,7 @@ from eth_abi.exceptions import (
     EncodingError
 )
 from web3._utils.abi import (
-    build_default_registry, 
+    build_non_strict_registry, 
     AddressEncoder,
 )
 from cfx_address import (
@@ -41,7 +41,7 @@ class CfxAddressDecoder(AddressDecoder):
     decode_fn = lambda x: x
 
 def build_cfx_default_registry() -> ABIRegistry:
-    registry = build_default_registry()
+    registry = build_non_strict_registry()
     
     registry.unregister('address')
     registry.register(

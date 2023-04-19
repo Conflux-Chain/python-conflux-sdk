@@ -1,14 +1,23 @@
 from typing import (
     TYPE_CHECKING,
+    cast,
     Any,
     Optional,
 )
 
-from web3.contract import (
+from web3._utils.datatypes import (
+    PropertyCheckingFactory,
+)
+
+from web3.contract.contract import (
     BaseContractFunctions,
     ContractFunction,
+)
+
+from web3.contract.contract import (
     call_contract_function
 )
+
 from web3.types import (
     ABI,
     ABIFunction,
@@ -113,6 +122,7 @@ class ConfluxContractFunction(ContractFunction):
             self.abi,
             state_override,
             ccip_read_enabled,
+            self.decode_tuples,
             *self.args,
             **self.kwargs,
         )
@@ -122,6 +132,10 @@ class ConfluxContractFunction(ContractFunction):
             transaction["value"] = to_int_if_drip_units(transaction["value"])
         return super().transact(transaction) # type: ignore
 
+    @classmethod
+    def factory(cls, class_name: str, **kwargs: Any) -> "ConfluxContractFunction":
+        return cast(ConfluxContractFunction, PropertyCheckingFactory(class_name, (cls,), kwargs)(kwargs.get("abi")))
+
 
 class ConfluxContractFunctions(BaseContractFunctions):
     def __init__(
@@ -129,8 +143,15 @@ class ConfluxContractFunctions(BaseContractFunctions):
         abi: ABI,
         w3: "Web3",
         address: Optional[AddressParam] = None,
+        decode_tuples: Optional[bool] = False,
     ) -> None:
-        super().__init__(abi, w3, ConfluxContractFunction, address)  # type: ignore
+        super().__init__(
+            abi,
+            w3,
+            ConfluxContractFunction,
+            address, # type: ignore
+            decode_tuples
+        )
     
     def __getattr__(self, function_name: str) -> "ConfluxContractFunction":
         return super().__getattr__(function_name) # type: ignore
