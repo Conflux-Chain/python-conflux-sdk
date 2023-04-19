@@ -131,6 +131,14 @@ class BaseCfx(BaseEth):
     w3: "Web3"
     
     @property
+    def default_block(self) -> EpochNumberParam:
+        return self._default_block
+
+    @default_block.setter
+    def default_block(self, value: EpochNumberParam) -> None:
+        self._default_block = value
+    
+    @property
     def default_account(self) -> Base32Address:
         """default account address, this address will be used as default `from` address if transaction `from` field is empty
         """
@@ -253,6 +261,10 @@ class BaseCfx(BaseEth):
     )
     
     _get_transaction_receipt: ConfluxMethod[Callable[[_Hash32], TxReceipt]] = ConfluxMethod(
+        RPC.cfx_getTransactionReceipt
+    )
+    
+    _transaction_receipt: ConfluxMethod[Callable[[_Hash32], TxReceipt]] = ConfluxMethod(
         RPC.cfx_getTransactionReceipt
     )
     
@@ -460,7 +472,7 @@ class ConfluxClient(BaseCfx, Eth):
     """RPC entry defined provides friendlier APIs for users
     """
     account: Account
-    defaultContractFactory: Type[ConfluxContract] = ConfluxContract
+    _default_contract_factory: Type[ConfluxContract] = ConfluxContract
     
     def __init__(self, w3: "Web3") -> None:
         super().__init__(w3)

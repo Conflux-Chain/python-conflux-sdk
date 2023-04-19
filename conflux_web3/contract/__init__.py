@@ -10,12 +10,12 @@ from typing import (
 
 from web3.contract import (
     Contract,
+)
+
+from web3.contract.utils import (
     find_functions_by_identifier,
 )
 
-from web3._utils.blocks import (
-    is_hex_encoded_block_hash,
-)
 from web3._utils.normalizers import (
     normalize_abi,
     normalize_bytecode,
@@ -120,8 +120,8 @@ class ConfluxContract(Contract):
         if not self.address:
             raise TypeError("The address argument is required to instantiate a contract.")
 
-        self.functions = ConfluxContractFunctions(self.abi, self.w3, self.address)
-        self.caller = ConfluxContractCaller(self.abi, self.w3, self.address)
+        self.functions = ConfluxContractFunctions(self.abi, self.w3, self.address, decode_tuples=self.decode_tuples)
+        self.caller = ConfluxContractCaller(self.abi, self.w3, self.address, decode_tuples=self.decode_tuples)
         self.events = ConfluxContractEvents(self.abi, self.w3, self.address)
         self.fallback = Contract.get_fallback_function(self.abi, self.w3, ConfluxContractFunction, self.address) # type: ignore
         self.receive = Contract.get_receive_function(self.abi, self.w3, ConfluxContractFunction, self.address) # type: ignore
@@ -146,8 +146,8 @@ class ConfluxContract(Contract):
                 normalizers=normalizers,
             ),
         )
-        contract.functions = ConfluxContractFunctions(contract.abi, contract.w3)
-        contract.caller = ConfluxContractCaller(contract.abi, contract.w3, contract.address)
+        contract.functions = ConfluxContractFunctions(contract.abi, contract.w3, decode_tuples=contract.decode_tuples)
+        contract.caller = ConfluxContractCaller(contract.abi, contract.w3, contract.address, decode_tuples=contract.decode_tuples)
         contract.events = ConfluxContractEvents(contract.abi, contract.w3)
         contract.fallback = Contract.get_fallback_function(
             contract.abi,

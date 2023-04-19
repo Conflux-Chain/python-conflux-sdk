@@ -7,7 +7,8 @@
 from typing import (
     TYPE_CHECKING,
     Callable,
-    Dict
+    Dict,
+    Union,
 )
 from cfx_utils.post_import_hook import (
     when_imported
@@ -101,8 +102,10 @@ eth_to_cfx_tag_mapping: Dict[str, "EpochNumberParam"] = {
 # used to hook web3.contract.parse_block_identifier
 # hook is activated in _web3_hook
 def cfx_parse_block_identifier(
-    w3: "Web3", block_identifier: "EpochNumberParam"
+    w3: "Web3", block_identifier: Union["EpochNumberParam", None]
 ) -> "EpochNumberParam":
+    if block_identifier is None:
+        return w3.cfx.default_block
     if isinstance(block_identifier, int):
         return block_identifier
     elif block_identifier in ['earliest', 'latest_checkpoint', 'latest_finalized', 'latest_confirmed', 'latest_state', 'latest_mined']: # get_args("EpochLiteral")
@@ -118,10 +121,10 @@ def cfx_parse_block_identifier(
     else:
         raise InvalidEpochNumebrParam
 
-@when_imported("web3.contract")
+@when_imported("web3._utils.contracts")
 def hook_parse_block_identifier(mod):
     # from conflux_web3.contract import cfx_parse_block_identifier
-    if mod.__name__ == "web3.contract":
+    if mod.__name__ == "web3._utils.contracts":
         mod.parse_block_identifier = conditional_func(
             cfx_parse_block_identifier,
             cfx_web3_condition

@@ -15,7 +15,7 @@ from hexbytes import HexBytes
 from eth_utils.functional import (
     to_tuple,
 )
-from web3.contract import (
+from web3.contract.base_contract import (
     BaseContractEvent,
     BaseContractEvents,
 )
@@ -31,9 +31,6 @@ from web3.logs import (
     IGNORE,
     STRICT,
     WARN,
-)
-from web3.contract import (
-    check_for_forbidden_api_filter_arguments
 )
 from web3._utils.events import (
     EventLogErrorFlags,
@@ -169,7 +166,7 @@ class ConfluxContractEvent(BaseContractEvent):
 
         event_abi = self._get_event_abi()
 
-        check_for_forbidden_api_filter_arguments(event_abi, _filters)
+        BaseContractEvent.check_for_forbidden_api_filter_arguments(event_abi, _filters)
 
         _, event_filter_params = construct_event_filter_params(
             self._get_event_abi(),
