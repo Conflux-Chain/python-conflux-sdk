@@ -14,7 +14,7 @@ def to_test_cns_write_api(use_testnet: bool) -> bool:
     # so we only do tests on python3.8 to avoid nonce problems
     return sys.version_info.minor == 8 and use_testnet
 
-def test_cns(w3: Web3, use_testnet, ens_name, ens_account):
+def test_cns(w3: Web3, use_testnet: bool, ens_name: str, ens_account: LocalAccount):
     if use_testnet and ens_name:
         ns = CNS.fromWeb3(w3)
         assert ns.address(ens_name)
@@ -31,7 +31,7 @@ def test_cns_from_address(use_testnet: bool, ens_name: str, ens_account: LocalAc
 
     
 
-def test_cns_with_rpc(w3: Web3, use_testnet: bool, ens_name):
+def test_cns_with_rpc(w3: Web3, use_testnet: bool, ens_name: str):
     if use_testnet:
         balance = w3.cfx.get_balance(ens_name)
         assert balance >= 0
@@ -39,7 +39,7 @@ def test_cns_with_rpc(w3: Web3, use_testnet: bool, ens_name):
         with pytest.raises(NameServiceNotSet):
             balance = w3.cfx.get_balance("hello45678oiuytrrtyuiytredcv.web3")
             
-def test_cns_usage_as_contract_param(w3: Web3, to_test_cns_write_api, account, ens_name):
+def test_cns_usage_as_contract_param(w3: Web3, to_test_cns_write_api: bool, account: LocalAccount, ens_name: str):
     if to_test_cns_write_api:
         w3.cfx.default_account = account
         erc20 = w3.cfx.contract(name="ERC20", with_deployment_info=False)
@@ -49,7 +49,7 @@ def test_cns_usage_as_contract_param(w3: Web3, to_test_cns_write_api, account, e
         assert erc20.functions.transfer(ens_name, 100).transact().executed()
         assert erc20.caller.balanceOf(ens_name) == 100 
 
-def test_cns_as_sender(w3: Web3, to_test_cns_write_api, ens_account, ens_name):
+def test_cns_as_sender(w3: Web3, to_test_cns_write_api: bool, ens_account: LocalAccount, ens_name: bool):
     if to_test_cns_write_api:
         w3.wallet.add_account(ens_account)
         w3.cfx.send_transaction({
@@ -58,7 +58,7 @@ def test_cns_as_sender(w3: Web3, to_test_cns_write_api, ens_account, ens_name):
             "from": ens_name
         }).executed()
 
-def test_cns_as_contract_address(w3: Web3, to_test_cns_write_api):
+def test_cns_as_contract_address(w3: Web3, to_test_cns_write_api: bool):
     if to_test_cns_write_api:
         faucet = w3.cfx.contract("faucet.web3", name="Faucet", with_deployment_info=False)
         assert faucet.address == "cfxtest:acejjfa80vj06j2jgtz9pngkv423fhkuxj786kjr61"
@@ -66,12 +66,12 @@ def test_cns_as_contract_address(w3: Web3, to_test_cns_write_api):
         w3.cfx.default_account = account
         faucet.functions.claimCfx().transact().executed()
 
-def test_cns_as_default_account(w3: Web3, use_testnet, ens_name, ens_account):
+def test_cns_as_default_account(w3: Web3, use_testnet: bool, ens_name: str, ens_account: LocalAccount):
     if use_testnet:
         w3.cfx.default_account = ens_name
         assert w3.cfx.default_account == ens_account.address
 
-def test_cns_owner(w3: Web3, use_testnet, ens_name):
+def test_cns_owner(w3: Web3, use_testnet: bool, ens_name: str):
     if use_testnet:
         assert w3.ens.owner(ens_name)
 
@@ -80,7 +80,7 @@ def test_cns_owner(w3: Web3, use_testnet, ens_name):
 #     w3.cfx.default_account = account
 #     w3.cns.setup_owner("test.web3", wrapped=True)
 
-def test_setup_address(w3: Web3, to_test_cns_write_api, ens_account):
+def test_setup_address(w3: Web3, to_test_cns_write_api: bool, ens_account: LocalAccount):
     if to_test_cns_write_api:
         w3.cns.allow_unstable_api = True
         w3.cfx.default_account = ens_account
@@ -94,11 +94,11 @@ def test_setup_address(w3: Web3, to_test_cns_write_api, ens_account):
         assert w3.cns.address(f"{random_subdomain}.test.web3") == random_address
         
 
-def test_cns_wallet(w3: Web3, use_testnet):
+def test_cns_wallet(w3: Web3, use_testnet: bool):
     if use_testnet:
         assert w3.wallet is w3.cns.w3.wallet
 
-def test_cns_default_account(w3: Web3, use_testnet, account):
+def test_cns_default_account(w3: Web3, use_testnet: bool, account: LocalAccount):
     if use_testnet:
         w3.cfx.default_account = account
         assert w3.cfx.default_account == w3.ens.w3.cfx.default_account
