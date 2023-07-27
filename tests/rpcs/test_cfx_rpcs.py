@@ -1,6 +1,7 @@
 from hexbytes import HexBytes
 import pytest
 
+from cfx_address import Base32Address
 from conflux_web3 import Web3
 from conflux_web3.types import (
     BlockData,
@@ -14,7 +15,7 @@ from tests._test_helpers.type_check import TypeValidator
 # We don't test if RPC works as expected
 
 @pytest.fixture(scope="module")
-def tx_hash(moduled_w3: Web3, secret_key) -> HexBytes:
+def tx_hash(moduled_w3: Web3, secret_key: str) -> HexBytes:
     w3 = moduled_w3
     status = w3.cfx.get_status()
     account = w3.account.from_key(secret_key)
@@ -46,7 +47,7 @@ def contract_address(moduled_w3: Web3):
     return contract_address
 
 @pytest.fixture(scope="module")
-def tx_with_log(moduled_w3: Web3, contract_address) -> HexBytes:
+def tx_with_log(moduled_w3: Web3, contract_address: Base32Address) -> HexBytes:
     w3 = moduled_w3
     erc20_metadata = get_contract_metadata("ERC20")
     erc20 = w3.cfx.contract(address=contract_address, abi=erc20_metadata["abi"])
@@ -108,7 +109,7 @@ class TestStatusQuery:
     #     info = 
 
 class TestAccountQuery:
-    def test_get_balance(self, w3: Web3, address):
+    def test_get_balance(self, w3: Web3, address: Base32Address):
         balance = w3.cfx.get_balance(address, w3.cfx.epoch_number-5)
         # the balance is supposed to be non-zero
         assert balance > 0
@@ -121,13 +122,13 @@ class TestAccountQuery:
     #     with pytest.raises(TypeError):
     #         w3.cfx.get_balance()
             
-    def test_get_staking_balance(self, w3: Web3, address):
+    def test_get_staking_balance(self, w3: Web3, address: Base32Address):
         staking_balance = w3.cfx.get_staking_balance(address, w3.cfx.epoch_number-5)
         assert staking_balance >= 0
         assert isinstance(staking_balance, Drip)
         # TODO: use staking balance contract
         
-    def test_get_code(self, w3: Web3, contract_address):
+    def test_get_code(self, w3: Web3, contract_address: Base32Address):
         # test different cases
         # contract address / user address
         contract_code = w3.cfx.get_code(contract_address, w3.cfx.epoch_number_by_tag("latest_state"))
@@ -136,7 +137,7 @@ class TestAccountQuery:
         user_code = w3.cfx.get_code(w3.cfx.account.create().address)
         assert not user_code
         
-    def test_get_storage_at(self, w3: Web3, contract_address, use_testnet):
+    def test_get_storage_at(self, w3: Web3, contract_address: Base32Address, use_testnet: bool):
         # TODO: a potential bug in RPC, at present we ignore the testing in local node
         if use_testnet:
             storage = w3.cfx.get_storage_at(contract_address, 100, w3.cfx.epoch_number_by_tag("latest_state"))
@@ -144,7 +145,7 @@ class TestAccountQuery:
         else:
             pass
         
-    def test_get_storage_root(self, w3: Web3, contract_address):
+    def test_get_storage_root(self, w3: Web3, contract_address: Base32Address):
         root = w3.cfx.get_storage_root(contract_address, w3.cfx.epoch_number_by_tag("latest_state"))
         TypeValidator.validate_typed_dict(root, "StorageRoot")
         
@@ -152,32 +153,32 @@ class TestAccountQuery:
         # root = w3.cfx.get_storage_root(w3.account.create().address)
         # assert not root
         
-    def test_get_collateral_for_storage(self, w3: Web3, address):
+    def test_get_collateral_for_storage(self, w3: Web3, address: Base32Address):
         storage = w3.cfx.get_collateral_for_storage(address, w3.cfx.epoch_number_by_tag("latest_state"))
         
         assert isinstance(storage, int)
     
-    def test_get_sponsor_info(self, w3: Web3, contract_address):
+    def test_get_sponsor_info(self, w3: Web3, contract_address: Base32Address):
         sponsor_info = w3.cfx.get_sponsor_info(contract_address, w3.cfx.epoch_number_by_tag("latest_state"))
         # assert sponsor_info
         TypeValidator.validate_typed_dict(sponsor_info, "SponsorInfo")
             
-    def test_get_account(self, w3: Web3, address):
+    def test_get_account(self, w3: Web3, address: Base32Address):
         account_info = w3.cfx.get_account(address, w3.cfx.epoch_number_by_tag("latest_state"))
         TypeValidator.validate_typed_dict(account_info, "AccountInfo")
 
-    def test_get_deposit_list(self, w3:Web3, address):
+    def test_get_deposit_list(self, w3:Web3, address: Base32Address):
         deposit_list = w3.cfx.get_deposit_list(address)
         for deposit_info in deposit_list:
             TypeValidator.validate_typed_dict(deposit_info, "DepositInfo")
     
-    def test_get_vote_list(self, w3:Web3, address):
+    def test_get_vote_list(self, w3:Web3, address: Base32Address):
         vote_list = w3.cfx.get_vote_list(address, w3.cfx.epoch_number_by_tag("latest_state"))
         for vote_info in vote_list:
             TypeValidator.validate_typed_dict(vote_info, "VoteInfo")
     
 class TestNonce:
-    def test_get_next_nonce(self, w3: Web3, address):
+    def test_get_next_nonce(self, w3: Web3, address: Base32Address):
         nonce = w3.cfx.get_next_nonce(address)
         assert nonce >= 0
         # if default account is set, 
@@ -186,7 +187,7 @@ class TestNonce:
         # default_nonce = w3.cfx.get_next_nonce()
         # assert default_nonce == nonce
     
-    def test_get_transaction_count(self, w3: Web3, address):
+    def test_get_transaction_count(self, w3: Web3, address: Base32Address):
         nonce = w3.cfx.get_transaction_count(address)
         assert nonce >= 0
 
@@ -197,7 +198,7 @@ class TestNonce:
     #     with pytest.raises(ValueError):
     #         w3.cfx.get_next_nonce()
 
-def test_get_tx(moduled_w3: Web3, contract_address):
+def test_get_tx(moduled_w3: Web3, contract_address: Base32Address):
     """test get_transaction(_by_hash) and get_transaction_receipt
     """
     w3 = moduled_w3
@@ -227,7 +228,7 @@ def test_get_logs(w3: Web3):
     """
     pass
 
-def test_get_confirmation_risk(w3: Web3, tx_hash):
+def test_get_confirmation_risk(w3: Web3, tx_hash: HexBytes):
     blockHash = w3.cfx.wait_for_transaction_receipt(tx_hash)['blockHash']
     risk = w3.cfx.get_confirmation_risk_by_hash(blockHash)
     assert risk < 1
@@ -244,42 +245,44 @@ def preprocess_block_data(block_data: BlockData, use_testnet: bool) -> BlockData
 
 class TestBlock:
     @pytest.fixture
-    def block_hash(self, w3: Web3, tx_hash):
+    def block_hash(self, w3: Web3, tx_hash: HexBytes):
         return w3.cfx.wait_for_transaction_receipt(tx_hash)['blockHash']
     
     @pytest.fixture
-    def block_data(self, w3:Web3, block_hash, use_testnet):
+    def block_data(self, w3:Web3, block_hash: bytes, use_testnet: bool):
         block_data = w3.cfx.get_block_by_hash(block_hash, True)
         # if not use_testnet:
         #     # local node may not run pos chain
         #     block_data = dict(block_data)
         #     block_data['posReference'] = HexBytes("0x0")
+        assert block_data is not None
         block_data = preprocess_block_data(block_data, use_testnet)
         return block_data
     
     @pytest.fixture
-    def no_full_block_data(self, w3:Web3, block_hash, use_testnet):
+    def no_full_block_data(self, w3:Web3, block_hash: bytes, use_testnet: bool):
         block_data = w3.cfx.get_block_by_hash(block_hash, False)
         # if not use_testnet:
         #     # local node may not run pos chain
         #     block_data = dict(block_data)
         #     block_data['posReference'] = HexBytes("0x0")
+        assert block_data is not None
         block_data = preprocess_block_data(block_data, use_testnet)
         return block_data
     
-    def test_get_block_by_hash(self, block_data, no_full_block_data):
+    def test_get_block_by_hash(self, block_data: BlockData, no_full_block_data: BlockData):
         # block_data is retrieved by get_block_by_hash
         TypeValidator.validate_typed_dict(block_data, "BlockData")
         TypeValidator.validate_typed_dict(no_full_block_data, "BlockData")
         return block_data
 
-    def test_get_block_by_epoch_number(self, w3:Web3, block_data: BlockData, use_testnet):
+    def test_get_block_by_epoch_number(self, w3:Web3, block_data: BlockData, use_testnet: bool):
         assert block_data['epochNumber'] is not None
         data_ = w3.cfx.get_block_by_epoch_number(block_data['epochNumber'], True)
         data_ = preprocess_block_data(data_, use_testnet)
         TypeValidator.validate_typed_dict(data_, "BlockData")
         
-    def test_get_block_by_block_number(self, w3:Web3, block_data: BlockData, use_testnet):
+    def test_get_block_by_block_number(self, w3:Web3, block_data: BlockData, use_testnet: bool):
         assert block_data['blockNumber'] is not None
         data_ = w3.cfx.get_block_by_block_number(block_data['blockNumber'], True)
         data_ = preprocess_block_data(data_, use_testnet)
@@ -300,7 +303,7 @@ class TestBlock:
         for block_hash in blocks:
             assert isinstance(block_hash, bytes)
             
-    def test_get_blocks_by_hash_with_pivot_assumptions(self, w3: Web3, use_testnet):
+    def test_get_blocks_by_hash_with_pivot_assumptions(self, w3: Web3, use_testnet: bool):
         epoch_number = w3.cfx.epoch_number_by_tag("latest_confirmed")
         blocks = w3.cfx.get_blocks_by_epoch(epoch_number)
         block_data = w3.cfx.get_block_by_hash_with_pivot_assumptions(
@@ -311,7 +314,7 @@ class TestBlock:
         block_data = preprocess_block_data(block_data, use_testnet)
         TypeValidator.validate_typed_dict(block_data, "BlockData")
 
-    def test_get_block(self, w3: Web3, block_data: BlockData, use_testnet):
+    def test_get_block(self, w3: Web3, block_data: BlockData, use_testnet: bool):
         epoch_number = block_data["epochNumber"]
         assert epoch_number is not None
         hash = block_data["hash"]
@@ -321,7 +324,7 @@ class TestBlock:
             block = preprocess_block_data(block, use_testnet)
             TypeValidator.validate_typed_dict(block, "BlockData")
 
-def test_check_balance_against_transaction(w3: Web3, address, contract_address):
+def test_check_balance_against_transaction(w3: Web3, address: Base32Address, contract_address: Base32Address):
     payment_info = w3.cfx.check_balance_against_transaction(
         address, contract_address, 10000, 10**9, 0, w3.cfx.epoch_number_by_tag("latest_state")
     )
