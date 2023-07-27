@@ -17,6 +17,7 @@ extras_require = {
         "typing_extensions",
         "pytest-cov",
         "ipfshttpclient==0.8.0a2",
+        "python-dotenv",
         # "py-geth>=3.8.0,<4",
     ],
     'linter': [

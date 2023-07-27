@@ -1,6 +1,7 @@
 from typing import Iterable, Sequence, Union
 import os
 import pytest
+import dotenv
 from tests._test_helpers.node import (
     LocalNode, BaseNode, RemoteTestnetNode, LocalTestnetNode
 )
@@ -16,6 +17,8 @@ from conflux_web3.types import (
 from conflux_web3.middleware import (
     Wallet
 )
+
+dotenv.load_dotenv()
 
 @pytest.fixture(scope="session")
 def use_testnet() -> bool:
