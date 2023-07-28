@@ -560,6 +560,19 @@ class TransactionPaymentInfo(TypedDict):
     willPayCollateral: bool
     willPayTxFee: bool
 
+class CollateralInfo(TypedDict):
+    """
+
+    Parameters
+    ----------
+    | totalStorageTokens: int
+    | convertedStoragePoints: int
+    | usedStoragePoints: int
+    """
+    totalStorageTokens: int
+    convertedStoragePoints: int
+    usedStoragePoints: int
+
 __all__ = [
     "TxDict",
     "TxParam",
@@ -596,5 +609,6 @@ __all__ = [
     "SupplyInfo",
     "PendingInfo",
     "PendingTransactionsInfo",
-    "TransactionPaymentInfo"
+    "TransactionPaymentInfo",
+    "CollateralInfo"
 ]

@@ -3,9 +3,17 @@ from typing import (
     Callable,
     Dict,
     Union,
+    Type,
+    get_type_hints
+)
+from typing_extensions import (
+    TypedDict,
 )
 from hexbytes import HexBytes
 
+from eth_typing import (
+    Hash32
+)
 from web3.datastructures import AttributeDict
 from web3.types import (
     RPCEndpoint,
@@ -66,6 +74,7 @@ from conflux_web3.middleware.pending import (
 )
 from conflux_web3.types import (
     Drip,
+    CollateralInfo,
 )
 
 STANDARD_NORMALIZERS = [
@@ -403,6 +412,27 @@ PENDING_TRANSACTIONS_INFO_FORMATTERS = {
     )
 }
 
+SIMPLE_RESULT_FORMATTER_MAPPING: Dict[Type[Any], Callable[..., Any]] = {
+    int: to_integer_if_hex,
+    Drip: from_hex_to_drip,
+    Base32Address: from_trust_to_base32,
+    Hash32: to_hash32,
+    HexBytes: HexBytes,
+    Union[int, None]: apply_formatter_if(is_not_null, to_integer_if_hex)
+}
+
+def create_dict_result_formatter(typed_dict_class: Type[TypedDict]) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+    formatter_dict: Dict[str, Callable[..., Any]] = {}
+    type_hints = get_type_hints(typed_dict_class)
+    
+    for key, type_hint in type_hints.items():
+        # Get the formatter function for the specific type hint
+        formatter_function = SIMPLE_RESULT_FORMATTER_MAPPING.get(type_hint, None)
+        
+        if formatter_function is not None:
+            formatter_dict[key] = formatter_function
+            
+    return apply_formatters_to_dict(formatter_dict)
 
 PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     # cfx namespace
@@ -455,6 +485,8 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
         apply_formatters_to_dict(DAO_INFO_FORMATTERS)
     ),
     RPC.cfx_getSupplyInfo: apply_formatters_to_dict(SUPPLY_INFO_FORMATTERS),
+    RPC.cfx_getCollateralInfo: create_dict_result_formatter(CollateralInfo),
+
     RPC.cfx_getAccountPendingInfo: apply_formatters_to_dict(PENDING_INFO_FORMATTERS),
     RPC.cfx_getAccountPendingTransactions: apply_formatters_to_dict(PENDING_TRANSACTIONS_INFO_FORMATTERS),
     RPC.cfx_getTransactionByHash: apply_formatter_if(

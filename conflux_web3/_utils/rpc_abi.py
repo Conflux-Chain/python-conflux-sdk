@@ -44,14 +44,27 @@ class RPC:
     cfx_getPoSRewardByEpoch = RPCEndpoint("cfx_getPoSRewardByEpoch")
     cfx_getParamsFromVote = RPCEndpoint("cfx_getParamsFromVote")
     cfx_getSupplyInfo = RPCEndpoint("cfx_getSupplyInfo")
-    
+    cfx_getCollateralInfo = RPCEndpoint("cfx_getCollateralInfo")
+
     cfx_getAccountPendingInfo = RPCEndpoint("cfx_getAccountPendingInfo")
     cfx_getAccountPendingTransactions = RPCEndpoint("cfx_getAccountPendingTransactions")
     cfx_checkBalanceAgainstTransaction = RPCEndpoint("cfx_checkBalanceAgainstTransaction")
+
+    cfx_newFilter = RPCEndpoint("cfx_newFilter")
+    cfx_newBlockFilter = RPCEndpoint("cfx_newBlockFilter")
+    cfx_newPendingTransactionFilter = RPCEndpoint("cfx_newPendingTransactionFilter")
+    cfx_getFilterChanges = RPCEndpoint("cfx_getFilterChanges")
+    cfx_getFilterLogs = RPCEndpoint("cfx_getFilterLogs")
+    cfx_uninstallFilter = RPCEndpoint("cfx_uninstallFilter")
+
+    # only available in LocalRPC
+    cfx_getTransactionsByEpoch = RPCEndpoint("cfx_getTransactionsByEpoch")
+    cfx_getTransactionsByBlock = RPCEndpoint("cfx_getTransactionsByBlock")
     
     # trace
     trace_block = RPCEndpoint("trace_block")
     trace_transaction = RPCEndpoint("trace_transaction")
+    trace_epoch = RPCEndpoint("trace_epoch")
 
     # debug
     accounts = RPCEndpoint("accounts")
