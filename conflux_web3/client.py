@@ -380,6 +380,7 @@ class BaseCfx(BaseEth):
     _get_logs: ConfluxMethod[Callable[[FilterParams], List[LogReceipt]]] = ConfluxMethod(
         RPC.cfx_getLogs
     )
+    _get_collateral_info: ConfluxMethod[Callable[[Optional[EpochNumberParam]], CollateralInfo]] = ConfluxMethod(RPC.cfx_getCollateralInfo)
 
     @overload  
     def contract(
@@ -1557,3 +1558,6 @@ class ConfluxClient(BaseCfx, Eth):
             if len(kwargs.keys()) != 0:
                 raise ValueError("Redundant Param: FilterParams as get_logs first parameter is already provided")
             return self._get_logs(filter_params)
+
+    def get_collateral_info(self, block_identifier: Optional[EpochNumberParam] = None) -> CollateralInfo:
+        return self._get_collateral_info(block_identifier)

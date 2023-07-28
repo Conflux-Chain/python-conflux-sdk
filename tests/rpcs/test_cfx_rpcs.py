@@ -105,6 +105,11 @@ class TestStatusQuery:
         info = w3.cfx.get_supply_info()
         TypeValidator.validate_typed_dict(info, "SupplyInfo")
     
+    def test_get_collateral_info(self, w3: Web3):
+        info = w3.cfx.get_collateral_info()
+        TypeValidator.validate_typed_dict(info, "CollateralInfo")
+        info = w3.cfx.get_collateral_info("latest_confirmed")
+        TypeValidator.validate_typed_dict(info, "CollateralInfo")
     # def test_get_account_pending_transactions(self, w3: Web3):
     #     info = 
 
