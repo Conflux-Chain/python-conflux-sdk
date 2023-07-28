@@ -323,6 +323,8 @@ SPONSOR_INFO_FORMATTERS = {
     "sponsorGasBound": from_hex_to_drip,
     "sponsorForCollateral": from_trust_to_base32,
     "sponsorForGas": from_trust_to_base32,
+    "availableStoragePoints": to_integer_if_hex,
+    "usedStoragePoints": to_integer_if_hex,
 }
 
 ACCOUNT_INFO_FORMATTERS = {
