@@ -373,12 +373,16 @@ class SponsorInfo(TypedDict):
     | sponsorForCollateral: Base32Address
     | sponsorForGas: Base32Address
     | sponsorGasBound: Drip
+    | usedStoragePoints: int
+    | availableStoragePoints: int
     """
     sponsorBalanceForCollateral: Drip
     sponsorBalanceForGas: Drip
     sponsorForCollateral: Base32Address
     sponsorForGas: Base32Address
     sponsorGasBound: Drip
+    usedStoragePoints: int
+    availableStoragePoints: int
     
 class AccountInfo(TypedDict):
     """
