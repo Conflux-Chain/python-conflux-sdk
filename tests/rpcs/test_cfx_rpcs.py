@@ -328,6 +328,15 @@ class TestBlock:
             block = w3.cfx.get_block(block_identifier)
             block = preprocess_block_data(block, use_testnet)
             TypeValidator.validate_typed_dict(block, "BlockData")
+    
+    def test_epoch_receipts(self, w3: Web3, block_data: BlockData):
+        epoch_number = block_data["epochNumber"]
+        assert epoch_number is not None
+        epoch_receipts = w3.cfx.get_epoch_receipts(epoch_number, True)
+        # assert epoch is not None
+        for block_receipts in epoch_receipts:
+            for tx_receipt in block_receipts:
+                TypeValidator.validate_typed_dict(tx_receipt, "TxReceipt")
 
 def test_check_balance_against_transaction(w3: Web3, address: Base32Address, contract_address: Base32Address):
     payment_info = w3.cfx.check_balance_against_transaction(
