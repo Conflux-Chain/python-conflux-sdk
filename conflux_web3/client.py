@@ -113,6 +113,9 @@ from conflux_web3.contract.metadata import (
 from conflux_web3._utils.transactions import (
     fill_transaction_defaults
 )
+from conflux_web3._utils.normalizers import (
+    rpc_snake_to_camel
+)
 from conflux_web3.method import (
     ConfluxMethod
 )
@@ -480,13 +483,20 @@ class ConfluxClient(BaseCfx, Eth):
     """
     account: Account
     _default_contract_factory: Type[ConfluxContract] = ConfluxContract
-    
+    _allow_arbitary_rpc: bool = False
+
     def __init__(self, w3: "Web3") -> None:
         super().__init__(w3)
         self.account = Account()
         self.account.set_w3(w3)
         self._disable_eth_methods(disabled_method_list)
-    
+
+    def __getattr__(self, name: str) -> Callable[..., Any]:
+        if not self._allow_arbitary_rpc:
+            raise Exception(f"RPC method cfx_{rpc_snake_to_camel(name)} is not defined, you can set `web3.cfx._allow_arbitary_rpc=True` to enable any RPC call.")
+        method: ConfluxMethod[Callable[..., Any]] = ConfluxMethod(RPCEndpoint(f"cfx_{rpc_snake_to_camel(name)}"))
+        return method.__get__(self, self.__class__)
+
     # lazy initialize self.address
     @cached_property
     def address(self) -> Type[Base32Address]:

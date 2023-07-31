@@ -26,6 +26,12 @@ from conflux_web3.exceptions import (
 if TYPE_CHECKING:
     from conflux_web3 import Web3  # noqa: F401
 
+def rpc_snake_to_camel(snake_str: str) -> str:
+    components = snake_str.split('_')
+    rtn = ""
+    for i, word in enumerate(components):
+        rtn += word if i == 0 else word.title()
+    return rtn
 
 @curry
 def abi_cns_resolver(w3: "Web3", type_str: TypeStr, val: Any) -> Tuple[TypeStr, Any]:
