@@ -119,6 +119,7 @@ PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     RPC.cfx_getBlocksByEpoch: apply_formatter_at_index(to_hex_if_integer, 0),
     RPC.cfx_getSkippedBlocksByEpoch: apply_formatter_at_index(to_hex_if_integer, 0),
     RPC.cfx_getBlockByHashWithPivotAssumption: apply_formatter_at_index(to_hex_if_integer, 2),
+    RPC.cfx_getEpochReceipts: apply_formatter_at_index(to_hex_if_integer, 0),
     
     RPC.cfx_getCode: apply_formatter_at_index(to_hex_if_integer, 1),
     RPC.cfx_getStorageAt: apply_formatter_at_index(to_hex_if_integer, 2),
@@ -452,6 +453,11 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     RPC.cfx_getBlocksByEpoch: apply_list_to_array_formatter(to_hash32),
     RPC.cfx_getSkippedBlocksByEpoch: apply_list_to_array_formatter(to_hash32),
     RPC.cfx_getBlockByHashWithPivotAssumption: apply_formatter_if(is_not_null, block_formatter),
+    RPC.cfx_getEpochReceipts: apply_list_to_array_formatter(apply_list_to_array_formatter(apply_formatter_if(
+        is_not_null,
+        apply_formatters_to_dict(RECEIPT_FORMATTERS),
+    ))),
+
     RPC.cfx_getLogs: filter_result_formatter,
     
     RPC.cfx_getCode: HexBytes,

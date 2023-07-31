@@ -22,6 +22,8 @@ class RPC:
     cfx_getBlockByHashWithPivotAssumption = RPCEndpoint("cfx_getBlockByHashWithPivotAssumption")
     cfx_getBlockRewardInfo = RPCEndpoint("cfx_getBlockRewardInfo")
     cfx_getBlocksByEpoch = RPCEndpoint("cfx_getBlocksByEpoch")
+    cfx_getEpochReceipts = RPCEndpoint("cfx_getEpochReceipts")
+
     cfx_getCode = RPCEndpoint("cfx_getCode")
     cfx_getCollateralForStorage = RPCEndpoint("cfx_getCollateralForStorage")
     cfx_getConfirmationRiskByHash = RPCEndpoint("cfx_getConfirmationRiskByHash")
@@ -103,6 +105,7 @@ RPC_ABIS = {
     RPC.cfx_getBlocksByEpoch: [EPOCH_NUMBER_PARAM],
     RPC.cfx_getSkippedBlocksByEpoch: [EPOCH_NUMBER_PARAM],
     RPC.cfx_getBlockByHashWithPivotAssumption: ["bytes32", "bytes32", "uint"],
+    RPC.cfx_getEpochReceipts: [EPOCH_NUMBER_PARAM, "bool"],
 
     RPC.cfx_getBalance: ["address", EPOCH_NUMBER_PARAM],
     RPC.cfx_getStakingBalance: ["address", EPOCH_NUMBER_PARAM],

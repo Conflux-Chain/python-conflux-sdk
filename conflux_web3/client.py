@@ -38,6 +38,9 @@ from web3._utils.empty import (
 from web3._utils.threads import (
     Timeout,
 )
+from web3.types import (
+    RPCEndpoint,
+)
 from web3.exceptions import (
     TransactionNotFound,
     TimeExhausted
@@ -99,6 +102,7 @@ from conflux_web3.types import (
     SupplyInfo,
     PendingTransactionsInfo,
     TransactionPaymentInfo,
+    CollateralInfo,
 )
 from conflux_web3.contract import (
     ConfluxContract
@@ -299,8 +303,9 @@ class BaseCfx(BaseEth):
     _get_block_by_hash_with_pivot_assumptions: ConfluxMethod[Callable[[_Hash32, _Hash32, int], BlockData]] = ConfluxMethod(
         RPC.cfx_getBlockByHashWithPivotAssumption
     )
-    
-    
+
+    _get_epoch_receipts: ConfluxMethod[Callable[[EpochNumberParam, Optional[bool]], Sequence[Sequence[TxReceipt]]]] = ConfluxMethod(RPC.cfx_getEpochReceipts)
+
     _get_code: ConfluxMethod[Callable[[AddressParam, Optional[EpochNumberParam]], HexBytes]] = ConfluxMethod(
         RPC.cfx_getCode
     )
@@ -380,6 +385,7 @@ class BaseCfx(BaseEth):
     _get_logs: ConfluxMethod[Callable[[FilterParams], List[LogReceipt]]] = ConfluxMethod(
         RPC.cfx_getLogs
     )
+
     _get_collateral_info: ConfluxMethod[Callable[[Optional[EpochNumberParam]], CollateralInfo]] = ConfluxMethod(RPC.cfx_getCollateralInfo)
 
     @overload  
@@ -1353,6 +1359,24 @@ class ConfluxClient(BaseCfx, Eth):
             returns block data if pivot hash is correct
         """        
         return self._get_block_by_hash_with_pivot_assumptions(block_hash, assumed_pivot_hash, epoch_number)
+    
+    def get_epoch_receipts(self, epoch_number: EpochNumberParam, include_espace_receipts: Optional[bool]=False) -> Sequence[Sequence[TxReceipt]]:
+        """
+        Returns the transaction receipts in every block of the specific epoch. Returns 
+
+        Parameters
+        ----------
+        epoch_number : EpochNumberParam
+            the epoch to query, should be earlier than latest_state
+        include_espace_receipts : Optional[bool]
+            Defaults to False. Determines if the returned receipts will include eSpace receipts. 
+
+        Returns
+        -------
+        Sequence[Sequence[TxReceipt]]
+            returns a 2-dimension array containing block receipts, where transaction receipts are contained
+        """
+        return self._get_epoch_receipts(epoch_number, include_espace_receipts)
     
     def get_confirmation_risk_by_hash(self, block_hash: _Hash32) -> float:
         """
