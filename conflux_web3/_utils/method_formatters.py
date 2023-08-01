@@ -85,13 +85,13 @@ STANDARD_NORMALIZERS = [
     # abi_address_to_hex, \
 ]
 
-def to_hash32(val, variable_length=False):
+def to_hash32(val: Union[str, int, bytes], variable_length: bool=False):
     return to_hexbytes(32, val, variable_length)
 
-def from_trust_to_base32(val):
+def from_trust_to_base32(val: str):
     return Base32Address(val, _from_trust=True)
 
-def from_hex_to_drip(val):
+def from_hex_to_drip(val: Any):
     return Drip(val, 16)
 
 transaction_param_formatter = compose(
@@ -311,7 +311,7 @@ BLOCK_FORMATTERS = {
 block_formatter = apply_formatters_to_dict(BLOCK_FORMATTERS)
 
 
-def to_transaction_hash(val) -> TransactionHash:
+def to_transaction_hash(val: Hash32) -> TransactionHash:
     if isinstance(val, TransactionHash):
         return val
     return TransactionHash(to_hexbytes(32, val))
