@@ -42,6 +42,13 @@ class RPC:
     cfx_sendRawTransaction = RPCEndpoint("cfx_sendRawTransaction")
     cfx_sendTransaction = RPCEndpoint("cfx_sendTransaction")
     
+    cfx_newFilter = RPCEndpoint("cfx_newFilter")
+    cfx_newBlockFilter = RPCEndpoint("cfx_newBlockFilter")
+    cfx_newPendingTransactionFilter = RPCEndpoint("cfx_newPendingTransactionFilter")
+    cfx_getFilterChanges = RPCEndpoint("cfx_getFilterChanges")
+    cfx_getFilterLogs = RPCEndpoint("cfx_getFilterLogs")
+    cfx_uninstallFilter = RPCEndpoint("cfx_uninstallFilter")
+
     cfx_getPoSEconomics = RPCEndpoint("cfx_getPoSEconomics")
     cfx_getPoSRewardByEpoch = RPCEndpoint("cfx_getPoSRewardByEpoch")
     cfx_getParamsFromVote = RPCEndpoint("cfx_getParamsFromVote")

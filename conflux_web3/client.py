@@ -13,7 +13,8 @@ from typing import (
     overload
 )
 from typing_extensions import (
-    Literal
+    Literal,
+    Unpack,
 )
 import warnings
 from hexbytes import HexBytes
@@ -53,6 +54,7 @@ from cfx_utils.token_unit import (
 )
 from cfx_utils.types import (
     _Hash32,
+    Hash32,
     Drip,
     EpochLiteral,
     EpochNumberParam,
@@ -103,6 +105,10 @@ from conflux_web3.types import (
     PendingTransactionsInfo,
     TransactionPaymentInfo,
     CollateralInfo,
+    BlockFilterId,
+    TxFilterId,
+    LogFilterId,
+    _FilterId,
 )
 from conflux_web3.contract import (
     ConfluxContract
@@ -388,6 +394,18 @@ class BaseCfx(BaseEth):
     _get_logs: ConfluxMethod[Callable[[FilterParams], List[LogReceipt]]] = ConfluxMethod(
         RPC.cfx_getLogs
     )
+    
+    _new_filter: ConfluxMethod[Callable[[FilterParams], LogFilterId]] = ConfluxMethod(RPC.cfx_newFilter)
+
+    _new_block_filter: ConfluxMethod[Callable[[], BlockFilterId]] = ConfluxMethod(RPC.cfx_newBlockFilter)
+    
+    _new_pending_transaction_filter: ConfluxMethod[Callable[[], TxFilterId]] = ConfluxMethod(RPC.cfx_newPendingTransactionFilter)
+
+    _get_filter_changes: ConfluxMethod[Callable[[_FilterId], Union[Sequence[Hash32], Sequence[LogReceipt]]]] = ConfluxMethod(RPC.cfx_getFilterChanges)
+    
+    _get_filter_logs: ConfluxMethod[Callable[[Union[LogFilterId, str]], Sequence[LogReceipt]]] = ConfluxMethod(RPC.cfx_getFilterLogs)
+
+    _uninstall_filter: ConfluxMethod[Callable[[_FilterId], bool]] = ConfluxMethod(RPC.cfx_uninstallFilter)
 
     _get_collateral_info: ConfluxMethod[Callable[[Optional[EpochNumberParam]], CollateralInfo]] = ConfluxMethod(RPC.cfx_getCollateralInfo)
 
@@ -1595,3 +1613,44 @@ class ConfluxClient(BaseCfx, Eth):
 
     def get_collateral_info(self, block_identifier: Optional[EpochNumberParam] = None) -> CollateralInfo:
         return self._get_collateral_info(block_identifier)
+
+    @overload
+    def new_filter(self, filter_params: FilterParams) -> LogFilterId:...
+    
+    @overload
+    def new_filter(self, filter_params: None=None, **kwargs: Unpack[FilterParams]) -> LogFilterId:...
+    
+    def new_filter(self, filter_params: Optional[FilterParams]=None, **kwargs: Unpack[FilterParams]) -> LogFilterId:     
+        if filter_params is None:
+            filter_params = cast(FilterParams, keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs)) # type: ignore
+            return self._new_filter(filter_params)
+        else:
+            if len(kwargs.keys()) != 0:
+                raise ValueError("Redundant Param: FilterParams as get_logs first parameter is already provided")
+            return self._new_filter(filter_params)
+        
+    def new_block_filter(self) -> BlockFilterId:
+        return self._new_block_filter()
+    
+    def new_pending_transaction_filter(self) -> TxFilterId:
+        return self._new_pending_transaction_filter()
+    
+    
+    @overload
+    def get_filter_changes(self, filter_id: LogFilterId) -> Sequence[LogReceipt]:...
+    
+    @overload
+    def get_filter_changes(self, filter_id: Union[TxFilterId, BlockFilterId]) -> Sequence[Hash32]:...
+    
+    @overload
+    def get_filter_changes(self, filter_id: str) -> Union[Sequence[Hash32], Sequence[LogReceipt]]:...
+    
+    
+    def get_filter_changes(self, filter_id: _FilterId) -> Union[Sequence[Hash32], Sequence[LogReceipt]]:     
+        return self._get_filter_changes(filter_id)
+
+    def get_filter_logs(self, log_filter_id: Union[LogFilterId, str]) -> Sequence[LogReceipt]:
+        return self._get_filter_logs(log_filter_id)
+
+    def uninstall_filter(self, filter_id: _FilterId) -> bool:
+        return self._uninstall_filter(filter_id)

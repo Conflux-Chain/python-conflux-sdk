@@ -1,12 +1,17 @@
 from hexbytes import HexBytes
-import pytest
+import time, pytest
 
 from cfx_address import Base32Address
+from cfx_account import LocalAccount
 from conflux_web3 import Web3
+from conflux_web3.contract import ConfluxContract
 from conflux_web3.types import (
     BlockData,
     Drip,
     GDrip,
+    BlockFilterId,
+    TxFilterId,
+    LogFilterId,
 )
 from conflux_web3.contract.metadata import get_contract_metadata
 from tests._test_helpers.type_check import TypeValidator
@@ -347,3 +352,69 @@ def test_check_balance_against_transaction(w3: Web3, address: Base32Address, con
         address, contract_address, 10000, GDrip(1), 0, w3.cfx.epoch_number_by_tag("latest_state")
     )
     TypeValidator.validate_typed_dict(payment_info, "TransactionPaymentInfo")
+
+class TestBlockFilter:
+    @pytest.fixture(scope="class")
+    def block_filter_id(self, moduled_w3: Web3) -> BlockFilterId:
+        return moduled_w3.cfx.new_block_filter()
+
+    def test_block_filter(self, moduled_w3: Web3, block_filter_id: BlockFilterId):
+        time.sleep(2)
+        new_blocks = moduled_w3.cfx.get_filter_changes(block_filter_id)
+        # new_blocks = moduled_w3.manager.request_blocking(
+        #     "cfx_getFilterChanges", [block_filter_id]
+        # )
+        assert len(new_blocks) > 0
+        for block_hash in new_blocks:
+            assert TypeValidator.isinstance(block_hash, bytes)
+            assert len(block_hash) == 32
+        moduled_w3.cfx.uninstall_filter(block_filter_id)
+
+
+class TestPendingTxFilter:
+    @pytest.fixture(scope="class")
+    def pending_tx_filter_id(self, moduled_w3: Web3) -> TxFilterId:
+        return moduled_w3.cfx.new_pending_transaction_filter()
+    
+    # TODO: check usablility
+    # def test_pending_tx_filter(self, moduled_w3: Web3, pending_tx_filter_id: TxFilterId):
+    #     skipped_pending_tx = moduled_w3.cfx.send_transaction({
+    #         "to": moduled_w3.address.zero_address(),
+    #         "value": Drip(100),
+    #         "nonce": moduled_w3.cfx.get_next_nonce(moduled_w3.cfx.default_account) + 1
+    #     })
+    #     time.sleep(10)
+    #     pending_txs = moduled_w3.cfx.get_filter_changes(pending_tx_filter_id)
+    #     assert len(pending_txs) > 0
+    #     for pending_tx in pending_txs:
+    #         assert TypeValidator.isinstance(pending_tx, bytes)
+    #         assert len(pending_tx) == 32
+        
+    #     moduled_w3.cfx.send_transaction({
+    #         "to": moduled_w3.address.zero_address(),
+    #         "value": Drip(100)
+    #     }).executed()
+        
+    #     skipped_pending_tx.executed()
+    #     moduled_w3.cfx.uninstall_filter(pending_tx_filter_id)
+
+
+class TestLogFilter:
+    @pytest.fixture(scope="class")
+    def contract(self, moduled_w3: Web3):
+        w3 = moduled_w3
+        contract_address = w3.cfx.contract(name="ERC20").constructor(name="Coin", symbol="C", initialSupply=10**18).transact().executed()["contractCreated"]
+        assert contract_address is not None
+        return w3.cfx.contract(contract_address, name="ERC20")
+    
+    @pytest.fixture(scope="class")
+    def log_filter_id(self, moduled_w3: Web3, contract: ConfluxContract):
+        return moduled_w3.cfx.new_filter(address = contract.address)
+    
+    def test_log_filter(self, moduled_w3: Web3, contract: ConfluxContract, log_filter_id: LogFilterId):
+        contract.functions.transfer(contract.address, 1**18).transact().executed()
+        logs = moduled_w3.cfx.get_filter_changes(log_filter_id)
+        assert len(logs) > 0
+        for log in logs:
+            TypeValidator.validate_typed_dict(log, "LogReceipt")
+        moduled_w3.cfx.uninstall_filter(log_filter_id)

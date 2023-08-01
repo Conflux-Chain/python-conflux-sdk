@@ -579,7 +579,11 @@ class CollateralInfo(TypedDict):
     convertedStoragePoints: int
     usedStoragePoints: int
     
-FilterId = NewType("FilterId", HexStr)
+LogFilterId = NewType("LogFilterId", HexStr)
+BlockFilterId = NewType("BlockFilterId", HexStr)
+TxFilterId = NewType("TxFilterId", HexStr)
+
+_FilterId = Union[LogFilterId, BlockFilterId, TxFilterId, str]
 
 __all__ = [
     "TxDict",
@@ -619,5 +623,8 @@ __all__ = [
     "PendingTransactionsInfo",
     "TransactionPaymentInfo",
     "CollateralInfo",
-    "FilterId",
+    "LogFilterId",
+    "BlockFilterId",
+    "TxFilterId",
+    "_FilterId",
 ]
