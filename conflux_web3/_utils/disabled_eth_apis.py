@@ -14,11 +14,8 @@ disabled_method_list = [
     # "modify_transaction"
     # "estimate_gas",
     "fee_history",
-    "get_filter_changes",
-    "get_filter_logs",
     "submit_hashrate",
     "submit_work",
-    "uninstall_filter",
     "generate_gas_price"
 ]
 

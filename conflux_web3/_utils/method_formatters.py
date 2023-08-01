@@ -152,6 +152,8 @@ PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     ),
 
     RPC.cfx_getLogs: apply_formatter_at_index(apply_formatters_to_dict(FILTER_PARAMS_FORMATTERS), 0),
+    RPC.cfx_newFilter: apply_formatter_at_index(apply_formatters_to_dict(FILTER_PARAMS_FORMATTERS), 0),
+
     RPC.cfx_call: apply_one_of_formatters((
         (is_length(1), apply_formatter_at_index(transaction_param_formatter, 0)), # type: ignore
         (is_length(2), apply_formatters_to_sequence( # type: ignore
@@ -461,6 +463,8 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     ))),
 
     RPC.cfx_getLogs: filter_result_formatter,
+    RPC.cfx_getFilterLogs: filter_result_formatter,
+    RPC.cfx_getFilterChanges: filter_result_formatter,
     
     RPC.cfx_getCode: HexBytes,
     RPC.cfx_getStorageAt: apply_formatter_if(is_not_null, to_hash32),
