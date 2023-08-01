@@ -38,7 +38,9 @@ from cfx_utils.types import (
     Storage,
     EpochNumberParam,
     EpochLiteral,
-    EpochNumber
+    EpochNumber,
+    HexStr,
+    BlockNumber,
 )
 
 if TYPE_CHECKING:
@@ -97,12 +99,16 @@ class FilterParams(TypedDict, total=False):
     ----------
     | fromEpoch: EpochNumberParam, optional
     | toEpoch: EpochNumberParam, optional
+    | fromBlock: int, optional
+    | toBlock: int, optional
     | blockHashes: Sequence[_Hash32], optional
     | address: Union[Base32Address, List[Base32Address]], optional
     | topics: Sequence[Optional[Union[_Hash32, Sequence[_Hash32]]]], optional
     """
     fromEpoch: EpochNumberParam
     toEpoch: EpochNumberParam
+    fromBlock: BlockNumber
+    toBlock: BlockNumber
     blockHashes: Sequence[_Hash32]
     address: Union[Base32Address, List[Base32Address]]
     topics: Sequence[Optional[Union[_Hash32, Sequence[_Hash32]]]]
@@ -572,6 +578,8 @@ class CollateralInfo(TypedDict):
     totalStorageTokens: int
     convertedStoragePoints: int
     usedStoragePoints: int
+    
+FilterId = NewType("FilterId", HexStr)
 
 __all__ = [
     "TxDict",
@@ -610,5 +618,6 @@ __all__ = [
     "PendingInfo",
     "PendingTransactionsInfo",
     "TransactionPaymentInfo",
-    "CollateralInfo"
+    "CollateralInfo",
+    "FilterId",
 ]

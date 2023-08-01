@@ -105,6 +105,8 @@ ABI_REQUEST_FORMATTERS = abi_request_formatters(STANDARD_NORMALIZERS, RPC_ABIS)
 FILTER_PARAMS_FORMATTERS = {
     "fromEpoch": to_hex_if_integer,
     "toEpoch": to_hex_if_integer,
+    "fromBlock": to_hex_if_integer,
+    "toBlock": to_hex_if_integer,
 }
 
 PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
