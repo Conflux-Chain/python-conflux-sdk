@@ -159,7 +159,7 @@ class BaseCfx(BaseEth):
         if isinstance(account, LocalAccount):
             normalized_address = Base32Address(account.address)
             self._default_account = normalized_address
-            if (self.w3.wallet is not None and account.address not in self.w3.wallet):
+            if (self.w3.wallet is not None and account.address not in self.w3.wallet): # type: ignore
                 self.w3.wallet.add_account(account)
             if self.w3.cns:
                 self.w3.cns.w3.cfx.default_account = normalized_address
