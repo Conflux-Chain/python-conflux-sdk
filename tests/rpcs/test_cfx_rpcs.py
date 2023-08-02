@@ -375,28 +375,20 @@ class TestPendingTxFilter:
     @pytest.fixture(scope="class")
     def pending_tx_filter_id(self, moduled_w3: Web3) -> TxFilterId:
         return moduled_w3.cfx.new_pending_transaction_filter()
-    
-    # TODO: check usablility
-    # def test_pending_tx_filter(self, moduled_w3: Web3, pending_tx_filter_id: TxFilterId):
-    #     skipped_pending_tx = moduled_w3.cfx.send_transaction({
-    #         "to": moduled_w3.address.zero_address(),
-    #         "value": Drip(100),
-    #         "nonce": moduled_w3.cfx.get_next_nonce(moduled_w3.cfx.default_account) + 1
-    #     })
-    #     time.sleep(10)
-    #     pending_txs = moduled_w3.cfx.get_filter_changes(pending_tx_filter_id)
-    #     assert len(pending_txs) > 0
-    #     for pending_tx in pending_txs:
-    #         assert TypeValidator.isinstance(pending_tx, bytes)
-    #         assert len(pending_tx) == 32
+
+    def test_pending_tx_filter(self, moduled_w3: Web3, pending_tx_filter_id: TxFilterId):
+        constucted_pending_tx = moduled_w3.cfx.send_transaction({
+            "to": moduled_w3.address.zero_address(),
+            "value": Drip(100),
+        })
+        pending_txs = moduled_w3.cfx.get_filter_changes(pending_tx_filter_id)
+        assert len(pending_txs) > 0
+        for pending_tx in pending_txs:
+            assert TypeValidator.isinstance(pending_tx, bytes)
+            assert len(pending_tx) == 32
         
-    #     moduled_w3.cfx.send_transaction({
-    #         "to": moduled_w3.address.zero_address(),
-    #         "value": Drip(100)
-    #     }).executed()
-        
-    #     skipped_pending_tx.executed()
-    #     moduled_w3.cfx.uninstall_filter(pending_tx_filter_id)
+        constucted_pending_tx.executed()
+        moduled_w3.cfx.uninstall_filter(pending_tx_filter_id)
 
 
 class TestLogFilter:
