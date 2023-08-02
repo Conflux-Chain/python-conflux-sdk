@@ -368,7 +368,7 @@ class TestBlockFilter:
         for block_hash in new_blocks:
             assert TypeValidator.isinstance(block_hash, bytes)
             assert len(block_hash) == 32
-        moduled_w3.cfx.uninstall_filter(block_filter_id)
+        assert moduled_w3.cfx.uninstall_filter(block_filter_id)
 
 
 class TestPendingTxFilter:
@@ -388,7 +388,7 @@ class TestPendingTxFilter:
             assert len(pending_tx) == 32
         
         constucted_pending_tx.executed()
-        moduled_w3.cfx.uninstall_filter(pending_tx_filter_id)
+        assert moduled_w3.cfx.uninstall_filter(pending_tx_filter_id)
 
 
 class TestLogFilter:
@@ -409,4 +409,4 @@ class TestLogFilter:
         assert len(logs) > 0
         for log in logs:
             TypeValidator.validate_typed_dict(log, "LogReceipt")
-        moduled_w3.cfx.uninstall_filter(log_filter_id)
+        assert moduled_w3.cfx.uninstall_filter(log_filter_id)
