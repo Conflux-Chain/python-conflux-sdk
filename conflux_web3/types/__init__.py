@@ -220,7 +220,6 @@ TxReceipt = TypedDict(
         "logsBloom": HexBytes,
         "logs": List[TransactionLogReceipt],
         "txExecErrorMsg": Union[str, None],
-        "space": Union[None, Literal["native", "evm"]]
     },
 )
 """
@@ -247,6 +246,9 @@ Parameters
 | "logs": List[TransactionLogReceipt],
 | "txExecErrorMsg": Union[str, None]
 """
+
+class TxReceiptWithSpace(TxReceipt):
+    space: Literal["native", "evm"]
 
 
 # syntax b/c "from" keyword not allowed w/ class construction
@@ -606,6 +608,7 @@ __all__ = [
     "TransactionEventData",
     "EventData",
     "TxReceipt",
+    "TxReceiptWithSpace"
     "TxData",
     "BlockData",
     "MiddlewareOnion",

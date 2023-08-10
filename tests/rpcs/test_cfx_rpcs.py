@@ -341,8 +341,7 @@ class TestBlock:
         # assert epoch is not None
         for block_receipts in epoch_receipts:
             for tx_receipt in block_receipts:
-                assert tx_receipt['space'] is not None
-                TypeValidator.validate_typed_dict(tx_receipt, "TxReceipt")
+                TypeValidator.validate_typed_dict(tx_receipt, "TxReceiptWithSpace")
 
 def test_check_balance_against_transaction(w3: Web3, address: Base32Address, contract_address: Base32Address):
     payment_info = w3.cfx.check_balance_against_transaction(
