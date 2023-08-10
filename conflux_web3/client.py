@@ -94,6 +94,7 @@ from conflux_web3.types import (
     SponsorInfo,
     AccountInfo,
     DepositInfo,
+    TxReceiptWithSpace,
     VoteInfo,
     StorageRoot,
     BlockRewardInfo,
@@ -1388,7 +1389,13 @@ class ConfluxClient(BaseCfx, Eth):
         """        
         return self._get_block_by_hash_with_pivot_assumptions(block_hash, assumed_pivot_hash, epoch_number)
     
-    def get_epoch_receipts(self, epoch_number: EpochNumberParam, include_espace_receipts: Optional[bool]=False) -> Sequence[Sequence[TxReceipt]]:
+    @overload
+    def get_epoch_receipts(self, epoch_number: EpochNumberParam, include_espace_receipts: Literal[True]) -> Sequence[Sequence[TxReceiptWithSpace]]: ...
+
+    @overload
+    def get_epoch_receipts(self, epoch_number: EpochNumberParam, include_espace_receipts: Optional[Literal[False]]) -> Sequence[Sequence[TxReceipt]]: ...
+
+    def get_epoch_receipts(self, epoch_number: EpochNumberParam, include_espace_receipts: Optional[bool]=False) -> Sequence[Sequence[Union[TxReceipt, TxReceiptWithSpace]]]:
         """
         Returns the transaction receipts in every block of the specific epoch. Returns 
 
