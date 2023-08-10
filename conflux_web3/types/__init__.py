@@ -219,7 +219,8 @@ TxReceipt = TypedDict(
         "outcomeStatus": int,
         "logsBloom": HexBytes,
         "logs": List[TransactionLogReceipt],
-        "txExecErrorMsg": Union[str, None]
+        "txExecErrorMsg": Union[str, None],
+        "space": Union[None, Literal["native", "evm"]]
     },
 )
 """
