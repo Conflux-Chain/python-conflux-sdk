@@ -3,6 +3,7 @@ from typing import (
     ForwardRef,
     Type,
     Union,
+    cast,
 )
 import typing
 import sys
@@ -37,7 +38,7 @@ class TypeValidator:
     False
     """
     @staticmethod
-    def _is_list_like_type(typ):
+    def _is_list_like_type(typ: type):
         return any(
             [
                 get_origin(typ) == collections.abc.Sequence,
@@ -46,7 +47,7 @@ class TypeValidator:
         )
     
     @staticmethod
-    def isinstance(val, field_type) -> bool:
+    def isinstance(val: Any, field_type: Type[Any]) -> bool:
         if is_typeddict(field_type):
             annotations = field_type.__annotations__
             for key, sub_field_type in annotations.items():
@@ -70,7 +71,7 @@ class TypeValidator:
             if type(field_type) == typing.NewType:
                 return isinstance(val, field_type.__supertype__)
         elif type(field_type).__name__ == "function":
-            return isinstance(val, field_type.__supertype__)
+            return isinstance(val, field_type.__supertype__) # type: ignore
         if type(field_type) is type:
             # for sake of debug
             if isinstance(val, field_type):
@@ -79,17 +80,64 @@ class TypeValidator:
         if type(field_type) is ForwardRef:
             return type(val).__name__ == field_type.__forward_arg__
         if type(field_type) is typing._GenericAlias: # type: ignore
-            return TypeValidator.isinstance(val, get_origin(field_type))
+            return TypeValidator.isinstance(val, cast(type, get_origin(field_type)))
         else:
             if isinstance(val, field_type):
                 return True
             return False
             # warnings.warn("complex type check")
             # return True
+        
+    @staticmethod
+    def assert_instance(val: Any, field_type: Type[Any]) -> Literal[True]:
+        if is_typeddict(field_type):
+            annotations = field_type.__annotations__
+            for key, sub_field_type in annotations.items():
+                if key not in val:
+                    raise TypeError(f"missed key for typed_dict: {key} not in {val}")
+                if not TypeValidator.isinstance(val[key], sub_field_type):
+                    raise TypeError(f"unexpected value type for typed_dict field: {val[key]} should be type {sub_field_type}")
+            return True
+        if get_origin(field_type) is Union:
+            for t in get_args(field_type):
+                if TypeValidator.isinstance(val, t):
+                    return True
+            raise TypeError(f"value does not match union: {val} does not match any of {get_args(field_type)}")
+        if get_origin(field_type) is Literal:
+            if val in get_args(field_type):
+                return True
+            raise TypeError(f"value does not match literal: {val} is not any of {get_args(field_type)}")
+        if TypeValidator._is_list_like_type(field_type):
+            for v in val:
+                try:
+                    TypeValidator.assert_instance(v, get_args(field_type)[0])
+                except TypeError as e:
+                    raise TypeError(f"some value in list are not in expecetd type: {get_args(field_type)[0]}") from e
+        if sys.version_info >= (3, 10):
+            # NewType becomes a class after python3.10
+            if type(field_type) == typing.NewType:
+                return isinstance(val, field_type.__supertype__)
+        elif type(field_type).__name__ == "function":
+            if isinstance(val, field_type.__supertype__): # type: ignore
+                return True
+            raise TypeError(f"value does not match type: {val} is not type {field_type.__supertype__}") # type: ignore
+        if type(field_type) is type:
+            # for sake of debug
+            if isinstance(val, field_type):
+                return True
+            raise TypeError(f"value does not match type: {val} is not type {field_type}")
+        if type(field_type) is ForwardRef:
+            return type(val).__name__ == field_type.__forward_arg__
+        if type(field_type) is typing._GenericAlias: # type: ignore
+            TypeValidator.assert_instance(val, cast(type, get_origin(field_type)))
+        else:
+            if isinstance(val, field_type):
+                return True
+            raise TypeError(f"value does not match type: {val} is not type {field_type}")
 
     @staticmethod
     def validate_typed_dict(value_to_validate: Any, typed_dict_class: Union[str, Type[TypedDict]]):
         if isinstance(typed_dict_class, str):
-            typed_dict_class = getattr(conflux_web3.types, typed_dict_class)
-        assert TypeValidator.isinstance(value_to_validate, typed_dict_class)
+            typed_dict_class = cast(Type[TypedDict], getattr(conflux_web3.types, typed_dict_class))
+        TypeValidator.assert_instance(value_to_validate, typed_dict_class)
         return True
