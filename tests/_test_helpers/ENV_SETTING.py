@@ -1,7 +1,7 @@
 import json
 import os
 
-TAG = "latest"
+TAG = "2.3.0"
 TESTNET_TAG = "2.3.0-3-testnet"
 REPO_NAME = "confluxchain/conflux-rust"
 DEV_IMAGE_FULL_NAME = f"{REPO_NAME}:{TAG}"

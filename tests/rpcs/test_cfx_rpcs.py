@@ -359,7 +359,7 @@ class TestBlockFilter:
         return moduled_w3.cfx.new_block_filter()
 
     def test_block_filter(self, moduled_w3: Web3, block_filter_id: BlockFilterId):
-        time.sleep(2)
+        time.sleep(5)
         new_blocks = moduled_w3.cfx.get_filter_changes(block_filter_id)
         # new_blocks = moduled_w3.manager.request_blocking(
         #     "cfx_getFilterChanges", [block_filter_id]
