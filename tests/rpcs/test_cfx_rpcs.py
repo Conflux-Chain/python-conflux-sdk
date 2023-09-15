@@ -405,6 +405,7 @@ class TestLogFilter:
     
     def test_log_filter(self, moduled_w3: Web3, contract: ConfluxContract, log_filter_id: LogFilterId):
         contract.functions.transfer(contract.address, 1**18).transact().executed()
+        time.sleep(1)
         logs = moduled_w3.cfx.get_filter_changes(log_filter_id)
         assert len(logs) > 0
         for log in logs:
