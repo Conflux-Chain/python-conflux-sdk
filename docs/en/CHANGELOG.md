@@ -1,5 +1,15 @@
 # Change Logs
 
+## 1.2.0
+
+* bump web3.py to 6.8.0
+  * remove cfxpm module
+* RPC support
+  * filter rpcs
+  * cfx_getEpochReceipts
+  * CIP-107 RPC updates
+  * missed get_admin interface
+
 ## 1.1.0
 
 * bump web3.py to 6.2.0
