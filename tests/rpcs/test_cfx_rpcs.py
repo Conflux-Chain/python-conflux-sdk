@@ -153,7 +153,8 @@ class TestAccountQuery:
         contract_code = w3.cfx.get_admin(contract_address, w3.cfx.epoch_number_by_tag("latest_state"))
         assert isinstance(contract_code, Base32Address) # reorg might happen, so we only assert the variable type
         
-        user_admin = w3.cfx.get_code(w3.cfx.account.create().address)
+        random_contract_address = w3.address(w3.cfx.account.create().address.replace("0x8", "0x1"))
+        user_admin = w3.cfx.get_admin(random_contract_address)
         assert user_admin is None
         
     def test_get_storage_at(self, w3: Web3, contract_address: Base32Address, use_testnet: bool):

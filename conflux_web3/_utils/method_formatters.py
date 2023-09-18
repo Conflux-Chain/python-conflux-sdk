@@ -115,6 +115,7 @@ PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     RPC.cfx_getBalance: apply_formatter_at_index(to_hex_if_integer, 1),
     RPC.cfx_getStakingBalance: apply_formatter_at_index(to_hex_if_integer, 1),
     RPC.cfx_getNextNonce: apply_formatter_at_index(to_hex_if_integer, 1),
+    RPC.cfx_getAdmin: apply_formatter_at_index(to_hex_if_integer, 1),
     
     RPC.cfx_getBlockByEpochNumber: apply_formatter_at_index(to_hex_if_integer, 0),
     RPC.cfx_getBlockByBlockNumber: apply_formatter_at_index(to_hex_if_integer, 0),
@@ -467,6 +468,7 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     RPC.cfx_getFilterChanges: filter_result_formatter,
     
     RPC.cfx_getCode: HexBytes,
+    RPC.cfx_getAdmin: apply_formatter_if(is_not_null, from_trust_to_base32),
     RPC.cfx_getStorageAt: apply_formatter_if(is_not_null, to_hash32),
     RPC.cfx_getStorageRoot: apply_formatter_if(is_not_null, storage_root_formatter),
     RPC.cfx_getCollateralForStorage: to_integer_if_hex,
