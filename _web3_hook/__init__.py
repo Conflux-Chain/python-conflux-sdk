@@ -129,15 +129,7 @@ def hook_parse_block_identifier(mod):
             cfx_parse_block_identifier,
             cfx_web3_condition
         )(mod.parse_block_identifier)
-    
-@when_imported("ethpm.package")
-def hook_ethpm_package(mod):
-    if mod.__name__ == "ethpm.package":
-        from cfxpm.package import set_conflux_linkable_contract
-        mod.Package.__init__ = conditional_post_func(
-            set_conflux_linkable_contract,
-            cfx_web3_condition
-        )(mod.Package.__init__)
+
 
 # hooked to is_none_or_zero_address in _web3_hook
 def is_none_or_base_32_zero_address(addr) -> bool:

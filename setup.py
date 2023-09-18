@@ -89,8 +89,7 @@ setup(
     long_description=long_description,
     packages=find_packages(),
     package_data={"conflux_web3": ["contract/metadata/*.json", "py.typed"],
-                  "cns": ["py.typed"],
-                  "cfxpm": ["py.typed"]},
+                  "cns": ["py.typed"]},
     url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
         "web3==6.2.0",
