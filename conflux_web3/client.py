@@ -1661,3 +1661,6 @@ class ConfluxClient(BaseCfx, Eth):
 
     def uninstall_filter(self, filter_id: _FilterId) -> bool:
         return self._uninstall_filter(filter_id)
+    
+    def get_admin(self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None) -> Union[None, Base32Address]:
+        return self._get_admin(address, block_identifier)
