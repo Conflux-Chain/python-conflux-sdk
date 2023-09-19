@@ -207,7 +207,7 @@ TxReceipt = TypedDict(
         "blockHash": Hash32,
         "epochNumber": int,
         "from": Base32Address,
-        "to": Base32Address,
+        "to": Union[Base32Address, None],
         "gasUsed": int,
         "gasFee": Drip,
         "gasCoveredBySponsor": bool,
