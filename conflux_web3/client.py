@@ -1104,7 +1104,7 @@ class ConfluxClient(BaseCfx, Eth):
     ) -> TxReceipt:
         """
         Returns transaction receipt after a transaction is finalized by PoS chain.
-        It will take 5 ~ 10 minutes to finalize a transaction but the finalized transaction won't be reverted.
+        It will take 4 ～ 6 minutes to finalize a transaction but the finalized transaction won't be reverted.
         It is recommended for developers to use this api to confirm important transactions.
 
         Parameters
@@ -1126,7 +1126,7 @@ class ConfluxClient(BaseCfx, Eth):
         TimeExhausted
             If timeout
         """        
-        warnings.warn("5 ~ 10 minutes are required to finalize a transaction", UserWarning)
+        warnings.warn("4 ~ 6 minutes are required to finalize a transaction", UserWarning)
         try:
             with Timeout(timeout) as _timeout:
                 while True:
