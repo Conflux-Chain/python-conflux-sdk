@@ -47,7 +47,7 @@ extras_require = {
         "wheel"
     ],
     'dev': [
-        # "bumpversion",
+        "bumpversion",
         # "flaky>=3.7.0,<4",
         # "hypothesis>=3.31.2,<6",
         # "pytest>=6.2.5,<7",
