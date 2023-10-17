@@ -504,9 +504,11 @@ class DAOVoteInfo(TypedDict):
     ----------
     | powBaseReward: Drip
     | interestRate: int
+    | storagePointProp: int
     """
     powBaseReward: Drip
     interestRate: int
+    storagePointProp: int
 
 class SupplyInfo(TypedDict):
     """

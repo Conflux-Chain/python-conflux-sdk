@@ -394,6 +394,7 @@ POS_REWARDS_INFO_FORMATTERS = {
 DAO_INFO_FORMATTERS = {
     "powBaseReward": from_hex_to_drip,
     "interestRate": to_integer_if_hex,
+    "storagePointProp": to_integer_if_hex,
 }
 
 SUPPLY_INFO_FORMATTERS = {
