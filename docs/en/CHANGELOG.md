@@ -1,5 +1,11 @@
 # Change Logs
 
+## 1.2.1
+
+* fix: missed interface(`getAvailableStoragePoints`) for internal contract `SponsorWhitelistControl`
+* RPC support:
+  * `storagePointProp` field for `cfx_getParamsFromVote` return value
+
 ## 1.2.0
 
 * bump web3.py to 6.8.0
