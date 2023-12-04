@@ -49,6 +49,7 @@ extras_require = {
     ],
     'dev': [
         "bumpversion",
+        "twine",
         # "flaky>=3.7.0,<4",
         # "hypothesis>=3.31.2,<6",
         # "pytest>=6.2.5,<7",
