@@ -5,6 +5,7 @@
 * fix: missed interface(`getAvailableStoragePoints`) for internal contract `SponsorWhitelistControl`
 * RPC support:
   * `storagePointProp` field for `cfx_getParamsFromVote` return value
+* support python 3.12
 
 ## 1.2.0
 
