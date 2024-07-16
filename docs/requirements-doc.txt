@@ -4,3 +4,4 @@ conflux-web3
 cfx-utils>=1.0.1
 # sphinx-autodoc-typehints
 # sphinx-design
+setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerability
