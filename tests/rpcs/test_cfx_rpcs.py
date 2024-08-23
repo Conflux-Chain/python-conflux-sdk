@@ -145,7 +145,7 @@ class TestAccountQuery:
         assert isinstance(contract_code, bytes) # reorg might happen, so we only assert the variable type
         
         user_code = w3.cfx.get_code(w3.cfx.account.create().address)
-        assert not user_code
+        assert user_code == HexBytes("0x")
     
     def test_get_admin(self, w3: Web3, contract_address: Base32Address):
         # test different cases

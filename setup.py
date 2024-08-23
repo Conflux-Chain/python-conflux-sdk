@@ -99,7 +99,7 @@ setup(
         "cfx-account>=1.0.0",
         "cfx-utils>=1.0.2",
         # "cached_property==1.5.2", # required by cfx-account
-        # "eth-account>=0.6.0,<0.7.0"
+        "eth-account<0.11.0"
     ],  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'
     extras_require=extras_require,
