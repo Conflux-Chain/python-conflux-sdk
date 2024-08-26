@@ -12,7 +12,7 @@ with open('./README.md') as readme:
 
 extras_require = {
     'tester': [
-        "docker>=6.0.0,<7",
+        "docker>=7.1.0,<8",
         "pytest>=6.2.5,<7",
         "typing_extensions",
         "pytest-cov",
