@@ -20,7 +20,7 @@ Python-conflux-sdk 帮助开发者使用 python 与 Conflux 区块链交互，�
 
 ## Quickstart
 
-安装需求: python >= 3.7
+安装需求: python >= 3.8
 
 ```bash
 pip3 install conflux-web3
