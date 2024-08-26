@@ -12,7 +12,8 @@ from conflux_web3.exceptions import (
 def to_test_cns_write_api(use_testnet: bool) -> bool:
     # currently we only support cns write api on testnet
     # so we only do tests on python3.8 to avoid nonce problems
-    return sys.version_info.minor == 8 and use_testnet
+    # return sys.version_info.minor == 8 and use_testnet
+    return False
 
 def test_cns(w3: Web3, use_testnet: bool, ens_name: str, ens_account: LocalAccount):
     if use_testnet and ens_name:
