@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.7"]
+        python-version: ["3.9"]
     name: Test python API
     steps:
     - uses: actions/checkout@v1
