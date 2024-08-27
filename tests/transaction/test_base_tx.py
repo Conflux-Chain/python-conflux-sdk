@@ -35,7 +35,8 @@ def test_basetx_estimate(w3: Web3, address: Base32Address):
     tx = {
         "from": address,
         "to": w3.account.create().address,
-        "value": 100
+        "value": 100,
+        "gasPrice": w3.cfx.gas_price
     }
     
     estimate = w3.cfx.estimate_gas_and_collateral(tx, w3.cfx.epoch_number-5)
