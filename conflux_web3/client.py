@@ -196,6 +196,10 @@ class BaseCfx(BaseEth):
     ) -> Tuple[TxParam, Optional[EpochNumberParam]]:
         if "from" not in transaction and self.default_account:
             transaction = assoc(transaction, "from", self.default_account)
+        if 'value' in transaction:
+            transaction['value'] = to_int_if_drip_units(transaction['value'])
+        if 'gasPrice' in transaction:
+            transaction['gasPrice'] = to_int_if_drip_units(transaction['gasPrice'])
 
         if block_identifier is None:
             params = (transaction, self._default_block)
