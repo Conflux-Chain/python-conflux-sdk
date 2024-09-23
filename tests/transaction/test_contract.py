@@ -1,5 +1,10 @@
 from typing import TYPE_CHECKING
 import os, json, pytest
+
+from hexbytes import HexBytes
+
+from web3.exceptions import ValidationError
+
 from conflux_web3 import Web3
 from conflux_web3.contract import (
     ConfluxContract,
@@ -8,10 +13,13 @@ from conflux_web3.contract.metadata import (
     get_contract_metadata
 )
 from cfx_utils.exceptions import Base32AddressNotMatch
-from conflux_web3.middleware.wallet import Wallet
+
 from cfx_account import LocalAccount
+
+from conflux_web3.middleware.wallet import Wallet
 from tests._test_helpers.type_check import TypeValidator
-from web3.exceptions import ValidationError
+
+from conflux_web3.utils.address import get_create_address
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
@@ -34,9 +42,12 @@ class TestERC20Contract:
         # test deployment
         erc20_metadata = get_contract_metadata("ERC20")
         erc20 = w3_.cfx.contract(bytecode=erc20_metadata["bytecode"], abi=erc20_metadata["abi"])
-        hash = erc20.constructor(name="Coin", symbol="C", initialSupply=10**18).transact()
-        contract_address = w3_.cfx.wait_for_transaction_receipt(hash)["contractCreated"]
-        assert contract_address is not None
+        tx_hash = erc20.constructor(name="Coin", symbol="C", initialSupply=10**18).transact()
+        contract_address = tx_hash.executed()["contractCreated"]
+        tx_data = w3_.cfx.get_transaction(tx_hash)
+        computed_contract_address = get_create_address(w3_.cfx.default_account, tx_data["nonce"], w3_.keccak(tx_data["data"])) # type: ignore
+        assert contract_address == computed_contract_address, (contract_address, computed_contract_address)
+        
         contract = w3_.cfx.contract(contract_address, abi=erc20_metadata["abi"])
         
         # test transfer
