@@ -1,5 +1,21 @@
 # Change Logs
 
+## 1.2.5
+
+* feat: add `get_create_address`, `get_create2_address` in `web3.utils.address`
+
+## 1.2.4
+
+* fix: `estimate_gas_and_collateral` with drip uint gas price
+
+## 1.2.3
+
+* fix: dependency issues
+
+## 1.2.2
+
+* update relying deps version
+
 ## 1.2.1
 
 * fix: missed interface(`getAvailableStoragePoints`) for internal contract `SponsorWhitelistControl`
