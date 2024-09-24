@@ -123,6 +123,10 @@ PYTHONIC_REQUEST_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     RPC.cfx_getSkippedBlocksByEpoch: apply_formatter_at_index(to_hex_if_integer, 0),
     RPC.cfx_getBlockByHashWithPivotAssumption: apply_formatter_at_index(to_hex_if_integer, 2),
     RPC.cfx_getEpochReceipts: apply_formatter_at_index(to_hex_if_integer, 0),
+    RPC.cfx_feeHistory: compose(
+        apply_formatter_at_index(to_hex_if_integer, 0),
+        apply_formatter_at_index(to_hex_if_integer, 1),
+    ),
     
     RPC.cfx_getCode: apply_formatter_at_index(to_hex_if_integer, 1),
     RPC.cfx_getStorageAt: apply_formatter_at_index(to_hex_if_integer, 2),
@@ -229,6 +233,7 @@ LOG_ENTRY_FORMATTERS = {
 log_entry_formatter = apply_formatters_to_dict(LOG_ENTRY_FORMATTERS)
 
 RECEIPT_FORMATTERS = {
+    "type": to_integer_if_hex,
     "transactionHash": to_hash32, 
     "index": to_integer_if_hex,
     "blockHash": apply_formatter_if(is_not_null, to_hash32), 
@@ -247,11 +252,17 @@ RECEIPT_FORMATTERS = {
     "outcomeStatus": to_integer_if_hex,
     "logsBloom": to_hexbytes(256), # type: ignore
     "logs": apply_list_to_array_formatter(log_entry_formatter),
+    "burntGasFee": from_hex_to_drip,
+    "effectiveGasPrice": from_hex_to_drip,
 }
 # receipt_formatter = apply_formatters_to_dict(RECEIPT_FORMATTERS)
 
+ACCESS_LIST_ENTRY_FORMATTERS = {
+    "address": from_trust_to_base32,
+}
 
 TRANSACTION_DATA_FORMATTERS = {
+    "type": to_integer_if_hex,
     "blockHash": apply_formatter_if(is_not_null, to_hash32),
     "chainId": apply_formatter_if(is_not_null, to_integer_if_hex),
     "contractCreated": apply_formatter_if(is_not_null, from_trust_to_base32),
@@ -270,6 +281,10 @@ TRANSACTION_DATA_FORMATTERS = {
     "transactionIndex": apply_formatter_if(is_not_null, to_integer_if_hex),
     "v": apply_formatter_if(is_not_null, to_integer_if_hex),
     "value": from_hex_to_drip,
+    "maxFeePerGas": apply_formatter_if(is_not_null, from_hex_to_drip),
+    "maxPriorityFeePerGas": apply_formatter_if(is_not_null, from_hex_to_drip),
+    "accessList": apply_formatter_if(is_not_null, apply_list_to_array_formatter(apply_formatters_to_dict(ACCESS_LIST_ENTRY_FORMATTERS))),
+    "yParity": apply_formatter_if(is_not_null, to_integer_if_hex),
 }
 transaction_data_formatter = apply_formatters_to_dict(TRANSACTION_DATA_FORMATTERS)
 
@@ -311,7 +326,8 @@ BLOCK_FORMATTERS = {
             ),
             (is_array_of_strings, apply_list_to_array_formatter(to_hash32)),
         )
-    )
+    ),
+    "baseFeePerGas": apply_formatter_if(is_not_null, from_hex_to_drip),
 }
 block_formatter = apply_formatters_to_dict(BLOCK_FORMATTERS)
 
@@ -395,6 +411,7 @@ DAO_INFO_FORMATTERS = {
     "powBaseReward": from_hex_to_drip,
     "interestRate": to_integer_if_hex,
     "storagePointProp": to_integer_if_hex,
+    "baseFeeShareProp": to_integer_if_hex,
 }
 
 SUPPLY_INFO_FORMATTERS = {
@@ -418,6 +435,14 @@ PENDING_TRANSACTIONS_INFO_FORMATTERS = {
         transaction_data_formatter
     )
 }
+
+FEE_HISTORY_FORMATTERS = {
+    "baseFeePerGas": apply_list_to_array_formatter(from_hex_to_drip),
+    # "gasUsedRatio": lambda x: x, # do nothing
+    "oldestEpoch": to_integer_if_hex,
+    "reward": apply_list_to_array_formatter(apply_list_to_array_formatter(from_hex_to_drip)),
+}
+
 
 SIMPLE_RESULT_FORMATTER_MAPPING: Dict[Type[Any], Callable[..., Any]] = {
     int: to_integer_if_hex,
@@ -449,6 +474,7 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     RPC.cfx_estimateGasAndCollateral: apply_formatters_to_dict(ESTIMATE_FORMATTERS),
     RPC.cfx_getConfirmationRiskByHash: fixed64_to_float,
     RPC.cfx_gasPrice: from_hex_to_drip,
+    RPC.cfx_maxPriorityFeePerGas: from_hex_to_drip,
     RPC.cfx_getBalance: from_hex_to_drip,
     RPC.cfx_getStakingBalance: from_hex_to_drip,
     RPC.cfx_getNextNonce: to_integer_if_hex,
@@ -463,6 +489,7 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
         is_not_null,
         apply_formatters_to_dict(RECEIPT_FORMATTERS),
     ))),
+    RPC.cfx_feeHistory: apply_formatters_to_dict(FEE_HISTORY_FORMATTERS),
 
     RPC.cfx_getLogs: filter_result_formatter,
     RPC.cfx_getFilterLogs: filter_result_formatter,
@@ -501,6 +528,7 @@ PYTHONIC_RESULT_FORMATTERS: Dict[RPCEndpoint, Callable[..., Any]] = {
     ),
     RPC.cfx_getSupplyInfo: apply_formatters_to_dict(SUPPLY_INFO_FORMATTERS),
     RPC.cfx_getCollateralInfo: create_dict_result_formatter(CollateralInfo),
+    RPC.cfx_getFeeBurnt: from_hex_to_drip,
 
     RPC.cfx_getAccountPendingInfo: apply_formatters_to_dict(PENDING_INFO_FORMATTERS),
     RPC.cfx_getAccountPendingTransactions: apply_formatters_to_dict(PENDING_TRANSACTIONS_INFO_FORMATTERS),

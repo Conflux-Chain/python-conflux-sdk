@@ -263,6 +263,21 @@ def preprocess_block_data(block_data: BlockData, use_testnet: bool) -> BlockData
         block_data['posReference'] = HexBytes("0x0") # type: ignore
     return block_data
 
+def test_get_fee_burnt(moduled_w3: Web3):
+    w3 = moduled_w3
+    fee_burnt = w3.cfx.get_fee_burnt()
+    assert isinstance(fee_burnt, Drip)
+
+def test_fee_history(moduled_w3: Web3):
+    w3 = moduled_w3
+    fee_history = w3.cfx.fee_history(5, "latest_state", [20,50])
+    TypeValidator.validate_typed_dict(fee_history, "FeeHistory")
+
+def test_max_priority_fee_per_gas(moduled_w3: Web3):
+    w3 = moduled_w3
+    fee = w3.cfx.max_priority_fee_per_gas
+    assert isinstance(fee, Drip)
+
 class TestBlock:
     @pytest.fixture
     def block_hash(self, w3: Web3, tx_hash: HexBytes):
