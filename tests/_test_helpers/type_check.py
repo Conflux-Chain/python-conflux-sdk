@@ -90,13 +90,16 @@ class TypeValidator:
         
     @staticmethod
     def assert_instance(val: Any, field_type: Type[Any]) -> Literal[True]:
+        from pydantic import BaseModel, ValidationError
+
         if is_typeddict(field_type):
-            annotations = field_type.__annotations__
-            for key, sub_field_type in annotations.items():
-                if key not in val:
-                    raise TypeError(f"missed key for typed_dict: {key} not in {val}")
-                if not TypeValidator.isinstance(val[key], sub_field_type):
-                    raise TypeError(f"unexpected value type for typed_dict field: {val[key]} should be type {sub_field_type}")
+            class PydanticModel(BaseModel, arbitrary_types_allowed=True):
+                __annotations__ = field_type.__annotations__
+
+            try:
+                PydanticModel(**val)
+            except ValidationError as e:
+                raise TypeError(f"Validation error for typed_dict: {e}")
             return True
         if get_origin(field_type) is Union:
             for t in get_args(field_type):

@@ -202,6 +202,7 @@ class EventData(TransactionEventData, total=False):
 TxReceipt = TypedDict(
     "TxReceipt",
     {
+        "type": int,
         "transactionHash": Hash32,
         "index": int,
         "blockHash": Hash32,
@@ -220,6 +221,8 @@ TxReceipt = TypedDict(
         "logsBloom": HexBytes,
         "logs": List[TransactionLogReceipt],
         "txExecErrorMsg": Union[str, None],
+        "effectiveGasPrice": Drip,
+        "burntGasFee": Drip,
     },
 )
 """
@@ -227,6 +230,7 @@ Transaction receipt as a dict
 
 Parameters
 ----------
+| "type": int,
 | "transactionHash": Hash32,
 | "index": int,
 | "blockHash": Hash32,
@@ -245,16 +249,25 @@ Parameters
 | "logsBloom": HexBytes,
 | "logs": List[TransactionLogReceipt],
 | "txExecErrorMsg": Union[str, None]
+| "effectiveGasPrice": Drip,
+| "burntGasFee": Drip,
 """
 
 class TxReceiptWithSpace(TxReceipt):
     space: Literal["native", "evm"]
 
+class AccessListEntry(TypedDict):
+    address: Base32Address
+    storageKeys: Sequence[HexStr]
+
+AccessList = NewType("AccessList", Sequence[AccessListEntry])
+
 
 # syntax b/c "from" keyword not allowed w/ class construction
-TxData = TypedDict(
-    "TxData",
+LegacyTxData = TypedDict(
+    "LegacyTxData",
     {
+        "type": int,
         "blockHash": Union[None, Hash32],
         "chainId": int,
         "contractCreated": Union[None, Base32Address],
@@ -276,30 +289,37 @@ TxData = TypedDict(
     },
     total=False,
 )
-"""
-Transaction data as a dict
 
-Parameters
-----------
-| "blockHash": Union[None, Hash32],
-| "chainId": int,
-| "contractCreated": Union[None, Base32Address],
-| "data": HexBytes,
-| "epochHeight": int,
-| "from": Base32Address,
-| "gas": int,
-| "gasPrice": Drip,
-| "hash": Hash32,
-| "nonce": Nonce,
-| "r": HexBytes,
-| "s": HexBytes,
-| "status": Union[None, int],
-| "storageLimit": Storage,
-| "to": Union[None, Base32Address],
-| "transactionIndex": Union[None, int],
-| "v": int,
-| "value": Drip,
-"""
+class TxData(LegacyTxData, total=False):
+    """
+    Transaction data as a dict
+
+    Parameters
+    ----------
+    | "type": int,
+    | "blockHash": Union[None, Hash32],
+    | "chainId": int,
+    | "contractCreated": Union[None, Base32Address],
+    | "data": HexBytes,
+    | "epochHeight": int,
+    | "from": Base32Address,
+    | "gas": int,
+    | "gasPrice": Drip,
+    | "hash": Hash32,
+    | "nonce": Nonce,
+    | "r": HexBytes,
+    | "s": HexBytes,
+    | "status": Union[None, int],
+    | "storageLimit": Storage,
+    | "to": Union[None, Base32Address],
+    | "transactionIndex": Union[None, int],
+    | "v": int,
+    | "value": Drip,
+    """
+    maxFeePerGas: Optional[Drip]
+    maxPriorityFeePerGas: Optional[Drip]
+    accessList: Optional[AccessList]
+    yParity: Optional[int]
 
 class BlockData(TypedDict):
     """
@@ -354,6 +374,7 @@ class BlockData(TypedDict):
     custom: Sequence[HexBytes]
     posReference: Hash32
     transactions: Sequence[Union[Hash32, TxData]]
+    baseFeePerGas: Drip
     
 
 Middleware = Callable[[Callable[[RPCEndpoint, Any], RPCResponse], "Web3"], Any]
@@ -505,10 +526,12 @@ class DAOVoteInfo(TypedDict):
     | powBaseReward: Drip
     | interestRate: int
     | storagePointProp: int
+    | baseFeeShareProp: int
     """
     powBaseReward: Drip
     interestRate: int
     storagePointProp: int
+    baseFeeShareProp: int
 
 class SupplyInfo(TypedDict):
     """
@@ -590,47 +613,18 @@ TxFilterId = NewType("TxFilterId", HexStr)
 
 _FilterId = Union[LogFilterId, BlockFilterId, TxFilterId, str]
 
-__all__ = [
-    "TxDict",
-    "TxParam",
-    "HexAddress",
-    "Drip",
-    "CFX",
-    "GDrip",
-    "AddressParam",
-    "Storage",
-    "EpochNumberParam",
-    "EpochLiteral",
-    "EpochNumber",
-    "NodeStatus",
-    "EstimateResult",
-    "FilterParams",
-    "TransactionLogReceipt",
-    "LogReceipt",
-    "TransactionEventData",
-    "EventData",
-    "TxReceipt",
-    "TxReceiptWithSpace"
-    "TxData",
-    "BlockData",
-    "MiddlewareOnion",
-    "StorageRoot",
-    "SponsorInfo",
-    "AccountInfo",
-    "DepositInfo",
-    "VoteInfo",
-    "BlockRewardInfo",
-    "PoSEconomicsInfo",
-    "PoSAccountRewardsInfo",
-    "PoSEpochRewardInfo",
-    "DAOVoteInfo",
-    "SupplyInfo",
-    "PendingInfo",
-    "PendingTransactionsInfo",
-    "TransactionPaymentInfo",
-    "CollateralInfo",
-    "LogFilterId",
-    "BlockFilterId",
-    "TxFilterId",
-    "_FilterId",
-]
+class FeeHistory(TypedDict):
+    """
+    Fee history information
+
+    Parameters
+    ----------
+    | baseFeePerGas: Sequence[Drip] - List of base fee per gas values for each epoch
+    | gasUsedRatio: Sequence[float] - List of gas used ratios for each epoch pivot block
+    | oldestEpoch: int - The oldest epoch number in the returned range
+    | reward: Sequence[Sequence[Drip]] - List of effective priority fee per gas values for each epoch
+    """
+    baseFeePerGas: Sequence[Drip]
+    gasUsedRatio: Sequence[float]
+    oldestEpoch: int
+    reward: Sequence[Sequence[Drip]]

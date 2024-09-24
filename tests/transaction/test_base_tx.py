@@ -24,7 +24,8 @@ def test_send_raw_transaction(w3: Web3, account: LocalAccount):
     rawTx = signed.rawTransaction
     r = w3.cfx.send_raw_transaction(rawTx)
     assert isinstance(r, bytes)
-    w3.cfx.wait_for_transaction_receipt(r)
+    receipt = w3.cfx.wait_for_transaction_receipt(r)
+    TypeValidator.validate_typed_dict(receipt, "TxReceipt")
 
 def test_basetx_estimate(w3: Web3, address: Base32Address):
     """

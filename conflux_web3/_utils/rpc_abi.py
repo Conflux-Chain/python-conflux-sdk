@@ -23,6 +23,9 @@ class RPC:
     cfx_getBlockRewardInfo = RPCEndpoint("cfx_getBlockRewardInfo")
     cfx_getBlocksByEpoch = RPCEndpoint("cfx_getBlocksByEpoch")
     cfx_getEpochReceipts = RPCEndpoint("cfx_getEpochReceipts")
+    cfx_maxPriorityFeePerGas = RPCEndpoint("cfx_maxPriorityFeePerGas")
+    cfx_feeHistory = RPCEndpoint("cfx_feeHistory")
+    cfx_getFeeBurnt = RPCEndpoint("cfx_getFeeBurnt")
 
     cfx_getCode = RPCEndpoint("cfx_getCode")
     cfx_getCollateralForStorage = RPCEndpoint("cfx_getCollateralForStorage")

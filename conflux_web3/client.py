@@ -85,6 +85,7 @@ from conflux_web3._utils.disabled_eth_apis import (
 )
 from conflux_web3.types import (
     EstimateResult,
+    FeeHistory,
     TxReceipt,
     TxData,
     NodeStatus,
@@ -394,6 +395,18 @@ class BaseCfx(BaseEth):
     
     _check_balance_against_transaction = ConfluxMethod(
         RPC.cfx_checkBalanceAgainstTransaction
+    )
+    
+    _max_priority_fee_per_gas: ConfluxMethod[Callable[[], Drip]] = ConfluxMethod(
+        RPC.cfx_maxPriorityFeePerGas
+    )
+    
+    _fee_history: ConfluxMethod[Callable[[int, EpochNumberParam, Sequence[float]], FeeHistory]] = ConfluxMethod(
+        RPC.cfx_feeHistory
+    )
+    
+    _get_fee_burnt: ConfluxMethod[Callable[[], Drip]] = ConfluxMethod(
+        RPC.cfx_getFeeBurnt
     )
     
     _get_logs: ConfluxMethod[Callable[[FilterParams], List[LogReceipt]]] = ConfluxMethod(
@@ -1668,3 +1681,15 @@ class ConfluxClient(BaseCfx, Eth):
     
     def get_admin(self, address: AddressParam, block_identifier: Optional[EpochNumberParam] = None) -> Union[None, Base32Address]:
         return self._get_admin(address, block_identifier)
+    
+    def fee_history(self, epoch_count: int, block_identifier: EpochNumberParam, reward_percentiles: Sequence[float]) -> FeeHistory:
+        return self._fee_history(epoch_count, block_identifier, reward_percentiles)
+    
+    def get_fee_burnt(self) -> Drip:
+        return self._get_fee_burnt()
+    
+    @property
+    def max_priority_fee_per_gas(self) -> Drip:
+        return self._max_priority_fee_per_gas()
+    
+        
