@@ -12,7 +12,7 @@ CONFLUX_SIMPLE_CACHE_RPC_WHITELIST = cast(
     Set[RPCEndpoint],
     {
         # "cfx_chainId", this is not a supported api
-        "cfx_gasPrice"
+        # "cfx_gasPrice"
     },
 )
 
