@@ -33,4 +33,4 @@ class TestPending:
         assert info["firstTxStatus"] == {"pending": "futureNonce"}
         assert info["pendingCount"] == 1
         for tx in info["pendingTransactions"]:
-            TypeValidator.validate_typed_dict(tx, "TxData")
+            TypeValidator.validate_tx_data(tx)

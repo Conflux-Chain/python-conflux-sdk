@@ -144,3 +144,17 @@ class TypeValidator:
             typed_dict_class = cast(Type[TypedDict], getattr(conflux_web3.types, typed_dict_class))
         TypeValidator.assert_instance(value_to_validate, typed_dict_class)
         return True
+    
+    @staticmethod
+    def validate_tx_data(value_to_validate: conflux_web3.types.TxData):
+        val = dict(value_to_validate)
+        if "maxFeePerGas" not in val:
+            val["maxFeePerGas"] = conflux_web3.types.Drip(0)
+        if "maxPriorityFeePerGas" not in value_to_validate:
+            val["maxPriorityFeePerGas"] = conflux_web3.types.Drip(0)
+        if "accessList" not in val:
+            val["accessList"] = []
+        if "yParity" not in val:
+            val["yParity"] = 0
+        return TypeValidator.validate_typed_dict(val, "TxData")
+        

@@ -15,7 +15,7 @@ def test_send_raw_transaction(w3: Web3, account: LocalAccount):
         'gas': 21000,
         'to': "cfxtest:aamd4myx7f3en2yu95xye7zb78gws09gj2ykmv9p58",
         'value': 100,
-        'gasPrice': 10**9,
+        'gasPrice': 10*10**9,
         'chainId': w3.cfx.chain_id,
         'storageLimit': 0,
         'epochHeight': status['epochNumber']
