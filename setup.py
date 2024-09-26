@@ -19,6 +19,7 @@ extras_require = {
         "ipfshttpclient==0.8.0a2",
         "python-dotenv",
         "setuptools",
+        "pydantic>=2.6.0,<3",
         # "py-geth>=3.8.0,<4",
     ],
     'linter': [

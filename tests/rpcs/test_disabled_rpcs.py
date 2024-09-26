@@ -8,6 +8,7 @@ from conflux_web3.exceptions import DisabledException
 
 def test_disabled_rpcs(w3: Web3):
     for method in disabled_method_list:
+        getattr(w3.cfx, "generate_gas_price")()
         with pytest.raises(DisabledException):
             getattr(w3.cfx, method)()
     for property in disabled_property_list:

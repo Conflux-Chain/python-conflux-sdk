@@ -397,7 +397,7 @@ class BaseCfx(BaseEth):
         RPC.cfx_checkBalanceAgainstTransaction
     )
     
-    _max_priority_fee_per_gas: ConfluxMethod[Callable[[], Drip]] = ConfluxMethod(
+    _max_priority_fee: ConfluxMethod[Callable[[], Drip]] = ConfluxMethod(
         RPC.cfx_maxPriorityFeePerGas
     )
     
@@ -586,14 +586,6 @@ class ConfluxClient(BaseCfx, Eth):
     def block_number(self):
         """
         # WARNING: Unsupported API, use `web3.cfx.epoch_number` instead
-        """
-        pass
-    
-    @property
-    @use_instead
-    def max_priority_fee(self):
-        """
-        # WARNING: Unsupported API
         """
         pass
     
@@ -1689,7 +1681,8 @@ class ConfluxClient(BaseCfx, Eth):
         return self._get_fee_burnt()
     
     @property
-    def max_priority_fee_per_gas(self) -> Drip:
-        return self._max_priority_fee_per_gas()
+    def max_priority_fee(self) -> Drip:
+        return self._max_priority_fee()
     
-        
+    def set_gas_price_strategy(self, strategy: Callable[["Web3", TxParam], Drip]):
+        super().set_gas_price_strategy(strategy) # type: ignore

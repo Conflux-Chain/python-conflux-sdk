@@ -260,9 +260,6 @@ class AccessListEntry(TypedDict):
     address: Base32Address
     storageKeys: Sequence[HexStr]
 
-AccessList = NewType("AccessList", Sequence[AccessListEntry])
-
-
 # syntax b/c "from" keyword not allowed w/ class construction
 LegacyTxData = TypedDict(
     "LegacyTxData",
@@ -316,10 +313,10 @@ class TxData(LegacyTxData, total=False):
     | "v": int,
     | "value": Drip,
     """
-    maxFeePerGas: Optional[Drip]
-    maxPriorityFeePerGas: Optional[Drip]
-    accessList: Optional[AccessList]
-    yParity: Optional[int]
+    maxFeePerGas: Drip
+    maxPriorityFeePerGas: Drip
+    accessList:  Sequence[AccessListEntry]
+    yParity: int
 
 class BlockData(TypedDict):
     """

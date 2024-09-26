@@ -8,15 +8,13 @@ disabled_method_list = [
     "get_uncle_by_block",
     "get_raw_transaction",
     "get_raw_transaction_by_block",
-    "get_transaction_by_block"
+    "get_transaction_by_block",
     # "get_transaction_count",
     # "replace_transaction",
     # "modify_transaction"
     # "estimate_gas",
-    "fee_history",
     "submit_hashrate",
     "submit_work",
-    "generate_gas_price"
 ]
 
 disabled_property_list = [
@@ -25,7 +23,6 @@ disabled_property_list = [
     "mining",
     "hashrate",
     "block_number",
-    "max_priority_fee",
     "get_work",
 ]
 
