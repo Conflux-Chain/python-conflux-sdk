@@ -1,7 +1,7 @@
 # should be placed at the most front
 import _web3_hook
 
-import pkg_resources
+from importlib.metadata import version
 
 from conflux_web3.main import Web3
 from conflux_web3.dev import (
@@ -11,7 +11,7 @@ from conflux_web3.dev import (
 )
 HTTPProvider = Web3.HTTPProvider
 
-__version__ = pkg_resources.get_distribution("conflux_web3").version
+__version__ = version("conflux_web3")
 
 __all__ = [
     "Web3",
