@@ -2,6 +2,7 @@ from audioop import add
 import pytest
 from conflux_web3 import Web3
 from conflux_web3._utils.transactions import fill_transaction_defaults
+from cfx_address import Base32Address
 from tests._test_helpers.type_check import TypeValidator
 
 def test_fill_transaction_defaults(w3: Web3, address):
@@ -10,7 +11,7 @@ def test_fill_transaction_defaults(w3: Web3, address):
     w3.cfx.default_account = address
     # "from" field is required before using this util
     unfilled_tx = {
-        "from": address,
+        "from": Base32Address(address),
         "to": w3.account.create().address
     }
     filled_tx = fill_transaction_defaults(w3, unfilled_tx)
