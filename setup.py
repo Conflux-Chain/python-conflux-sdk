@@ -20,6 +20,7 @@ extras_require = {
         "python-dotenv",
         "setuptools",
         "pydantic>=2.6.0,<3",
+        "cfx-address>=1.2.0"
         # "py-geth>=3.8.0,<4",
     ],
     'linter': [
@@ -98,7 +99,7 @@ setup(
         "web3==6.8.0",
         "cfx-address>=1.0.0",
         "cfx-account>=1.0.0",
-        "cfx-utils>=1.0.2",
+        "cfx-utils>=1.0.3",
         # "cached_property==1.5.2", # required by cfx-account
         "eth-account<0.11.0"
     ],  # add any additional packages that
