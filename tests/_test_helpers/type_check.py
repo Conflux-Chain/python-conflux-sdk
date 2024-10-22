@@ -132,7 +132,7 @@ class TypeValidator:
         if type(field_type) is ForwardRef:
             return type(val).__name__ == field_type.__forward_arg__
         if type(field_type) is typing._GenericAlias: # type: ignore
-            TypeValidator.assert_instance(val, cast(type, get_origin(field_type)))
+            return TypeValidator.assert_instance(val, cast(type, get_origin(field_type)))
         else:
             if isinstance(val, field_type):
                 return True

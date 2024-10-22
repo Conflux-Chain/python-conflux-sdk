@@ -189,6 +189,10 @@ class BaseCfx(BaseEth):
             transaction['value'] = to_int_if_drip_units(transaction['value'])
         if 'gasPrice' in transaction:
             transaction['gasPrice'] = to_int_if_drip_units(transaction['gasPrice'])
+        if 'maxPriorityFeePerGas' in transaction:
+            transaction['maxPriorityFeePerGas'] = to_int_if_drip_units(transaction['maxPriorityFeePerGas'])
+        if 'maxFeePerGas' in transaction:
+            transaction['maxFeePerGas'] = to_int_if_drip_units(transaction['maxFeePerGas'])
         transaction = fill_transaction_defaults(self.w3, transaction)
         return (transaction,)
     
