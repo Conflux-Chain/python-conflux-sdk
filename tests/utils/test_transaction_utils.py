@@ -1,5 +1,3 @@
-from audioop import add
-import pytest
 from conflux_web3 import Web3
 from conflux_web3._utils.transactions import fill_transaction_defaults
 from cfx_address import Base32Address
