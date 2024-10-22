@@ -59,7 +59,7 @@ def test_send_transaction(w3: Web3, embedded_accounts: Sequence[Base32Address]):
         # 'gas': 21000,
         'to': w3.cfx.account.create().address,
         'value': 100,
-        # 'gasPrice': 10**9,
+        'gasPrice': 10**9,
         # 'chainId': w3.cfx.chain_id,
         # 'storageLimit': 0,
         # 'epochHeight': status['epochNumber']
