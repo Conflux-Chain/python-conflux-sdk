@@ -1113,7 +1113,7 @@ class ConfluxClient(BaseCfx, Eth):
             )
     
     def wait_till_transaction_finalized(
-        self, transaction_hash: _Hash32, timeout: float = 1200, poll_latency: float = 0.5
+        self, transaction_hash: _Hash32, timeout: float = 1200, poll_latency: float = 5
     ) -> TxReceipt:
         """
         Returns transaction receipt after a transaction is finalized by PoS chain.
@@ -1141,17 +1141,13 @@ class ConfluxClient(BaseCfx, Eth):
         """        
         warnings.warn("4 ~ 6 minutes are required to finalize a transaction", UserWarning)
         try:
+            tx_receipt = self.wait_till_transaction_executed(transaction_hash)
             with Timeout(timeout) as _timeout:
                 while True:
-                    try:
-                        tx_receipt = self.wait_till_transaction_executed(transaction_hash)
-                    except TransactionNotFound:
-                        tx_receipt = None
-                    if tx_receipt is not None:
-                        tx_epoch = tx_receipt["epochNumber"]
-                        finalized_epoch = self.epoch_number_by_tag("latest_finalized")
-                        if tx_epoch <= finalized_epoch:
-                            break
+                    tx_epoch = tx_receipt["epochNumber"]
+                    finalized_epoch = self.epoch_number_by_tag("latest_finalized")
+                    if tx_epoch <= finalized_epoch:
+                        break
                     _timeout.sleep(poll_latency)
             return tx_receipt
         except Timeout:

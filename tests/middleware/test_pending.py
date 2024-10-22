@@ -1,16 +1,12 @@
 import os
-from typing import TYPE_CHECKING, Sequence, cast
+from typing import TYPE_CHECKING
 from cfx_account.account import LocalAccount
 
-
-from conflux_web3.types import Base32Address
-from conflux_web3.middleware.pending import PendingTransactionMiddleware
-from tests._test_helpers.type_check import TypeValidator
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
-def test_pending(w3: "Web3", account: LocalAccount, use_testnet):
+def test_pending(w3: "Web3", account: LocalAccount, use_testnet: bool):
     # activate by default
     # w3.middleware_onion.add(PendingTransactionMiddleware)
     
@@ -23,7 +19,8 @@ def test_pending(w3: "Web3", account: LocalAccount, use_testnet):
         'gas': 21000,
         'to': w3.cfx.account.create().address,
         'value': 100,
-        'gasPrice': 10**9,
+        'maxFeePerGas': 2 * w3.cfx.gas_price,
+        'maxPriorityFeePerGas': 0,
         'chainId': w3.cfx.chain_id,
         'storageLimit': 0,
         'epochHeight': status['epochNumber']
