@@ -41,6 +41,8 @@ from cfx_utils.types import (
     EpochNumber,
     HexStr,
     BlockNumber,
+    CIP1559TxDict,
+    LegacyTxDict,
 )
 
 if TYPE_CHECKING:

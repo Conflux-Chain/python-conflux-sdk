@@ -153,3 +153,42 @@ def test_wallet_pop():
     )
     assert wallet.pop(account.address).address == account.address
     assert account.address not in wallet
+
+
+def test_wallet_middleware_sign_1559_transaction(w3:Web3, account: LocalAccount):
+    wallet = construct_sign_and_send_raw_middleware(account, w3.cfx.chain_id)
+    w3.middleware_onion.add(wallet)
+    tx = {
+        'from': account.address,
+        # 'nonce': w3.cfx.get_next_nonce(addr),
+        # 'gas': 21000,
+        'to': w3.cfx.account.create().address,
+        'value': 10**9,
+        # 'gasPrice': 10**9,
+        # 'chainId': w3.cfx.chain_id,
+        # 'storageLimit': 0,
+        # 'epochHeight': status['epochNumber']
+    }
+    hash = w3.cfx.send_transaction(tx)
+    tx_data = w3.cfx.get_transaction(hash)
+    assert tx_data['type'] == 2
+    hash.executed()
+
+def test_wallet_middleware_sign_legacy_transaction(w3:Web3, account: LocalAccount):
+    wallet = construct_sign_and_send_raw_middleware(account, w3.cfx.chain_id)
+    w3.middleware_onion.add(wallet)
+    tx = {
+        'from': account.address,
+        # 'nonce': w3.cfx.get_next_nonce(addr),
+        # 'gas': 21000,
+        'to': w3.cfx.account.create().address,
+        'value': 10**9,
+        'gasPrice': w3.cfx.gas_price,
+        # 'chainId': w3.cfx.chain_id,
+        # 'storageLimit': 0,
+        # 'epochHeight': status['epochNumber']
+    }
+    hash = w3.cfx.send_transaction(tx)
+    tx_data = w3.cfx.get_transaction(hash)
+    assert tx_data['type'] == 0
+    hash.executed()
