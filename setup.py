@@ -13,7 +13,7 @@ with open('./README.md') as readme:
 extras_require = {
     'tester': [
         "docker>=7.1.0,<8",
-        "pytest>=6.2.5,<7",
+        "pytest>=8,<9",
         "typing_extensions",
         "pytest-cov",
         "ipfshttpclient==0.8.0a2",
@@ -97,11 +97,9 @@ setup(
     url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
         "web3==6.20.3",
-        "cfx-address>=1.0.0",
-        "cfx-account>=1.1.0b2",
-        "cfx-utils>=1.0.4",
-        # "cached_property==1.5.2", # required by cfx-account
-        "eth-account<0.11.0"
+        "cfx-address>=1.2.0",
+        "cfx-account>=1.1.0b3",
+        "cfx-utils>=1.0.5",
     ],  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'
     extras_require=extras_require,
