@@ -1,5 +1,11 @@
 # Change Logs
 
+## 1.3.0
+
+* bump web3.py to 6.20.x
+* deprecate python3.7 and support python3.13
+* signing middleware defaults to dynamic fee
+
 ## 1.2.5
 
 * feat: add `get_create_address`, `get_create2_address` in `web3.utils.address`
