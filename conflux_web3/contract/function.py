@@ -18,11 +18,14 @@ from web3.contract.contract import (
     call_contract_function
 )
 
-from web3.types import (
-    ABI,
+from eth_typing import (
     ABIFunction,
-    FunctionIdentifier,
-    CallOverride
+    ABI,
+)
+
+from web3.types import (
+    StateOverride,
+    ABIElementIdentifier,
 )
 
 from cfx_utils.token_unit import (
@@ -53,7 +56,7 @@ if TYPE_CHECKING:
 def build_transaction_for_function(
         address: Base32Address,
         web3: 'Web3',
-        function_name: Optional[FunctionIdentifier] = None,
+        function_name: Optional[ABIElementIdentifier] = None,
         transaction: Optional[TxParam] = None,
         contract_abi: Optional[ABI] = None,
         fn_abi: Optional[ABIFunction] = None,
@@ -91,7 +94,7 @@ class ConfluxContractFunction(ContractFunction):
         return build_transaction_for_function(
             self.address,
             self.w3,
-            self.function_identifier,
+            self.abi_element_identifier,
             built_transaction,  # type: ignore
             self.contract_abi,
             self.abi,
@@ -102,7 +105,7 @@ class ConfluxContractFunction(ContractFunction):
     def call(self,
             transaction: Optional[TxParam] = None,
             block_identifier: Optional[EpochNumberParam] = "latest_state",
-            state_override: Optional[CallOverride] = None,
+            state_override: Optional[StateOverride] = None,
             ccip_read_enabled: Optional[bool] = None) -> Any:
         call_transaction = self._get_call_txparams(transaction) # type: ignore
 
@@ -115,7 +118,7 @@ class ConfluxContractFunction(ContractFunction):
             [
                 addresses_to_verbose_base32(self.w3.cfx.chain_id), # type: ignore
             ],
-            self.function_identifier,
+            self.abi_element_identifier,
             call_transaction,
             block_identifier, # type: ignore
             self.contract_abi,

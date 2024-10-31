@@ -3,7 +3,7 @@ import os, json, pytest
 
 from hexbytes import HexBytes
 
-from web3.exceptions import ValidationError
+from eth_utils.exceptions import ValidationError
 
 from conflux_web3 import Web3
 from conflux_web3.contract import (

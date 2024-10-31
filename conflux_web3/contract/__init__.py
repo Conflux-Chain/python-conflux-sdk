@@ -23,7 +23,7 @@ from web3._utils.normalizers import (
 from web3._utils.datatypes import (
     PropertyCheckingFactory,
 )
-from web3.types import (
+from eth_typing import (
     ABI
 )
 

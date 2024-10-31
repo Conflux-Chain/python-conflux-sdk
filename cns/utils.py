@@ -45,14 +45,15 @@ def init_web3(
 
 
 def customize_web3(w3: "_Web3") -> "_Web3":
-    from web3.middleware.stalecheck import make_stalecheck_middleware
+    
+    from web3.middleware.stalecheck import StalecheckMiddlewareBuilder
 
     if w3.middleware_onion.get("name_to_address"):
         w3.middleware_onion.remove("name_to_address")
 
     if not w3.middleware_onion.get("stalecheck"):
         w3.middleware_onion.add(
-            make_stalecheck_middleware(ACCEPTABLE_STALE_HOURS * 3600, ("cfx_getBlockByEpochNumber",)), name="stalecheck"
+            StalecheckMiddlewareBuilder.build(ACCEPTABLE_STALE_HOURS * 3600, ("cfx_getBlockByEpochNumber",)), name="stalecheck"
         )
     return w3
 

@@ -7,7 +7,7 @@ from web3._utils.rpc_abi import (
     abi_request_formatters,
 )
 from web3.middleware.formatting import (
-    construct_formatting_middleware,
+    FormattingMiddlewareBuilder,
 )
 
 from conflux_web3.types import (
@@ -28,6 +28,6 @@ def name_to_address_middleware(w3: "Web3") -> Middleware:
     normalizers = [
         abi_cns_resolver(w3), # type: ignore
     ]
-    return construct_formatting_middleware(
+    return FormattingMiddlewareBuilder.build(
         request_formatters=abi_request_formatters(normalizers, RPC_ABIS)  # type: ignore
     )

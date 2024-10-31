@@ -14,12 +14,12 @@ from web3._utils.contracts import (
 from web3.contract.base_contract import (
     BaseContractCaller,
 )
-from web3.types import (
+from eth_typing import (
     ABI,
 )
 
-from web3._utils.abi import (
-    filter_by_type,
+from eth_utils.abi import (
+    filter_abi_by_type,
 )
 
 from conflux_web3.types import (
@@ -58,7 +58,7 @@ class ConfluxContractCaller(BaseContractCaller):
             if transaction is None:
                 transaction = {}
 
-            self._functions = filter_by_type("function", self.abi)
+            self._functions = filter_abi_by_type("function", self.abi)
             for func in self._functions:
                 fn: ConfluxContractFunction = ConfluxContractFunction.factory(
                     func["name"],
