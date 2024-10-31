@@ -12,11 +12,15 @@ from eth_typing.encoding import HexStr
 from eth_utils.hexadecimal import encode_hex
 from eth_utils.conversions import to_hex
 
-from web3.types import ABIFunction
-from web3._utils import contracts
-from web3._utils.abi import (
-    check_if_arguments_can_be_encoded,
+from eth_typing import ABIFunction
+from eth_utils.abi import (
     get_abi_input_types,
+)
+from web3._utils import contracts
+from web3.utils.abi import (
+    check_if_arguments_can_be_encoded,
+)
+from web3._utils.abi import (
     map_abi_data,
 )
 from web3._utils.normalizers import (

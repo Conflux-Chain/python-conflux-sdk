@@ -1,7 +1,7 @@
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
+    Type,
     List,
     NewType,
     Optional,
@@ -15,10 +15,6 @@ from typing_extensions import (
 )
 from hexbytes import HexBytes
 
-from web3.types import (
-    RPCEndpoint,
-    RPCResponse,
-)
 from web3.datastructures import (
     NamedElementOnion,
 )
@@ -47,6 +43,7 @@ from cfx_utils.types import (
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
+    from conflux_web3.middleware.base import ConfluxWeb3Middleware
 
 class NodeStatus(TypedDict):
     """
@@ -376,7 +373,7 @@ class BlockData(TypedDict):
     baseFeePerGas: Drip
     
 
-Middleware = Callable[[Callable[[RPCEndpoint, Any], RPCResponse], "Web3"], Any]
+Middleware = Type["ConfluxWeb3Middleware"]
 MiddlewareOnion = NamedElementOnion[str, Middleware]
 
 class StorageRoot(TypedDict):

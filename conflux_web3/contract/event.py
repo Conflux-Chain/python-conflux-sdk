@@ -23,7 +23,7 @@ from web3.datastructures import (
     AttributeDict,
     MutableAttributeDict,
 )
-from web3.types import (
+from eth_typing import (
     ABI,
 )
 from web3.logs import (

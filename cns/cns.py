@@ -292,7 +292,7 @@ class CNS(ENS):
             provided, defaults to the mainnet ENS registry address.
         """
         provider = w3.manager.provider
-        middlewares = w3.middleware_onion.middlewares
+        middlewares = w3.middleware_onion.middleware
         default_account = w3.cfx.default_account
         return cls(cast("BaseProvider", provider), addr=addr, middlewares=middlewares, default_account=default_account)
 

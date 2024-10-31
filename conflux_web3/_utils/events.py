@@ -28,7 +28,7 @@ from web3._utils.abi import (
     map_abi_data,
     normalize_event_input_types,
 )
-from web3.types import (
+from eth_typing import (
     ABIEvent,
 )
 from web3.datastructures import (
