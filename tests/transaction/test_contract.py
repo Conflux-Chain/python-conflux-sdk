@@ -62,8 +62,8 @@ class TestERC20Contract:
         assert balance1 == 100
         
         # test getLogs
-        fromEpoch = transfer_receipt["epochNumber"]
-        logs = w3_.cfx.get_logs(fromEpoch=fromEpoch, address=contract_address)
+        from_epoch = transfer_receipt["epochNumber"]
+        logs = w3_.cfx.get_logs(from_epoch=from_epoch, address=contract_address)
         for log in logs:
             TypeValidator.validate_typed_dict(log, "LogReceipt")
             
@@ -84,7 +84,7 @@ class TestERC20Contract:
             to=random_account.address
         )
         assert filter_topics
-        new_logs = w3_.cfx.get_logs(fromEpoch=fromEpoch, topics=filter_topics)
+        new_logs = w3_.cfx.get_logs(fromEpoch=from_epoch, topics=filter_topics)
         assert new_logs == logs
         
         # test event get_logs
@@ -93,7 +93,7 @@ class TestERC20Contract:
                 "value": 100,
                 "to": random_account.address
             },
-            fromEpoch=fromEpoch
+            from_epoch=from_epoch
         )
         assert new_processed_logs[0]["args"] == processed_log["args"]
 

@@ -179,9 +179,9 @@ class ConfluxContractEvent(BaseContractEvent):
     def get_logs(
         self,
         argument_filters: Optional[Dict[str, Any]] = None,
-        fromEpoch: Optional[EpochNumberParam] = None,
-        toEpoch: Optional[EpochNumberParam] = None,
-        blockHashes: Optional[Sequence[HexBytes]] = None,
+        from_epoch: Optional[EpochNumberParam] = None,
+        to_epoch: Optional[EpochNumberParam] = None,
+        block_hashes: Optional[Sequence[HexBytes]] = None,
         address: Optional[Union[Base32Address, Sequence[Base32Address]]]=None
     ) -> Sequence[EventData]:
         """
@@ -191,11 +191,11 @@ class ConfluxContractEvent(BaseContractEvent):
         ----------
         argument_filters : Optional[Dict[str, Any]], optional
             _description_, by default None
-        fromEpoch : Optional[EpochNumberParam], optional
+        from_epoch : Optional[EpochNumberParam], optional
             _description_, by default None
-        toEpoch : Optional[EpochNumberParam], optional
+        to_epoch : Optional[EpochNumberParam], optional
             _description_, by default None
-        blockHashes : Optional[Sequence[HexBytes]], optional
+        block_hashes : Optional[Sequence[HexBytes]], optional
             _description_, by default None
         address : Optional[Union[Base32Address, Sequence[Base32Address]]], optional
             _description_, by default None
@@ -207,9 +207,9 @@ class ConfluxContractEvent(BaseContractEvent):
         """        
         topics = self.get_filter_topics(argument_filters)
         filter_params = {
-            "blockHashes": blockHashes,
-            "fromEpoch": fromEpoch,
-            "toEpoch": toEpoch,
+            "blockHashes": block_hashes,
+            "fromEpoch": from_epoch,
+            "toEpoch": to_epoch,
             "topics": topics,
             "address": address
         }
