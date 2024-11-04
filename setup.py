@@ -96,9 +96,9 @@ setup(
                   "cns": ["py.typed"]},
     url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
-        "web3==6.20.3",
+        "web3==7.4.0",
         "cfx-address>=1.2.0",
-        "cfx-account>=1.1.0",
+        "cfx-account>=1.2.0",
         "cfx-utils>=1.0.5",
     ],  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'
