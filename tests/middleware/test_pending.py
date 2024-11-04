@@ -34,5 +34,5 @@ def test_pending(w3: "Web3", account: LocalAccount, use_testnet: bool):
     pending.executed()
     pending.confirmed()
     if use_testnet and os.environ.get("TEST_FINALIZATION", None):
-        with pytest.raises(UserWarning):
+        with pytest.warns(UserWarning):
             pending.finalized()
