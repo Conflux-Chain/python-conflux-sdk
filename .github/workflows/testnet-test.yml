@@ -4,8 +4,8 @@
 name: Python package
 
 on:
-  push:
-    branches: [ "dev", "v1", "cns"]
+  pull_request:
+    branches: [ "dev", "v1"]
 
 jobs:
   build:
@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.10", "3.11", "3.12", "3.13"] # 3.9 is tested in coverage
+        python-version: ["3.13"]
 
     steps:
     - uses: actions/checkout@v3
@@ -28,14 +28,9 @@ jobs:
         pip install ".[tester]"
     - name: Run test
       run: |
-        pytest tests
-    - name: Run test on testnet
-      run: |
         export TESTNET_URL=${{secrets.TESTNET_URL}} &&
         export USE_TESTNET=1 &&
         export ENS_ACCOUNT_NAME=${{secrets.ENS_ACCOUNT_NAME}} &&
         export ENS_ACCOUNT_SECRET=${{secrets.ENS_ACCOUNT_SECRET}} &&
+        export TEST_FINALIZATION=1 &&
         pytest tests
-    - name: test finalization api
-      run: |
-        export USE_TESTNET=1 && export TEST_FINALIZATION=1 && pytest tests/middleware/test_pending.py
