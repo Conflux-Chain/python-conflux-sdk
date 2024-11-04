@@ -22,7 +22,7 @@ def tx_hash(moduled_w3: Web3, secret_key: str) -> HexBytes:
         'epochHeight': status['epochNumber']
     }
     signed = account.sign_transaction(tx)
-    rawTx = signed.rawTransaction
+    rawTx = signed.raw_transaction
     h = w3.cfx.send_raw_transaction(rawTx)
     h.executed()
     return h

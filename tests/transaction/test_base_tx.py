@@ -21,7 +21,7 @@ def test_send_raw_transaction(w3: Web3, account: LocalAccount):
         'epochHeight': status['epochNumber']
     }
     signed = account.sign_transaction(tx)
-    rawTx = signed.rawTransaction
+    rawTx = signed.raw_transaction
     r = w3.cfx.send_raw_transaction(rawTx)
     assert isinstance(r, bytes)
     receipt = w3.cfx.wait_for_transaction_receipt(r)
