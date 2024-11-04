@@ -36,7 +36,6 @@ class TestBlock:
     def test_get_block_by_hash(self, block_data: BlockData, no_full_block_data: BlockData):
         TypeValidator.validate_typed_dict(block_data, "BlockData")
         TypeValidator.validate_typed_dict(no_full_block_data, "BlockData")
-        return block_data
 
     def test_get_block_by_epoch_number(self, w3:Web3, block_data: BlockData, use_testnet: bool):
         assert block_data['epochNumber'] is not None

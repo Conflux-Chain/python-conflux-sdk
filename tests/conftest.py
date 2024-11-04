@@ -14,9 +14,6 @@ from conflux_web3 import (
 from conflux_web3.types import (
     Base32Address
 )
-from conflux_web3.middleware import (
-    Wallet
-)
 
 dotenv.load_dotenv()
 
