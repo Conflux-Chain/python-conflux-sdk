@@ -26,7 +26,7 @@ def test_pending(w3: "Web3", account: LocalAccount, use_testnet: bool):
         'epochHeight': status['epochNumber']
     }
     signed = account.sign_transaction(tx)
-    rawTx = signed.rawTransaction
+    rawTx = signed.raw_transaction
     pending = w3.cfx.send_raw_transaction(rawTx)
     # hash = cast(PendingTransaction, hash)
     pending.mined()

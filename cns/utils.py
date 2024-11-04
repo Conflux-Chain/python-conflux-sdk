@@ -4,6 +4,7 @@ from typing import (
     Sequence,
     Tuple,
     cast,
+    Collection,
 )
 
 from ens.utils import (
@@ -13,6 +14,10 @@ from ens.constants import (
     ACCEPTABLE_STALE_HOURS,
 )
 
+from web3.exceptions import (
+    Web3ValueError,
+)
+from web3.middleware.stalecheck import StalecheckMiddlewareBuilder
 from cfx_address import (
     Base32Address
 )
@@ -43,6 +48,19 @@ def init_web3(
         w3.cfx._default_account = default_account
     return customize_web3(w3)
 
+def build_stalecheck_middleware(allowable_delay: int, skip_stalecheck_for_methods: Collection[str]):
+    def inner(w3):
+        if allowable_delay <= 0:
+            raise Web3ValueError(
+                "You must set a positive allowable_delay in seconds for this middleware"
+            )
+        middleware = StalecheckMiddlewareBuilder(w3)
+        middleware.allowable_delay = allowable_delay
+        middleware.skip_stalecheck_for_methods = skip_stalecheck_for_methods
+        middleware.cache = {"latest": None}
+        return middleware
+    return inner
+    
 
 def customize_web3(w3: "_Web3") -> "_Web3":
     
@@ -53,7 +71,7 @@ def customize_web3(w3: "_Web3") -> "_Web3":
 
     if not w3.middleware_onion.get("stalecheck"):
         w3.middleware_onion.add(
-            StalecheckMiddlewareBuilder.build(ACCEPTABLE_STALE_HOURS * 3600, ("cfx_getBlockByEpochNumber",)), name="stalecheck"
+            build_stalecheck_middleware(ACCEPTABLE_STALE_HOURS * 3600, ["cfx_getBlockByEpochNumber"]), name="stalecheck"
         )
     return w3
 

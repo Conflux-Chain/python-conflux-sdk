@@ -5,13 +5,18 @@ from typing import (
     Optional,
     Sequence,
     Union,
-    Callable,
     Any,
 )
 import warnings
 
+from toolz import curry
+
 from eth_keys.datatypes import (
     PrivateKey,
+)
+
+from web3.types import (
+    RPCEndpoint,
 )
 
 from cfx_utils.types import (
@@ -35,6 +40,8 @@ from conflux_web3._utils.cns import (
 from conflux_web3._utils.rpc_abi import (
     RPC
 )
+from conflux_web3.middleware.base import ConfluxWeb3Middleware
+
 
 if TYPE_CHECKING:
     from conflux_web3 import Web3
@@ -128,26 +135,28 @@ class Wallet:
         # any account added to wallet is a brand new object
         return Account.from_key(private_key, self._chain_id)
     
-    def __call__(self, make_request: Callable[..., Dict[str, Any]], w3: "Web3"):
-        def inner(method: str, params: Sequence[Any]):
+    
+    def __call__(self, w3: "Web3"):
+        def request_processor(method: RPCEndpoint, params: Sequence[Any]):
             if method != RPC.cfx_sendTransaction:
-                return make_request(method, params)
+                return (method, params)
             
             transaction: TxDict = params[0]
             if "from" not in transaction:
-                return make_request(method, params)
+                return (method, params)
             else:
                 transaction["from"] = resolve_if_cns_name(w3, transaction["from"])
                 if transaction["from"] not in self:
-                    return make_request(method, params)
+                    return (method, params)
             
             account = self[transaction["from"]]
-            raw_tx = account.sign_transaction(transaction).rawTransaction
+            raw_tx = account.sign_transaction(transaction).raw_transaction
             # because param formatting has been done before middleware process
             # we do the param formatting manually
-            response = make_request(RPC.cfx_sendRawTransaction, [raw_tx.hex()])
-            return response
-        return inner
+            return (RPC.cfx_sendRawTransaction, [raw_tx.to_0x_hex()])
+        middleware = ConfluxWeb3Middleware(w3)
+        middleware.request_processor = request_processor
+        return middleware
 
     def add_account(self, account: _PrivateKey):
         local_account = self.normalize_private_key_to_account(account)
