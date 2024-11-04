@@ -5,6 +5,7 @@ from typing import (
     Optional,
 )
 
+from eth_typing import ABICallable
 from web3._utils.datatypes import (
     PropertyCheckingFactory,
 )
@@ -19,7 +20,6 @@ from web3.contract.contract import (
 )
 
 from eth_typing import (
-    ABIFunction,
     ABI,
 )
 
@@ -59,7 +59,7 @@ def build_transaction_for_function(
         function_name: Optional[ABIElementIdentifier] = None,
         transaction: Optional[TxParam] = None,
         contract_abi: Optional[ABI] = None,
-        fn_abi: Optional[ABIFunction] = None,
+        abi_callable: Optional[ABICallable] = None,
         *args: Any,
         **kwargs: Any) -> TxParam:
     """Builds a dictionary with the fields required to make the given transaction
@@ -70,9 +70,9 @@ def build_transaction_for_function(
     prepared_transaction:TxParam = prepare_transaction(
         address, # type: ignore
         web3,
-        fn_identifier=function_name, # type: ignore
+        abi_element_identifier=function_name, # type: ignore
         contract_abi=contract_abi,
-        fn_abi=fn_abi,
+        abi_callable=abi_callable,
         transaction=transaction,  # type: ignore
         fn_args=args,
         fn_kwargs=kwargs,

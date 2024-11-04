@@ -1,32 +1,36 @@
 from typing import (
     Optional,
     cast,
-    Union,
+    Any,
 )
 import itertools
 
+from eth_utils.abi import (
+    get_abi_input_names,
+)
 from eth_abi.codec import (
     ABICodec,
 )
-from eth_utils.abi import (
-    event_abi_to_log_topic,
-)
+
 from eth_utils.conversions import (
     to_bytes,
 )
 from eth_utils.toolz import (
     curry, # type: ignore
 )
-from web3._utils import events
+
 from web3._utils.events import (
-    get_event_abi_types_for_decoding
+    get_event_abi_types_for_decoding,
 )
 from web3._utils.abi import (
     exclude_indexed_event_inputs,
-    get_abi_input_names,
     get_indexed_event_inputs,
     map_abi_data,
     normalize_event_input_types,
+    named_tree
+)
+from web3.utils.abi import (
+    get_event_log_topics,
 )
 from eth_typing import (
     ABIEvent,
@@ -37,7 +41,6 @@ from web3.datastructures import (
 from web3.exceptions import (
     InvalidEventABI,
     LogTopicError,
-    MismatchedABI,
 )
 from web3._utils.encoding import (
     hexstr_if_str,
@@ -49,44 +52,49 @@ from cfx_address.utils import (
 from conflux_web3.types import (
     EventData,
     LogReceipt,
-    TransactionLogReceipt
 )
 
+def _log_entry_data_to_bytes(
+    log_entry_data: Any,
+):
+    return hexstr_if_str(to_bytes, log_entry_data)  # type: ignore
 
-@curry
+def get_cfx_base32_normalizer(chain_id: int): # type: ignore
+    return lambda type_str, hex_address: (type_str, normalize_to(hex_address, chain_id, True)) if type_str == "address" else (type_str, hex_address) # type: ignore
+
+
+@curry # type: ignore
 def cfx_get_event_data(
-    abi_codec: ABICodec, event_abi: ABIEvent, log_entry: Union[TransactionLogReceipt, LogReceipt], chain_id: Optional[int]= None
+    abi_codec: ABICodec,
+    event_abi: ABIEvent,
+    log_entry: LogReceipt,
+    chain_id: Optional[int]= None
 ) -> EventData:
     """
     Given an event ABI and a log entry for that event, return the decoded
-    event data.
-    Modified from web3._utils.events.get_event_data
+    event data
     """
-    if event_abi.get("anonymous", None):
-        log_topics = log_entry["topics"]
-    elif not log_entry["topics"]:
-        raise MismatchedABI("Expected non-anonymous event to have 1 or more topics")
-    # type ignored b/c event_abi_to_log_topic(event_abi: Dict[str, Any])
-    elif event_abi_to_log_topic(event_abi) != log_entry["topics"][0]:  # type: ignore
-        raise MismatchedABI("The event signature did not match the provided ABI")
-    else:
-        log_topics = log_entry["topics"][1:]
-
+    log_topics = get_event_log_topics(event_abi, log_entry["topics"])
+    log_topics_bytes = [_log_entry_data_to_bytes(topic) for topic in log_topics]
     log_topics_abi = get_indexed_event_inputs(event_abi)
     log_topic_normalized_inputs = normalize_event_input_types(log_topics_abi)
     log_topic_types = get_event_abi_types_for_decoding(log_topic_normalized_inputs)
-    log_topic_names = get_abi_input_names(ABIEvent({"inputs": log_topics_abi}))
+    log_topic_names = get_abi_input_names(
+        ABIEvent({"name": event_abi["name"], "type": "event", "inputs": log_topics_abi})
+    )
 
-    if len(log_topics) != len(log_topic_types):
+    if len(log_topics_bytes) != len(log_topic_types):
         raise LogTopicError(
-            f"Expected {len(log_topic_types)} log topics.  Got {len(log_topics)}"
+            f"Expected {len(log_topic_types)} log topics.  Got {len(log_topics_bytes)}"
         )
 
-    log_data = hexstr_if_str(to_bytes, log_entry["data"])
+    log_data = _log_entry_data_to_bytes(log_entry["data"])
     log_data_abi = exclude_indexed_event_inputs(event_abi)
     log_data_normalized_inputs = normalize_event_input_types(log_data_abi)
     log_data_types = get_event_abi_types_for_decoding(log_data_normalized_inputs)
-    log_data_names = get_abi_input_names(ABIEvent({"inputs": log_data_abi}))
+    log_data_names = get_abi_input_names(
+        ABIEvent({"name": event_abi["name"], "type": "event", "inputs": log_data_abi})
+    )
 
     # sanity check that there are not name intersections between the topic
     # names and the data argument names.
@@ -98,28 +106,26 @@ def cfx_get_event_data(
         )
 
     decoded_log_data = abi_codec.decode(log_data_types, log_data)
-    
-    return_normalizer = [
-        lambda type_str, hex_address: (type_str, normalize_to(hex_address, chain_id, True)) if type_str == "address" \
-                                                                                        else (type_str, hex_address)
-    ]
-    
     normalized_log_data = map_abi_data(
-        return_normalizer, log_data_types, decoded_log_data
+        [get_cfx_base32_normalizer(chain_id)], log_data_types, decoded_log_data
+    )
+    named_log_data = named_tree(
+        log_data_normalized_inputs,
+        normalized_log_data,
     )
 
     decoded_topic_data = [
         abi_codec.decode([topic_type], topic_data)[0]
-        for topic_type, topic_data in zip(log_topic_types, log_topics)
+        for topic_type, topic_data in zip(log_topic_types, log_topics_bytes)
     ]
     normalized_topic_data = map_abi_data(
-        return_normalizer, log_topic_types, decoded_topic_data
+        [get_cfx_base32_normalizer(chain_id)], log_topic_types, decoded_topic_data
     )
 
     event_args = dict(
         itertools.chain(
             zip(log_topic_names, normalized_topic_data),
-            zip(log_data_names, normalized_log_data),
+            named_log_data.items(),
         )
     )
 
@@ -132,11 +138,12 @@ def cfx_get_event_data(
         "transactionHash": log_entry.get("transactionHash", None),
         "address": log_entry["address"],
         "blockHash": log_entry.get("blockHash", None),
-        "epochNumber": log_entry.get("epochNumber", None),
+        "epochNumber": log_entry.get("epochNumber", None)
     }
+    if isinstance(log_entry, AttributeDict):
+        return cast(EventData, AttributeDict.recursive(event_data))
 
-    return cast(EventData, AttributeDict.recursive(event_data))
-
+    return event_data
     
 
 # events.get_event_data = conditional_func(
