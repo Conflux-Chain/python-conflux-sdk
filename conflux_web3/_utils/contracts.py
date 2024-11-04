@@ -45,7 +45,7 @@ def cfx_encode_abi(
     """
     argument_types = get_abi_input_types(abi)
 
-    if not check_if_arguments_can_be_encoded(abi, web3.codec, arguments, {}):
+    if not check_if_arguments_can_be_encoded(abi, *arguments, abi_codec=web3.codec):
         raise TypeError(
             "One or more arguments could not be encoded to the necessary "
             "ABI type.  Expected types are: {0}".format(

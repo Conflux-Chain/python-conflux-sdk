@@ -65,7 +65,7 @@ class ConfluxContractCaller(BaseContractCaller):
                     w3=self.w3,
                     contract_abi=self.abi,
                     address=self.address,
-                    function_identifier=func["name"],
+                    abi_element_identifier=func["name"],
                     decode_tuples=decode_tuples,
                 )
 
