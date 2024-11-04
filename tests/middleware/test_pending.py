@@ -1,4 +1,5 @@
 import os
+import pytest
 from typing import TYPE_CHECKING
 from cfx_account.account import LocalAccount
 
@@ -33,4 +34,5 @@ def test_pending(w3: "Web3", account: LocalAccount, use_testnet: bool):
     pending.executed()
     pending.confirmed()
     if use_testnet and os.environ.get("TEST_FINALIZATION", None):
-        pending.finalized()
+        with pytest.raises(UserWarning):
+            pending.finalized()

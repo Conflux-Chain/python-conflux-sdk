@@ -1601,7 +1601,7 @@ class ConfluxClient(BaseCfx, Eth):
     @overload
     def get_logs(self, filter_params: None=None, **kwargs: Any) -> List[LogReceipt]:...
     
-    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs: Any) -> List[LogReceipt]:
+    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs: Optional[FilterParams]) -> List[LogReceipt]:
         """
         Returns logs matching the filter provided.
         It is accepted to pass filter_params as a dict or by direclty specifying field name (but cannot mix)
