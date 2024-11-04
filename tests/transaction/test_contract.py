@@ -1,9 +1,6 @@
 from typing import TYPE_CHECKING
-import os, json, pytest
+import pytest
 
-from hexbytes import HexBytes
-
-from eth_utils.exceptions import ValidationError
 
 from conflux_web3 import Web3
 from conflux_web3.contract import (
@@ -63,7 +60,7 @@ class TestERC20Contract:
         
         # test getLogs
         from_epoch = transfer_receipt["epochNumber"]
-        logs = w3_.cfx.get_logs(from_epoch=from_epoch, address=contract_address)
+        logs = w3_.cfx.get_logs(fromEpoch=from_epoch, address=contract_address)
         for log in logs:
             TypeValidator.validate_typed_dict(log, "LogReceipt")
             
