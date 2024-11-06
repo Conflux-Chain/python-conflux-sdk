@@ -9,7 +9,7 @@ from conflux_web3.middleware.wallet import (
     construct_sign_and_send_raw_middleware
 )
 
-
+@pytest.mark.xdist_group(name="account")   
 def test_wallet_middleware_single_init(w3:Web3, account: LocalAccount):
     wallet = construct_sign_and_send_raw_middleware(account, w3.cfx.chain_id)
     w3.middleware_onion.add(wallet)
@@ -28,6 +28,7 @@ def test_wallet_middleware_single_init(w3:Web3, account: LocalAccount):
     assert hash
     w3.cfx.wait_for_transaction_receipt(hash)
 
+@pytest.mark.xdist_group(name="account")   
 def test_no_chain_id_wallet_middleware_single_init(w3:Web3, account: LocalAccount):
     wallet = construct_sign_and_send_raw_middleware(account)
     w3.middleware_onion.add(wallet)
@@ -46,6 +47,7 @@ def test_no_chain_id_wallet_middleware_single_init(w3:Web3, account: LocalAccoun
     assert hash
     w3.cfx.wait_for_transaction_receipt(hash)
 
+@pytest.mark.xdist_group(name="account")   
 def test_wallet_middleware_list_init(w3:Web3, account: LocalAccount):
     wallet = Wallet([account], w3.cfx.chain_id)
     w3.middleware_onion.add(wallet)
@@ -64,6 +66,7 @@ def test_wallet_middleware_list_init(w3:Web3, account: LocalAccount):
     assert hash
     w3.cfx.wait_for_transaction_receipt(hash)
 
+@pytest.mark.xdist_group(name="account")   
 def test_wallet_middleware_adding(w3: Web3, account: LocalAccount):
     wallet = Wallet(forced_chain_id=w3.cfx.chain_id)
     wallet.add_accounts([account])
@@ -83,6 +86,7 @@ def test_wallet_middleware_adding(w3: Web3, account: LocalAccount):
     assert hash
     w3.cfx.wait_for_transaction_receipt(hash)
 
+@pytest.mark.xdist_group(name="account")   
 def test_default_wallet_middleware_adding(w3: Web3, account: LocalAccount):
     w3.wallet.add_accounts([account])
     tx = {
@@ -154,7 +158,7 @@ def test_wallet_pop():
     assert wallet.pop(account.address).address == account.address
     assert account.address not in wallet
 
-
+@pytest.mark.xdist_group(name="account")   
 def test_wallet_middleware_sign_1559_transaction(w3:Web3, account: LocalAccount):
     wallet = construct_sign_and_send_raw_middleware(account, w3.cfx.chain_id)
     w3.middleware_onion.add(wallet)
@@ -174,6 +178,7 @@ def test_wallet_middleware_sign_1559_transaction(w3:Web3, account: LocalAccount)
     assert tx_data['type'] == 2
     hash.executed()
 
+@pytest.mark.xdist_group(name="account")   
 def test_wallet_middleware_sign_legacy_transaction(w3:Web3, account: LocalAccount):
     wallet = construct_sign_and_send_raw_middleware(account, w3.cfx.chain_id)
     w3.middleware_onion.add(wallet)

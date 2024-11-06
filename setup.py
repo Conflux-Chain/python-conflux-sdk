@@ -14,6 +14,7 @@ extras_require = {
     'tester': [
         "docker>=7.1.0,<8",
         "pytest>=8,<9",
+        "pytest-xdist>=3,<4",
         "typing_extensions",
         "pytest-cov",
         "ipfshttpclient==0.8.0a2",

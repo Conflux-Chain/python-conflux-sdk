@@ -12,6 +12,7 @@ class TestLogFilter:
         assert contract_address is not None
         return w3.cfx.contract(contract_address, name="ERC20")
     
+    @pytest.mark.xdist_group(name="account")
     def test_log_filter(self, moduled_w3: Web3, contract: ConfluxContract):
         log_filter_id = moduled_w3.cfx.new_filter(address = contract.address)
         contract.functions.transfer(contract.address, 1**18).transact().executed()

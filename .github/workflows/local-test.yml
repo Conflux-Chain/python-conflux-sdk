@@ -28,4 +28,4 @@ jobs:
         pip install ".[tester]"
     - name: Run test
       run: |
-        pytest tests
+        pytest tests -n logical --dist loadgroup

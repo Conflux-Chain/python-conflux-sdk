@@ -2,7 +2,7 @@
 
 typeCheckingMode = "strict"
 exclude=["build/*"]
-venv="venv"
+venv="sdk-313"
 reportUnknownMemberType = "information"
 reportUnknownVariableType = "warning"
 reportUnknownArgumentType = "information"
@@ -14,3 +14,4 @@ reportIncompatibleVariableOverride = "information"
 reportMissingTypeStubs = "information"
 reportPrivateImportUsage = "information"
 reportPrivateUsage = "information"
+reportUntypedFunctionDecorator = "information"

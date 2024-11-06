@@ -30,7 +30,7 @@ def test_cns_from_address(use_testnet: bool, ens_name: str, ens_account: LocalAc
         w3 = Web3(provider, cns=cns)
         assert w3.cns.address(ens_name) == ens_account.address
 
-    
+
 
 def test_cns_with_rpc(w3: Web3, use_testnet: bool, ens_name: str):
     if use_testnet:
@@ -39,7 +39,8 @@ def test_cns_with_rpc(w3: Web3, use_testnet: bool, ens_name: str):
     else:
         with pytest.raises(NameServiceNotSet):
             balance = w3.cfx.get_balance("hello45678oiuytrrtyuiytredcv.web3")
-            
+
+@pytest.mark.xdist_group(name="account")     
 def test_cns_usage_as_contract_param(w3: Web3, to_test_cns_write_api: bool, account: LocalAccount, ens_name: str):
     if to_test_cns_write_api:
         w3.cfx.default_account = account
@@ -50,6 +51,7 @@ def test_cns_usage_as_contract_param(w3: Web3, to_test_cns_write_api: bool, acco
         assert erc20.functions.transfer(ens_name, 100).transact().executed()
         assert erc20.caller.balanceOf(ens_name) == 100 
 
+@pytest.mark.xdist_group(name="account")
 def test_cns_as_sender(w3: Web3, to_test_cns_write_api: bool, ens_account: LocalAccount, ens_name: bool):
     if to_test_cns_write_api:
         w3.wallet.add_account(ens_account)
@@ -59,6 +61,7 @@ def test_cns_as_sender(w3: Web3, to_test_cns_write_api: bool, ens_account: Local
             "from": ens_name
         }).executed()
 
+@pytest.mark.xdist_group(name="account")
 def test_cns_as_contract_address(w3: Web3, to_test_cns_write_api: bool):
     if to_test_cns_write_api:
         faucet = w3.cfx.contract("faucet.web3", name="Faucet", with_deployment_info=False)
@@ -81,6 +84,7 @@ def test_cns_owner(w3: Web3, use_testnet: bool, ens_name: str):
 #     w3.cfx.default_account = account
 #     w3.cns.setup_owner("test.web3", wrapped=True)
 
+@pytest.mark.xdist_group(name="account")
 def test_setup_address(w3: Web3, to_test_cns_write_api: bool, ens_account: LocalAccount):
     if to_test_cns_write_api:
         w3.cns.allow_unstable_api = True
@@ -99,6 +103,7 @@ def test_cns_wallet(w3: Web3, use_testnet: bool):
     if use_testnet:
         assert w3.wallet is w3.cns.w3.wallet
 
+@pytest.mark.xdist_group(name="account")
 def test_cns_default_account(w3: Web3, use_testnet: bool, account: LocalAccount):
     if use_testnet:
         w3.cfx.default_account = account

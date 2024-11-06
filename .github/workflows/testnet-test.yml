@@ -33,4 +33,4 @@ jobs:
         export ENS_ACCOUNT_NAME=${{secrets.ENS_ACCOUNT_NAME}} &&
         export ENS_ACCOUNT_SECRET=${{secrets.ENS_ACCOUNT_SECRET}} &&
         export TEST_FINALIZATION=1 &&
-        pytest tests
+        pytest tests -n logical --dist loadgroup
