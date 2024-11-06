@@ -9,8 +9,8 @@ TESTNET_IMAGE_FULL_NAME = f"{REPO_NAME}:{TESTNET_TAG}"
 LOCAL_NODE_NAME = "python-sdk-env"
 TESTNET_NODE_NAME = "python-sdk-env-testnet"
 LOCAL_HOST = "127.0.0.1"
-PORT = "12537"
-TESTNET_HOST_PORT = "12637"
+INTERNAL_PORT = 12537
+TESTNET_HOST_PORT = 12637
 
 TESTNET_CONFIG_DIR = os.path.join(
     os.path.dirname(__file__), 

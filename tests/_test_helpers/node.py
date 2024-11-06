@@ -27,7 +27,7 @@ from tests._test_helpers.ENV_SETTING import (
     LOCAL_NODE_NAME,
     TESTNET_NODE_NAME,
     LOCAL_HOST,
-    PORT,
+    INTERNAL_PORT,
     VOLUMES,
     TESTNET_HOST_PORT
 )
@@ -99,10 +99,11 @@ class LocalNode(BaseNode):
     if container with node_name (default as "python-sdk-env") already exists, no extra work needs be done
     else pull image and create environment
     """
-    def __init__(self, image_name=DEV_IMAGE_FULL_NAME, node_name=LOCAL_NODE_NAME):
+    def __init__(self, image_name=DEV_IMAGE_FULL_NAME, node_name=LOCAL_NODE_NAME, index: int=0):
         self._image_name = image_name
         self._node_name = node_name
-        self._url = f"http://{LOCAL_HOST}:{PORT}"
+        host_port = INTERNAL_PORT + index
+        self._url = f"http://{LOCAL_HOST}:{host_port}"
         self._client = docker.from_env()
         container = get_existed_container(self._client, self._node_name)
         
@@ -115,9 +116,9 @@ class LocalNode(BaseNode):
                                                         detach=True, 
                                                         # auto_remove=True,
                                                         ports={
-                                                            f"{PORT}/tcp": f"{PORT}"
+                                                            f"{INTERNAL_PORT}/tcp": f"{host_port}"
                                                         })
-            self._wait_for_start()
+        self._wait_for_start()
 
     @cached_property
     def secrets(self) -> List[str]:
@@ -178,7 +179,7 @@ class LocalTestnetNode(LocalNode):
                                                         # auto_remove=True,
                                                         volumes=volumes,
                                                         ports={
-                                                            f"{PORT}/tcp": f"{TESTNET_HOST_PORT}" # use a different port on host
+                                                            f"{INTERNAL_PORT}/tcp": f"{TESTNET_HOST_PORT}" # use a different port on host
                                                         })
             self._wait_for_start()
     

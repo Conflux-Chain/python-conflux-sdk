@@ -22,19 +22,20 @@ def use_testnet() -> bool:
     return bool(os.environ.get("TESTNET_SECRET")) or bool(os.environ.get("USE_TESTNET"))
 
 @pytest.fixture(scope="session")
-def node(use_testnet) -> Iterable[BaseNode]:
+def node(use_testnet: bool, worker_id: str) -> Iterable[BaseNode]:
     if use_testnet:
         node = RemoteTestnetNode() # connection error might occur if using public RPC
         # node = LocalTestnetNode() 
         yield node
         # node.exit()
     else:
-        node = LocalNode()
+        num = 0 if worker_id == "master" else int(worker_id[2:])
+        node = LocalNode(node_name=f"sdk-test-{num}", index=num)
         yield node
         # node.exit()
 
 @pytest.fixture(scope="session")
-def node_url(node):
+def node_url(node: Iterable[LocalNode]) -> str:
     return node.url
 
 @pytest.fixture(scope="session")
