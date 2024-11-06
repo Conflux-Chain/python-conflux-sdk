@@ -1,9 +1,11 @@
+import pytest
 from typing import Sequence
 from cfx_account.account import LocalAccount
 from conflux_web3 import Web3
 from conflux_web3.types import Base32Address
 from tests._test_helpers.type_check import TypeValidator
 
+@pytest.mark.xdist_group(name="account")
 def test_send_raw_transaction(w3: Web3, account: LocalAccount):
     status = w3.cfx.get_status()
     

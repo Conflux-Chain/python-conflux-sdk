@@ -57,7 +57,7 @@ def w3(node_url: str, node: LocalNode) -> Web3:
     return w3
 
 @pytest.fixture(scope="session")
-def account(node_url: str, secret_key) -> LocalAccount:
+def account(node_url: str, secret_key: str) -> LocalAccount:
     """external_account, not supported by node
     """
     provider = Web3.HTTPProvider(node_url)

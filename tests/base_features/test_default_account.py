@@ -1,5 +1,4 @@
 from conflux_web3 import Web3
-from web3.datastructures import AttributeDict
 
 def test_default_account_set(w3: Web3, secret_key):
     local_account = w3.account.from_key(secret_key)

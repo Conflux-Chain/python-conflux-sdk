@@ -1,5 +1,5 @@
 import pytest
-
+from typing import Any
 from conflux_web3 import Web3
 
 from conflux_web3.contract.metadata import get_contract_metadata
@@ -22,12 +22,13 @@ class TestPending:
         })
         hash.executed()
         
-    
-    def test_get_account_pending_info(self, w3: Web3, address, future_tx):
+    @pytest.mark.xdist_group(name="account")
+    def test_get_account_pending_info(self, w3: Web3, address: str, future_tx: Any):
         account_pending_info = w3.cfx.get_account_pending_info(address)
         TypeValidator.validate_typed_dict(account_pending_info, "PendingInfo")
     
-    def test_get_account_pending_transactions(self, w3: Web3, address, future_tx):
+    @pytest.mark.xdist_group(name="account")
+    def test_get_account_pending_transactions(self, w3: Web3, address:str , future_tx: Any):  
         nonce = w3.cfx.get_next_nonce(address)
         info = w3.cfx.get_account_pending_transactions(address, nonce, 1)
         assert info["firstTxStatus"] == {"pending": "futureNonce"}
