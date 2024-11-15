@@ -6,13 +6,33 @@ from cfx_account import (
 from conflux_web3 import Web3
 from conflux_web3.middleware.wallet import (
     Wallet,
-    construct_sign_and_send_raw_middleware
+    construct_sign_and_send_raw_middleware,
+    SignAndSendRawMiddlewareBuilder
 )
 
 @pytest.mark.xdist_group(name="account")   
 def test_wallet_middleware_single_init(w3:Web3, account: LocalAccount):
     wallet = construct_sign_and_send_raw_middleware(account, w3.cfx.chain_id)
     w3.middleware_onion.add(wallet)
+    tx = {
+        'from': account.address,
+        # 'nonce': w3.cfx.get_next_nonce(addr),
+        # 'gas': 21000,
+        'to': w3.cfx.account.create().address,
+        'value': 10**9,
+        # 'gasPrice': 10**9,
+        # 'chainId': w3.cfx.chain_id,
+        # 'storageLimit': 0,
+        # 'epochHeight': status['epochNumber']
+    }
+    hash = w3.cfx.send_transaction(tx)
+    assert hash
+    w3.cfx.wait_for_transaction_receipt(hash)
+
+@pytest.mark.xdist_group(name="account")   
+def test_wallet_middleware_single_init_by_builder(w3:Web3, account: LocalAccount):
+    wallet = SignAndSendRawMiddlewareBuilder.build(account, w3.cfx.chain_id)
+    w3.middleware_onion.inject(wallet, layer=0)
     tx = {
         'from': account.address,
         # 'nonce': w3.cfx.get_next_nonce(addr),
