@@ -9,8 +9,6 @@ from typing import (
 )
 import warnings
 
-from toolz import curry
-
 from eth_keys.datatypes import (
     PrivateKey,
 )
@@ -192,5 +190,10 @@ class Wallet:
 def construct_sign_and_send_raw_middleware(
     account_or_accounts: Union[Sequence[_PrivateKey], _PrivateKey], 
     forced_chain_id: Optional[int]=None
-) -> Wallet:
-    return Wallet(account_or_accounts, forced_chain_id)
+):
+    return Wallet(account_or_accounts, forced_chain_id)  # type: ignore
+
+class SignAndSendRawMiddlewareBuilder:
+    @classmethod
+    def build(cls, account_or_accounts: Union[Sequence[_PrivateKey], _PrivateKey], forced_chain_id: Optional[int]=None):
+        return Wallet(account_or_accounts, forced_chain_id)  # type: ignore

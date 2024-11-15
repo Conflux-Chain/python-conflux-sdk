@@ -8,6 +8,7 @@ from conflux_web3.middleware.pending import (
 )
 from conflux_web3.middleware.wallet import (
     Wallet,
+    construct_sign_and_send_raw_middleware,
 )
 from conflux_web3.middleware.names import (
     name_to_address_middleware
@@ -23,12 +24,13 @@ def conflux_default_middlewares(w3: "Web3") -> Sequence[Tuple[Middleware, str]]:
     return [
         (name_to_address_middleware(w3), "name_to_address"),
         (PendingTransactionMiddleware, "PendingTransactionMiddleware"),
-        (Wallet(), "wallet"),
+        (Wallet(), "wallet"),  # type: ignore
     ]
 
 
 __all__ = [
     "PendingTransactionMiddleware",
     "Wallet",
-    "conflux_default_middlewares"
+    "conflux_default_middlewares",
+    "construct_sign_and_send_raw_middleware",
 ]

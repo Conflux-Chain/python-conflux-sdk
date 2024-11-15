@@ -1,13 +1,14 @@
 from typing import (
     TYPE_CHECKING,
     Any,
-    Type,
     List,
     NewType,
     Optional,
     Sequence,
     Union,
-    Dict
+    Dict,
+    Callable,
+    Protocol,
 )
 from typing_extensions import (
     Literal,
@@ -18,6 +19,7 @@ from hexbytes import HexBytes
 from web3.datastructures import (
     NamedElementOnion,
 )
+from web3.types import RPCResponse, RPCEndpoint
 
 from cfx_address import Base32Address
 from cfx_utils.types import (
@@ -371,9 +373,15 @@ class BlockData(TypedDict):
     posReference: Hash32
     transactions: Sequence[Union[Hash32, TxData]]
     baseFeePerGas: Drip
-    
 
-Middleware = Type["ConfluxWeb3Middleware"]
+class Web3MiddlewareProtocol(Protocol):
+    def request_processor(self, method: RPCEndpoint, params: Any) -> Any:
+        ...
+
+    def response_processor(self, method: RPCEndpoint, response: RPCResponse) -> RPCResponse:
+        ...
+
+Middleware = Callable[["Web3"], Web3MiddlewareProtocol]
 MiddlewareOnion = NamedElementOnion[str, Middleware]
 
 class StorageRoot(TypedDict):
