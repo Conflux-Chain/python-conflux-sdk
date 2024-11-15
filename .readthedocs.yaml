@@ -8,7 +8,7 @@ build:
   jobs:
     pre_build:
       # Generate on-the-fly Sphinx configuration from Jupyter Book's _config.yml
-      - "jupyter-book config sphinx docs/en/ > docs/en/conf.py"
+      - "jupyter-book config sphinx docs/zh-CN/ > docs/zh-CN/conf.py"
 
 python:
   install:
