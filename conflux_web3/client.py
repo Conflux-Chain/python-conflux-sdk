@@ -1594,14 +1594,16 @@ class ConfluxClient(BaseCfx, Eth):
         return self._check_balance_against_transaction(
             account_address, contract_address, gas_limit, gas_price, storage_limit, block_identifier
         )
+        
+        
+    @overload
+    def get_logs(self, filter_params: None=None, **kwargs: Unpack[FilterParams]) -> List[LogReceipt]:...
     
     @overload
     def get_logs(self, filter_params: FilterParams) -> List[LogReceipt]:...
     
-    @overload
-    def get_logs(self, filter_params: None=None, **kwargs: Any) -> List[LogReceipt]:...
     
-    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs: Optional[FilterParams]) -> List[LogReceipt]:
+    def get_logs(self, filter_params: Optional[FilterParams]=None, **kwargs: Unpack[FilterParams]) -> List[LogReceipt]:
         """
         Returns logs matching the filter provided.
         It is accepted to pass filter_params as a dict or by direclty specifying field name (but cannot mix)
@@ -1620,7 +1622,15 @@ class ConfluxClient(BaseCfx, Eth):
             a list of LogReceipt. It is recommended to read https://github.com/Conflux-Chain/python-conflux-sdk/blob/v1/examples/04-interact_with_contracts_and_logs.py to know how to process the returned logs
         """        
         if filter_params is None:
-            filter_params = cast(FilterParams, keyfilter(lambda key: key in FilterParams.__annotations__.keys(), kwargs)) # type: ignore
+            # Convert snake_case to camelCase for kwargs keys
+            converted_kwargs = {}
+            for key, value in kwargs.items():
+                # Split by underscore and convert to camelCase
+                parts = key.split('_')
+                camel_key = parts[0] + ''.join(x.title() for x in parts[1:])
+                converted_kwargs[camel_key] = value
+            
+            filter_params = cast(FilterParams, keyfilter(lambda key: key in FilterParams.__annotations__.keys(), converted_kwargs)) # type: ignore
             return self._get_logs(filter_params)
         else:
             if len(kwargs.keys()) != 0:
