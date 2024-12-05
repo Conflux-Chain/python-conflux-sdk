@@ -13,9 +13,8 @@ from web3._utils.abi import (
     build_non_strict_registry, 
     AddressEncoder,
 )
-from cfx_address import (
-    Base32Address,
-    validate_base32
+from cfx_address.utils import (
+    normalize_to
 )
 from cfx_utils.exceptions import (
     InvalidBase32Address
@@ -26,16 +25,16 @@ from conflux_web3._utils.cns import (
 
 class Base32AddressEncoder(AddressEncoder):
     
-    encode_fn = lambda self, address: AddressEncoder.encode_fn(Base32Address(address).hex_address)
+    encode_fn = lambda self, address: AddressEncoder.encode_fn(normalize_to(address, None))
     
     @classmethod
     def validate_value(cls, value: Any) -> None:
         if is_cns_name(value):
             return
         try:
-            validate_base32(value)
+            normalize_to(value, None)
         except InvalidBase32Address:
-            raise EncodingError(InvalidBase32Address)
+            raise EncodingError(f"Not a valid Base32 address nor hex address: {value}")
 
 class CfxAddressDecoder(AddressDecoder):
     decode_fn = lambda x: x
