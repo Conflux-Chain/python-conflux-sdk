@@ -232,6 +232,11 @@ LOG_ENTRY_FORMATTERS = {
 }
 log_entry_formatter = apply_formatters_to_dict(LOG_ENTRY_FORMATTERS)
 
+STORAGE_CHANGE_FORMATTER = apply_formatters_to_dict({
+    "address": from_trust_to_base32,
+    "collaterals": to_integer_if_hex,
+})
+
 RECEIPT_FORMATTERS = {
     "type": to_integer_if_hex,
     "transactionHash": to_hash32, 
@@ -245,7 +250,7 @@ RECEIPT_FORMATTERS = {
     # "gasCoveredBySponsor": bool,
     "storageCollateralized": to_integer_if_hex,
     # "storageCoveredBySponsor": bool,
-    "storageReleased": apply_list_to_array_formatter(to_hex_if_integer),
+    "storageReleased": apply_list_to_array_formatter(STORAGE_CHANGE_FORMATTER),
     "contractCreated": apply_formatter_if(is_not_null, from_trust_to_base32),
     
     "stateRoot": to_hash32,
