@@ -984,11 +984,11 @@ class ConfluxClient(BaseCfx, Eth):
             receipt = cast(TxReceipt, super().wait_for_transaction_receipt(transaction_hash, timeout, poll_latency)) # type: ignore
         except TimeExhausted:
             raise TimeExhausted(
-                f"Transaction {HexBytes(transaction_hash) !r} is not executed"
+                f"Transaction {HexBytes(transaction_hash) !r} is not executed "
                 f"after {timeout} seconds"
             )
         if receipt["outcomeStatus"] != 0:
-            raise RuntimeError(f'transaction "${transaction_hash}" execution failed, outcomeStatus ${receipt["outcomeStatus"]}')
+            raise RuntimeError(f'transaction "0x{receipt["transactionHash"].hex()}" execution failed, outcomeStatus {receipt["outcomeStatus"]} with error: {receipt["txExecErrorMsg"]}')
         return receipt
     
     def wait_till_transaction_executed(
