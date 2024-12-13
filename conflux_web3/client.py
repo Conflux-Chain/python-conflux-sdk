@@ -116,7 +116,8 @@ from conflux_web3.contract import (
     ConfluxContract
 )
 from conflux_web3.contract.metadata import (
-    get_contract_metadata
+    get_contract_metadata,
+    EMBEDDED_CONTRACT_NAMES
 )
 from conflux_web3._utils.transactions import (
     fill_transaction_defaults
@@ -433,7 +434,7 @@ class BaseCfx(BaseEth):
 
     @overload  
     def contract(
-        self, address: Union[Base32Address, str], *, name: Optional[str]=None, with_deployment_info: Optional[bool]=None, **kwargs: Any
+        self, address: Union[Base32Address, str], *, name: Optional[EMBEDDED_CONTRACT_NAMES]=None, with_deployment_info: Optional[bool]=None, **kwargs: Any
     ) -> ConfluxContract:
         ...
 
@@ -445,19 +446,19 @@ class BaseCfx(BaseEth):
     
     @overload  
     def contract(
-        self, address: None=None, *, name: str=..., with_deployment_info: None=None, **kwargs: Any  
+        self, address: None=None, *, name: EMBEDDED_CONTRACT_NAMES=..., with_deployment_info: None=None, **kwargs: Any  
     ) -> Union[Type[ConfluxContract], ConfluxContract]:
         ...
     
     @overload  
     def contract(
-        self, address: None=None, *, name: str=..., with_deployment_info: Literal[False]=..., **kwargs: Any 
+        self, address: None=None, *, name: EMBEDDED_CONTRACT_NAMES=..., with_deployment_info: Literal[False]=..., **kwargs: Any 
     ) -> Type[ConfluxContract]:
         ...
 
     @overload  
     def contract(
-        self, address: None=None, *, name: str=..., with_deployment_info: Literal[True]=..., **kwargs: Any
+        self, address: None=None, *, name: EMBEDDED_CONTRACT_NAMES=..., with_deployment_info: Literal[True]=..., **kwargs: Any
     ) -> ConfluxContract:
         ...
 
@@ -465,7 +466,7 @@ class BaseCfx(BaseEth):
         self,
         address: Optional[Union[Base32Address, str]] = None,
         *,
-        name: Optional[str] = None,
+        name: Optional[EMBEDDED_CONTRACT_NAMES] = None,
         with_deployment_info: Optional[bool] = None,
         **kwargs: Any,
     ) -> Union[Type[ConfluxContract], ConfluxContract]:

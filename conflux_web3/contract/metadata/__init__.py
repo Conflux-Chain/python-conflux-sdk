@@ -4,8 +4,11 @@ from pathlib import (
     Path
 )
 from typing import (
+    Any,
     Dict,
-    Optional
+    Optional,
+    Literal,
+    Union,
 )
 from toolz import (
     keyfilter
@@ -50,21 +53,52 @@ DEPLOYMENT_INFO = {
     }
 }
 
-METADATA_INFO = {
+
+INTERNAL_CONTRACT_NAMES = Literal[
+    "AdminControl",
+    "ConfluxContext",
+    "CrossSpaceCall",
+    "SponsorWhitelistControl",
+    "ParamsControl",
+    "PoSRegister",
+    "Staking",
+]
+
+DEPLOYED_CONTRACT_INSTANCES = Literal[
+    "Faucet",
+    "cUSDT",
+    "FC",
+    "ERC1820",
+    "ENS",
+]
+
+ERC_INTERFACES = Literal[
+    "ERC20",
+    "ERC1820",
+]
+
+ENS_INTERFACES = Literal[
+    "ENS",
+    "ETHRegistrarController",
+    "NameWrapper",
+    "RESOLVER",
+]
+
+
+METADATA_INFO: Dict[DEPLOYED_CONTRACT_INSTANCES, ERC_INTERFACES] = {
     "cUSDT": "ERC20",
     "FC": "ERC20",
 }
 
-def list_embedded_contract_names():
-    pass
+EMBEDDED_CONTRACT_NAMES = Union[INTERNAL_CONTRACT_NAMES, DEPLOYED_CONTRACT_INSTANCES, ERC_INTERFACES, ENS_INTERFACES]
 
 # TODO: normalize metadata["bin"] to metadata["bytecode"]
 # TODO: return type as TypedDict
 def get_contract_metadata(
-    contract_name: str, 
+    contract_name: EMBEDDED_CONTRACT_NAMES, 
     chain_id: Optional[int]=None, 
     with_deployment_info: Optional[bool]=None
-) -> Dict:
+) -> Dict[str, Any]:
     """
     _summary_
 
