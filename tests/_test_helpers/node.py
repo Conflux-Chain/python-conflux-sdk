@@ -2,11 +2,11 @@ from abc import ABC
 import json
 import os
 from typing import (
-    List
+    Dict,
+    List,
 )
 import time
 import urllib3
-import functools
 
 import docker
 from docker.errors import (
@@ -62,7 +62,7 @@ def get_existed_container(client: docker.client.DockerClient, node_name: str):
     except NotFound:
         return None
      
-def connect_to_server(url):
+def connect_to_server(url: str):
     # http = urllib3.PoolManager()
     payload = {
         "method": "cfx_getStatus",
@@ -81,11 +81,10 @@ def connect_to_server(url):
     return result
 
 class BaseNode(ABC):
-    def __init__(self):
-        self._url = None
+    _url: str
     
     @property
-    def url(self):
+    def url(self) -> str:
         return self._url
 
     def secrets(self) -> List[str]:
@@ -99,7 +98,7 @@ class LocalNode(BaseNode):
     if container with node_name (default as "python-sdk-env") already exists, no extra work needs be done
     else pull image and create environment
     """
-    def __init__(self, image_name=DEV_IMAGE_FULL_NAME, node_name=LOCAL_NODE_NAME, index: int=0):
+    def __init__(self, image_name: str=DEV_IMAGE_FULL_NAME, node_name: str=LOCAL_NODE_NAME, index: int=0):
         self._image_name = image_name
         self._node_name = node_name
         host_port = INTERNAL_PORT + index
@@ -117,7 +116,7 @@ class LocalNode(BaseNode):
                                                         # auto_remove=True,
                                                         ports={
                                                             f"{INTERNAL_PORT}/tcp": f"{host_port}"
-                                                        })
+                                                        })  # type: ignore
         self._wait_for_start()
 
     @cached_property
@@ -132,7 +131,7 @@ class LocalNode(BaseNode):
         print("starting test node")
         # time.sleep(10)
         
-        for i in range(max_try):
+        for _ in range(max_try):
             try:
                 status = connect_to_server(self.url)
                 if int(status["epochNumber"], 16) >= 1:
@@ -150,7 +149,7 @@ class LocalNode(BaseNode):
         # time.sleep(10)
         w3 = Web3(Web3.HTTPProvider(self.url))
         account = w3.account.from_key(self.secrets[0], w3.cfx.chain_id)
-        for i in range(max_try):
+        for _ in range(max_try):
             if w3.cfx.get_next_nonce(account.address) >= 10:
                 return
             time.sleep(interval)
@@ -163,7 +162,10 @@ class LocalNode(BaseNode):
             self._client.close()
 
 class LocalTestnetNode(LocalNode):
-    def __init__(self, image_name=TESTNET_IMAGE_FULL_NAME, node_name=TESTNET_NODE_NAME, volumes=VOLUMES):
+    def __init__(self,
+        image_name: str=TESTNET_IMAGE_FULL_NAME,
+        node_name: str=TESTNET_NODE_NAME,
+        volumes: Dict[str, Dict[str, str]]=VOLUMES):
         self._image_name = image_name
         self._node_name = node_name
         self._url = f"http://{LOCAL_HOST}:{TESTNET_HOST_PORT}"
@@ -177,10 +179,10 @@ class LocalTestnetNode(LocalNode):
                                                         name=self._node_name, 
                                                         detach=True, 
                                                         # auto_remove=True,
-                                                        volumes=volumes,
+                                                        volumes=volumes,  # type: ignore
                                                         ports={
                                                             f"{INTERNAL_PORT}/tcp": f"{TESTNET_HOST_PORT}" # use a different port on host
-                                                        })
+                                                        })  # type: ignore
             self._wait_for_start()
     
     @cached_property
