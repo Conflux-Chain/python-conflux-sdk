@@ -23,6 +23,7 @@ extras_require = {
         "pydantic>=2.6.0,<3",
         "cfx-address>=1.2.0",
         "pytest-xdist",
+        "pytest-order",
         # "py-geth>=3.8.0,<4",
     ],
     'linter': [
