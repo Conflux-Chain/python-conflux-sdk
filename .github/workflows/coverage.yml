@@ -22,7 +22,7 @@ jobs:
         export USE_TESTNET=1 &&
         export ENS_ACCOUNT_NAME=${{secrets.ENS_ACCOUNT_NAME}} &&
         export ENS_ACCOUNT_SECRET=${{secrets.ENS_ACCOUNT_SECRET}} &&
-        pytest --cov tests -n 4 --dist loadscope
+        pytest --cov tests -n 3 --dist loadscope
     - name: Upload coverage reports to Codecov
       run: |
         curl -Os https://uploader.codecov.io/latest/linux/codecov
