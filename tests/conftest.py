@@ -49,11 +49,11 @@ def secret_key(node: LocalNode, worker_index: int, use_testnet: bool) -> Union[s
     Returns:
         str: secret key with enough balance
     """
+    if not use_testnet:
+        return node.secrets[0]
     try:
         return node.secrets[worker_index]
-    except IndexError as e:
-        if not use_testnet:  # faucet_account is enabled
-            raise e
+    except IndexError:
         w3 = Web3(Web3.HTTPProvider(node.url))
         acct = w3.cfx.account.create()
         w3.wallet.add_account(acct)
