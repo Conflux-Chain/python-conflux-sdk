@@ -7,8 +7,7 @@ from cfx_account.account import LocalAccount
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
-@pytest.mark.order(1)
-@pytest.mark.xdist_group(name="pending")   
+@pytest.mark.order(1) 
 def test_pending(w3: "Web3", account: LocalAccount, use_testnet: bool):
     # activate by default
     # w3.middleware_onion.add(PendingTransactionMiddleware)

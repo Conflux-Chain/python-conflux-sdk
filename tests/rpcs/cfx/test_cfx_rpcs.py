@@ -12,7 +12,7 @@ from tests._test_helpers.type_check import TypeValidator
 # Note that we only test if SDK works as expected, especially for request and result formatting.
 # We don't test if RPC works as expected
 
-@pytest.mark.xdist_group(name="account")
+
 def test_get_tx(moduled_w3: Web3, contract_address: Base32Address):
     """test get_transaction(_by_hash) and get_transaction_receipt
     """
@@ -43,20 +43,20 @@ def test_accounts(w3: Web3, use_testnet: bool):
 #     """
 #     pass
 
-@pytest.mark.xdist_group(name="account")
+
 def test_get_confirmation_risk(w3: Web3, tx_hash: HexBytes):
     blockHash = w3.cfx.wait_for_transaction_receipt(tx_hash)['blockHash']
     risk = w3.cfx.get_confirmation_risk_by_hash(blockHash)
     assert risk < 1
 
 
-@pytest.mark.xdist_group(name="account")
+
 def test_fee_history(moduled_w3: Web3):
     w3 = moduled_w3
     fee_history = w3.cfx.fee_history(5, "latest_state", [20,50])
     TypeValidator.validate_typed_dict(fee_history, "FeeHistory")
 
-@pytest.mark.xdist_group(name="account")
+
 def test_max_priority_fee(moduled_w3: Web3):
     w3 = moduled_w3
     fee = w3.cfx.max_priority_fee

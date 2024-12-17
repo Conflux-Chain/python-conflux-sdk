@@ -22,12 +22,12 @@ class TestPending:
         })
         hash.executed()
         
-    @pytest.mark.xdist_group(name="account")
+    
     def test_get_account_pending_info(self, w3: Web3, address: str, future_tx: Any):
         account_pending_info = w3.cfx.get_account_pending_info(address)
         TypeValidator.validate_typed_dict(account_pending_info, "PendingInfo")
     
-    @pytest.mark.xdist_group(name="account")
+    
     def test_get_account_pending_transactions(self, w3: Web3, address:str , future_tx: Any):  
         nonce = w3.cfx.get_next_nonce(address)
         info = w3.cfx.get_account_pending_transactions(address, nonce, 1)
