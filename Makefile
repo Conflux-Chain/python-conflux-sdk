@@ -27,5 +27,6 @@ doc: rm-doc gen-doc-config
 # 	make html
 
 test:
-	pytest tests && export USE_TESTNET=1 && pytest tests
+	pytest tests -vv -n 4 --dist loadscope
+# && export USE_TESTNET=1 && pytest tests
 # cd ./docs && make doctest

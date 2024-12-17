@@ -30,7 +30,7 @@ class TestERC20Contract:
         return w3
 
     # warnings might be raised by web3.py, we just ignore these warnings
-    @pytest.mark.xdist_group(name="account")
+    
     def test_contract_deploy_and_transfer(self, w3_: Web3):
         # test deployment
         erc20_metadata = get_contract_metadata("ERC20")
@@ -99,7 +99,7 @@ class TestERC20Contract:
         )
         assert new_processed_logs[0]["args"] == processed_log["args"]
 
-    @pytest.mark.xdist_group(name="account")
+    
     def test_contract_without_wallet(self, w3: Web3, account: LocalAccount):
         erc20_metadata = get_contract_metadata("ERC20")
 
