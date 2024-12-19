@@ -71,7 +71,7 @@ def customize_web3(w3: "_Web3") -> "_Web3":
 
     if not w3.middleware_onion.get("stalecheck"):
         w3.middleware_onion.add(
-            build_stalecheck_middleware(ACCEPTABLE_STALE_HOURS * 3600, ["cfx_getBlockByEpochNumber"]), name="stalecheck"
+            build_stalecheck_middleware(ACCEPTABLE_STALE_HOURS * 3600, ["cfx_getBlockByEpochNumber", "cfx_getStatus"]), name="stalecheck"
         )
     return w3
 
