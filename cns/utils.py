@@ -63,9 +63,6 @@ def build_stalecheck_middleware(allowable_delay: int, skip_stalecheck_for_method
     
 
 def customize_web3(w3: "_Web3") -> "_Web3":
-    
-    from web3.middleware.stalecheck import StalecheckMiddlewareBuilder
-
     if w3.middleware_onion.get("name_to_address"):
         w3.middleware_onion.remove("name_to_address")
 
