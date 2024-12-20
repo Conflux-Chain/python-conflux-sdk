@@ -21,11 +21,16 @@ from web3.contract.contract import (
 
 from eth_typing import (
     ABI,
+    HexStr,
 )
 
 from web3.types import (
     StateOverride,
     ABIElementIdentifier,
+)
+
+from cfx_utils.decorators import (
+    combomethod,
 )
 
 from cfx_utils.token_unit import (
@@ -36,6 +41,7 @@ from cfx_address import (
 )
 from conflux_web3.types import (
     TxParam,
+    TxDict,
     AddressParam,
     EpochNumberParam,
 )
@@ -89,7 +95,7 @@ class ConfluxContractFunction(ContractFunction):
     def __call__(self, *args: Any, **kwargs: Any) -> "ConfluxContractFunction":
         return super().__call__(*args, **kwargs) # type: ignore
     
-    def build_transaction(self, transaction: Optional[TxParam] = None) -> TxParam:
+    def build_transaction(self, transaction: Optional[TxParam] = None) -> TxDict:
         built_transaction = self._build_transaction(transaction)  # type: ignore
         return build_transaction_for_function(
             self.address,
@@ -134,6 +140,10 @@ class ConfluxContractFunction(ContractFunction):
         if transaction and "value" in transaction:
             transaction["value"] = to_int_if_drip_units(transaction["value"])
         return super().transact(transaction) # type: ignore
+    
+    @combomethod
+    def encode_transaction_data(cls) -> HexStr:
+        return cls._encode_transaction_data()
 
     @classmethod
     def factory(cls, class_name: str, **kwargs: Any) -> "ConfluxContractFunction":
