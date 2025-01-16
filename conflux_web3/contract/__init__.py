@@ -11,11 +11,13 @@ from typing import (
 from web3.contract import (
     Contract,
 )
-
 from web3.contract.utils import (
     find_functions_by_identifier,
+    find_events_by_identifier,
 )
-
+from web3.exceptions import (
+    Web3AttributeError,
+)
 from web3._utils.normalizers import (
     normalize_abi,
     normalize_bytecode,
@@ -61,7 +63,8 @@ from conflux_web3.contract.caller import (
     ConfluxContractCaller
 )
 from conflux_web3.contract.event import (
-    ConfluxContractEvents
+    ConfluxContractEvents,
+    ConfluxContractEvent,
 )
 from conflux_web3.contract.constructor import (
     ConfluxContractConstructor
@@ -101,7 +104,7 @@ class ConfluxContract(Contract):
 
         :param address: Base32 Contract address 
         """
-        if self.w3 is None:
+        if self.w3 is None:  # type: ignore
             raise AttributeError(
                 'The `Contract` class has not been initialized.  Please use the '
                 '`web3.contract` interface to create your contract class.'
@@ -121,7 +124,7 @@ class ConfluxContract(Contract):
             raise TypeError("The address argument is required to instantiate a contract.")
 
         self.functions = ConfluxContractFunctions(self.abi, self.w3, self.address, decode_tuples=self.decode_tuples)
-        self.caller = ConfluxContractCaller(self.abi, self.w3, self.address, decode_tuples=self.decode_tuples)
+        self.caller = ConfluxContractCaller(self.abi, self.w3, self.address, decode_tuples=self.decode_tuples, contract_functions=self.functions,)
         self.events = ConfluxContractEvents(self.abi, self.w3, self.address)
         self.fallback = Contract.get_fallback_function(self.abi, self.w3, ConfluxContractFunction, self.address) # type: ignore
         self.receive = Contract.get_receive_function(self.abi, self.w3, ConfluxContractFunction, self.address) # type: ignore
@@ -146,8 +149,24 @@ class ConfluxContract(Contract):
                 normalizers=normalizers,
             ),
         )
+        
+        if contract.abi:
+            for abi in contract.abi:
+                abi_name = abi.get("name")
+                if abi_name in ["abi", "address"]:
+                    raise Web3AttributeError(
+                        f"Contract contains a reserved word `{abi_name}` "
+                        f"and could not be instantiated."
+                    )
+        
         contract.functions = ConfluxContractFunctions(contract.abi, contract.w3, decode_tuples=contract.decode_tuples)
-        contract.caller = ConfluxContractCaller(contract.abi, contract.w3, contract.address, decode_tuples=contract.decode_tuples)
+        contract.caller = ConfluxContractCaller(
+            contract.abi,
+            contract.w3,
+            contract.address,
+            decode_tuples=contract.decode_tuples,
+            contract_functions=contract.functions,
+        )
         contract.events = ConfluxContractEvents(contract.abi, contract.w3)
         contract.fallback = Contract.get_fallback_function(
             contract.abi,
@@ -188,3 +207,15 @@ class ConfluxContract(Contract):
         return find_functions_by_identifier(  # type: ignore
             contract_abi, w3, address, callable_check, ConfluxContractFunction # type: ignore
         )
+    
+    @combomethod
+    def find_events_by_identifier(
+        cls,
+        contract_abi: ABI,
+        w3: "Web3",
+        address: ChecksumAddress,
+        callable_check: Callable[..., Any],
+    ) -> List["ConfluxContractEvent"]:
+        return find_events_by_identifier(
+            contract_abi, w3, address, callable_check, ConfluxContractEvent
+        ) # type: ignore

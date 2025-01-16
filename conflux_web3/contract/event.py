@@ -6,7 +6,6 @@ from typing import (
     Iterable,
     Optional,
     Sequence,
-    Type,
     Union,
     cast,
 )
@@ -19,9 +18,26 @@ from web3.contract.base_contract import (
     BaseContractEvent,
     BaseContractEvents,
 )
+from web3.contract.contract import (
+    ContractEvent,
+)
 from web3.datastructures import (
     AttributeDict,
     MutableAttributeDict,
+)
+from web3.utils.abi import (
+    _get_any_abi_signature_with_name,
+)
+from web3._utils.abi import (
+    get_name_from_abi_element_identifier,
+)
+from web3.exceptions import (
+    NoABIFound,
+    NoABIEventsFound,
+    ABIEventNotFound,
+)
+from eth_utils.abi import (
+    abi_to_signature,
 )
 from eth_typing import (
     ABI,
@@ -67,7 +83,7 @@ from conflux_web3._utils.decorators import (
 if TYPE_CHECKING:
     from conflux_web3 import Web3
 
-class ConfluxContractEvent(BaseContractEvent):
+class ConfluxContractEvent(ContractEvent):
     
     w3: "Web3"
     address: Base32Address
@@ -77,12 +93,6 @@ class ConfluxContractEvent(BaseContractEvent):
         self, txn_receipt: TxReceipt, errors: EventLogErrorFlags = WARN
     ) -> Sequence[EventData]:
         return self._parse_logs(txn_receipt, errors) # type: ignore
-    
-    @combomethod
-    def processReceipt(
-        self, txn_receipt: TxReceipt, errors: EventLogErrorFlags = WARN
-    ) -> Sequence[EventData]:
-        return self.process_receipt(txn_receipt, errors)
     
     @combomethod
     @to_tuple
@@ -131,15 +141,6 @@ class ConfluxContractEvent(BaseContractEvent):
     def process_log(self, log: LogReceipt) -> EventData:
         abi = self.abi or self._get_event_abi()
         return cfx_get_event_data(self.w3.codec, abi, log, self.w3.cfx.chain_id)
-
-    @combomethod
-    def processLog(self, log: LogReceipt) -> EventData:
-        return self.process_log(self.w3.codec, self.abi, log)
-
-    @combomethod
-    @use_instead
-    def createFilter(*args, **kwargs):
-        pass
     
     @combomethod
     @use_instead
@@ -217,10 +218,7 @@ class ConfluxContractEvent(BaseContractEvent):
         return tuple(
             self.process_log(log) for log in logs
         )
-        
-    @combomethod
-    def getLogs(self, *args, **kwargs):
-        return self.get_logs(*args, **kwargs)
+
 
 class ConfluxContractEvents(BaseContractEvents):
     def __init__(
@@ -228,8 +226,39 @@ class ConfluxContractEvents(BaseContractEvents):
     ) -> None:
         super().__init__(abi, w3, ConfluxContractEvent, address) # type: ignore
         
-    def __getitem__(self, event_name: str) -> Type["ConfluxContractEvent"]:
-        return cast(Type[ConfluxContractEvent], super().__getitem__(event_name))
-    
-    def __getattr__(self, event_name: str) -> Type["ConfluxContractEvent"]:
-        return cast(Type[ConfluxContractEvent], super().__getattr__(event_name))
+
+    def __getattr__(self, event_name: str) -> "ConfluxContractEvent":
+        if super().__getattribute__("abi") is None:
+            raise NoABIFound(
+                "There is no ABI found for this contract.",
+            )
+        elif "_events" not in self.__dict__ or len(self._events) == 0:
+            raise NoABIEventsFound(
+                "The abi for this contract contains no event definitions. ",
+                "Are you sure you provided the correct contract abi?",
+            )
+        elif get_name_from_abi_element_identifier(event_name) not in [
+            get_name_from_abi_element_identifier(event["name"])
+            for event in self._events
+        ]:
+            raise ABIEventNotFound(
+                f"The event '{event_name}' was not found in this contract's abi. ",
+                "Are you sure you provided the correct contract abi?",
+            )
+
+        if "(" not in event_name:
+            event_name = _get_any_abi_signature_with_name(event_name, self._events)
+        else:
+            event_name = f"_{event_name}"
+
+        return super().__getattribute__(event_name)
+
+    def __getitem__(self, event_name: str) -> "ConfluxContractEvent":
+        return getattr(self, event_name)
+
+    def __iter__(self) -> Iterable["ConfluxContractEvent"]:
+        if not hasattr(self, "_events") or not self._events:
+            return
+
+        for event in self._events:
+            yield self[abi_to_signature(event)]
