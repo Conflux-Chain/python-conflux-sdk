@@ -6,21 +6,14 @@ from typing import (
 from eth_utils.toolz import (
     partial,
 )
-
-from web3._utils.contracts import (
-    parse_block_identifier,
+from eth_typing import (
+    ABI,
 )
 
 from web3.contract.base_contract import (
     BaseContractCaller,
 )
-from eth_typing import (
-    ABI,
-)
 
-from eth_utils.abi import (
-    filter_abi_by_type,
-)
 
 from conflux_web3.types import (
     TxParam,
@@ -29,7 +22,7 @@ from conflux_web3.types import (
 )
 
 from .function import (
-    ConfluxContractFunction
+    ConfluxContractFunctions,
 )
 
 if TYPE_CHECKING:
@@ -46,6 +39,7 @@ class ConfluxContractCaller(BaseContractCaller):
         block_identifier: EpochNumberParam = "latest_state",
         ccip_read_enabled: Optional[bool] = None,
         decode_tuples: Optional[bool] = False,
+        contract_functions: Optional[ConfluxContractFunctions] = None,
     ) -> None:
         super().__init__(
             abi,
@@ -54,32 +48,26 @@ class ConfluxContractCaller(BaseContractCaller):
             decode_tuples=decode_tuples
         )
 
+
         if self.abi:
             if transaction is None:
                 transaction = {}
 
-            self._functions = filter_abi_by_type("function", self.abi)
-            for func in self._functions:
-                fn: ConfluxContractFunction = ConfluxContractFunction.factory(
-                    func["name"],
-                    w3=self.w3,
-                    contract_abi=self.abi,
-                    address=self.address,
-                    abi_element_identifier=func["name"],
-                    decode_tuples=decode_tuples,
+            if contract_functions is None:
+                contract_functions = ConfluxContractFunctions(
+                    abi, w3, address=address, decode_tuples=decode_tuples
                 )
 
-                block_id = parse_block_identifier(self.w3, block_identifier)
+            self._functions = contract_functions._functions
+            for fn in contract_functions.__iter__():
                 caller_method = partial(
                     self.call_function,
                     fn,
                     transaction=transaction,
-                    block_identifier=block_id,
+                    block_identifier=block_identifier,
                     ccip_read_enabled=ccip_read_enabled,
-                    # decode_tuples=decode_tuples,
                 )
-
-                setattr(self, func["name"], caller_method)
+                setattr(self, str(fn.abi_element_identifier), caller_method)
         
 
     def __call__(

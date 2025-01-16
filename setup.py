@@ -5,7 +5,7 @@ from setuptools import (
     setup,
 )
 
-VERSION = "1.4.0-beta.4"
+VERSION = "1.4.0-beta.6"
 DESCRIPTION = 'Python SDK for Conflux network'
 with open('./README.md') as readme:
     long_description = readme.read()
@@ -99,7 +99,7 @@ setup(
                   "cns": ["py.typed"]},
     url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
-        "web3==7.4.0",
+        "web3==7.7.0",
         "cfx-address>=1.2.0",
         "cfx-account>=1.2.0",
         "cfx-utils>=1.0.5",
