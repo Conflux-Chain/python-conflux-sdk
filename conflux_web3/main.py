@@ -38,6 +38,9 @@ from cfx_account import (
 from conflux_web3.types import (
     MiddlewareOnion
 )
+from conflux_web3.providers.rpc import (
+    HTTPProvider
+)
 from conflux_web3.middleware import (
     conflux_default_middlewares
 )
@@ -64,6 +67,8 @@ if TYPE_CHECKING:
 class Web3(OriWeb3):
     cfx: ConfluxClient
     txpool: Txpool
+    
+    HTTPProvider = HTTPProvider
     
     def __init__(
         self,
