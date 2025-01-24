@@ -13,7 +13,11 @@ build:
     pre_build:
       # Generate on-the-fly Sphinx configuration from Jupyter Book's _config.yml
       - "jupyter-book config sphinx docs/en"
-      - "jupyter-book build docs/en"
+    build:
+      html:
+        - "jupyter-book build docs/en"
+        - "cp -r docs/en/_build/* $READTHEDOCS_OUTPUT"
+
 
 python:
   install:

@@ -14,6 +14,11 @@ build:
       # Generate on-the-fly Sphinx configuration from Jupyter Book's _config.yml
       - "jupyter-book config sphinx docs/zh-CN"
       - "jupyter-book build docs/zh-CN"
+    build:
+      html:
+        - "jupyter-book build docs/zh-CN"
+        - "cp -r docs/zh-CN/_build/* $READTHEDOCS_OUTPUT"
+
 python:
   install:
   - requirements: docs/requirements-doc.txt
