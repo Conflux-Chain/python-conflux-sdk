@@ -16,6 +16,7 @@ build:
     build:
       html:
         - "jupyter-book build docs/en"
+        - "mkdir -p $READTHEDOCS_OUTPUT"
         - "cp -r docs/en/_build/* $READTHEDOCS_OUTPUT"
 
 
