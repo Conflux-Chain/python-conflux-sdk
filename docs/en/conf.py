@@ -3,12 +3,13 @@
 # If you wish to continue using _config.yml, make edits to that file and
 # re-generate this one.
 ###############################################################################
-author = 'Read the Docs team'
+always_use_bars_union = True
+author = 'Conflux'
 autoclass_content = 'both'
 comments_config = {'hypothesis': False, 'utterances': False}
-copyright = '2023'
+copyright = '2025'
 exclude_patterns = ['**.ipynb_checkpoints', '.DS_Store', 'Thumbs.db', '_build']
-extensions = ['sphinx_togglebutton', 'sphinx_copybutton', 'myst_nb', 'jupyter_book', 'sphinx_thebe', 'sphinx_comments', 'sphinx_external_toc', 'sphinx.ext.intersphinx', 'sphinx_design', 'sphinx_book_theme', 'sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.napoleon', 'sphinx.ext.doctest', 'IPython.sphinxext.ipython_console_highlighting', 'sphinx_jupyterbook_latex', 'sphinx_multitoc_numbering']
+extensions = ['sphinx_togglebutton', 'sphinx_copybutton', 'myst_nb', 'jupyter_book', 'sphinx_thebe', 'sphinx_comments', 'sphinx_external_toc', 'sphinx.ext.intersphinx', 'sphinx_design', 'sphinx_book_theme', 'sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.napoleon', 'sphinx.ext.doctest', 'IPython.sphinxext.ipython_console_highlighting', 'sphinx_autodoc_typehints', 'sphinx_jupyterbook_latex', 'sphinx_multitoc_numbering']
 external_toc_exclude_missing = False
 external_toc_path = '_toc.yml'
 html_baseurl = ''
@@ -31,5 +32,8 @@ nb_output_stderr = 'show'
 numfig = True
 pygments_style = 'sphinx'
 suppress_warnings = ['myst.domains']
+typehints_fully_qualified = True
+typehints_use_signature = True
+typehints_use_signature_return = True
 use_jupyterbook_latex = True
 use_multitoc_numbering = True
