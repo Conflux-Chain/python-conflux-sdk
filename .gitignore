@@ -24,3 +24,5 @@ main*.py
 docs/*/_build
 docs/*/_autosummary
 .coverage
+docs/examples/zh
+docs/examples/en
