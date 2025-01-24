@@ -11,7 +11,6 @@
   - [Quickstart](#quickstart)
   - [文档](#文档)
     - [在线运行示例代码](#在线运行示例代码)
-    - [本地化](#本地化)
 
 
 ## 概览
@@ -67,12 +66,3 @@ w3.cfx.send_transaction(transaction)
 ### 在线运行示例代码
 
 文档中提供的示例代码可以通过[mybinder](https://mybinder.org/)在线运行。 您可以依次点击代码示例页顶部的 `🚀` -> `Binder` 来启动环境。环境中已配置好运行代码的必备依赖，因此相关代码可以直接运行。
-
-### 本地化
-
-当前的文档支持两种语言:
-
-* 英文版本
-* 中文版本
-
-欢迎您通过 [GitLocalize](https://gitlocalize.com/repo/8175) 为我们提供翻译。
