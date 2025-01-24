@@ -13,21 +13,20 @@ publish:
 
 rm-doc:
 	rm -rf docs/en/_build
-	
+	rm -rf docs/zh-CN/_build
 gen-doc-config:
 	jupyter-book config sphinx docs/en
 	jupyter-book config sphinx docs/zh-CN
 
 gen-example-from-base:
 	mmg -b mmg.yml
-
-copy-examples:
 	cp -r docs/examples/en/* docs/en/examples/
 	cp -r docs/examples/zh/* docs/zh-CN/examples/
 
 # Note the first line relies on jupyterbook==0.11.3
-doc: rm-doc gen-doc-config
+doc: rm-doc gen-doc-config gen-example-from-base
 	jupyter-book build docs/en/
+	jupyter-book build docs/zh-CN/
 
 # gen-docs:
 # 	cd ./docs && \
