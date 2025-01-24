@@ -16,6 +16,7 @@ rm-doc:
 	
 gen-doc-config:
 	jupyter-book config sphinx docs/en
+	jupyter-book config sphinx docs/zh-CN
 
 gen-example-from-base:
 	mmg -b mmg.yml
