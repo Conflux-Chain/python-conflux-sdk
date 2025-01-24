@@ -17,6 +17,9 @@ rm-doc:
 gen-doc-config:
 	jupyter-book config sphinx docs/en/ > docs/en/conf.py
 
+gen-example-from-base:
+	mmg -b mmg.yml
+
 # Note the first line relies on jupyterbook==0.11.3
 doc: rm-doc gen-doc-config
 	jupyter-book build docs/en/

@@ -23,4 +23,6 @@ main*.py
 *.bk.py
 docs/*/_build
 docs/*/_autosummary
+docs/examples/zh/*.ipynb
+docs/examples/en/*.ipynb
 .coverage
