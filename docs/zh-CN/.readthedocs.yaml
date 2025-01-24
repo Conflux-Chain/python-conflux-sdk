@@ -17,6 +17,7 @@ build:
     build:
       html:
         - "jupyter-book build docs/zh-CN"
+        - "mkdir -p $READTHEDOCS_OUTPUT"
         - "cp -r docs/zh-CN/_build/* $READTHEDOCS_OUTPUT"
 
 python:
