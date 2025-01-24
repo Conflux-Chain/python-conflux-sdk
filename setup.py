@@ -47,6 +47,7 @@ extras_require = {
         # "sphinx>=4.2.0,<5",
         "jupyter-book",
         "mmg==2.0.0",
+        "sphinx-autodoc-typehints",
         # "sphinx_rtd_theme>=0.1.9",
         # "toposort>=1.4",
         # "towncrier==18.5.0",
