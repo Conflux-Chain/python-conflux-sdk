@@ -13,7 +13,6 @@
   - [Quickstart](#quickstart)
   - [Documentations](#documentations)
     - [Run Code Examples Online!](#run-code-examples-online)
-    - [Localization](#localization)
 
 
 ## Overview
@@ -73,12 +72,3 @@ More detailed code examples are provided in the [documentation](https://python-c
 ### Run Code Examples Online!
 
 All code examples can be run online in [mybinder](https://mybinder.org/). You can click `🚀` -> `Binder` on the top bar to activate the running environment. All dependencies wil be installed and the example can be run immediately.
-
-### Localization
-
-Currently this documentation supports:
-
-* English version
-* Chinese version
-
-And welcome to provide translation in [GitLocalize](https://gitlocalize.com/repo/8175).
