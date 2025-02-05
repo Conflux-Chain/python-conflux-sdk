@@ -1,5 +1,15 @@
 # Change Logs
 
+## 1.4.0
+
+* bump web3.py to 7.8.0
+  * middleware refactor with web3.py v6 -> v7 change
+* feat: provider supports default retry
+* feat: embedded contract name with type hints
+* feat: supports EIP-1559
+* chore: improved ci and docs
+* incompatible changes: fromEpoch/toEpoch -> from_epoch/to_epoch
+
 ## 1.3.0
 
 * bump web3.py to 6.20.x
