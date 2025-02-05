@@ -17,7 +17,7 @@ from cfx_address.utils import (
     normalize_to
 )
 from cfx_utils.exceptions import (
-    InvalidBase32Address
+    InvalidAddress,
 )
 from conflux_web3._utils.cns import (
     is_cns_name
@@ -33,8 +33,9 @@ class Base32AddressEncoder(AddressEncoder):
             return
         try:
             normalize_to(value, None)
-        except InvalidBase32Address:
+        except InvalidAddress:
             raise EncodingError(f"Not a valid Base32 address nor hex address: {value}")
+
 
 class CfxAddressDecoder(AddressDecoder):
     decode_fn = lambda x: x
