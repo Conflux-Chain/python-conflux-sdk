@@ -2,7 +2,6 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Optional,
-    Iterable,
 )
 
 from eth_typing import (
@@ -20,13 +19,6 @@ from web3.contract.base_contract import (
 from web3.contract.contract import (
     ContractFunction,
 )
-from web3._utils.abi import (
-    get_name_from_abi_element_identifier,
-
-)
-from web3.utils.abi import (
-    _get_any_abi_signature_with_name,
-)
 
 from web3.contract.utils import (
     call_contract_function
@@ -35,11 +27,6 @@ from web3.contract.utils import (
 from web3.types import (
     StateOverride,
     ABIElementIdentifier,
-)
-from web3.exceptions import (
-    NoABIFound,
-    NoABIFunctionsFound,
-    ABIFunctionNotFound,
 )
 
 from cfx_utils.decorators import (
@@ -165,7 +152,7 @@ class ConfluxContractFunction(ContractFunction):
     #     return cast(ConfluxContractFunction, PropertyCheckingFactory(class_name, (cls,), kwargs)(kwargs.get("abi")))
 
 
-class ConfluxContractFunctions(BaseContractFunctions):
+class ConfluxContractFunctions(BaseContractFunctions[ConfluxContractFunction]):
     def __init__(
         self,
         abi: ABI,
@@ -180,44 +167,3 @@ class ConfluxContractFunctions(BaseContractFunctions):
             address, # type: ignore
             decode_tuples
         )
-    
-    def __iter__(self) -> Iterable["ConfluxContractFunction"]:
-        if not hasattr(self, "_functions") or not self._functions:
-            return
-
-        for func in self._functions:
-            yield self[abi_to_signature(func)]
-    
-
-    def __getattr__(self, function_name: str) -> "ContractFunction":
-        if super().__getattribute__("abi") is None:
-            raise NoABIFound(
-                "There is no ABI found for this contract.",
-            )
-        elif "_functions" not in self.__dict__ or len(self._functions) == 0:
-            raise NoABIFunctionsFound(
-                "The abi for this contract contains no function definitions. ",
-                "Are you sure you provided the correct contract abi?",
-            )
-        elif get_name_from_abi_element_identifier(function_name) not in [
-            get_name_from_abi_element_identifier(function["name"])
-            for function in self._functions
-        ]:
-            raise ABIFunctionNotFound(
-                f"The function '{function_name}' was not found in this ",
-                "contract's abi.",
-            )
-
-        if "(" not in function_name:
-            function_name = _get_any_abi_signature_with_name(
-                function_name, self._functions
-            )
-        else:
-            function_name = f"_{function_name}"
-
-        return super().__getattribute__(
-            function_name,
-        )
-    
-    def __getitem__(self, function_name: str) -> "ConfluxContractFunction":
-        return getattr(self, function_name)

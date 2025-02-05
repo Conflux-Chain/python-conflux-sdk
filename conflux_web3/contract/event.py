@@ -220,45 +220,8 @@ class ConfluxContractEvent(ContractEvent):
         )
 
 
-class ConfluxContractEvents(BaseContractEvents):
+class ConfluxContractEvents(BaseContractEvents[ConfluxContractEvent]):
     def __init__(
         self, abi: ABI, w3: "Web3", address: Optional[AddressParam] = None
     ) -> None:
         super().__init__(abi, w3, ConfluxContractEvent, address) # type: ignore
-        
-
-    def __getattr__(self, event_name: str) -> "ConfluxContractEvent":
-        if super().__getattribute__("abi") is None:
-            raise NoABIFound(
-                "There is no ABI found for this contract.",
-            )
-        elif "_events" not in self.__dict__ or len(self._events) == 0:
-            raise NoABIEventsFound(
-                "The abi for this contract contains no event definitions. ",
-                "Are you sure you provided the correct contract abi?",
-            )
-        elif get_name_from_abi_element_identifier(event_name) not in [
-            get_name_from_abi_element_identifier(event["name"])
-            for event in self._events
-        ]:
-            raise ABIEventNotFound(
-                f"The event '{event_name}' was not found in this contract's abi. ",
-                "Are you sure you provided the correct contract abi?",
-            )
-
-        if "(" not in event_name:
-            event_name = _get_any_abi_signature_with_name(event_name, self._events)
-        else:
-            event_name = f"_{event_name}"
-
-        return super().__getattribute__(event_name)
-
-    def __getitem__(self, event_name: str) -> "ConfluxContractEvent":
-        return getattr(self, event_name)
-
-    def __iter__(self) -> Iterable["ConfluxContractEvent"]:
-        if not hasattr(self, "_events") or not self._events:
-            return
-
-        for event in self._events:
-            yield self[abi_to_signature(event)]
