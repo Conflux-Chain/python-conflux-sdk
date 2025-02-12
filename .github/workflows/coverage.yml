@@ -21,9 +21,10 @@ jobs:
       run: |
         make build
 
-    - name: Install built package
+    - name: Install built package and avoid local import
       run: |
         pip install dist/*.whl --force-reinstall
+        rm -rf conflux_web3
     - name: Run tests and collect coverage
       run:
         export TESTNET_URL=${{secrets.TESTNET_URL}} &&
