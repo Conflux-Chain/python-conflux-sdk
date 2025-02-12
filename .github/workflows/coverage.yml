@@ -23,7 +23,7 @@ jobs:
 
     - name: Install built package
       run: |
-        pip install dist/*.whl
+        pip install dist/*.whl --force-reinstall
     - name: Run tests and collect coverage
       run:
         export TESTNET_URL=${{secrets.TESTNET_URL}} &&
