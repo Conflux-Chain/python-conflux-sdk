@@ -25,7 +25,16 @@ jobs:
   
     - name: Install dependencies
       run: |
-        pip install ".[tester]"
+        pip install ".[dev]"
+
+    - name: Build package
+      run: |
+        make build
+
+    - name: Install built package
+      run: |
+        pip install dist/*.whl
+
     - name: Run test
       run: |
         make test

@@ -15,7 +15,15 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install requirements
-      run: pip install ".[tester]"
+      run: pip install ".[dev]"
+    
+    - name: Build package
+      run: |
+        make build
+
+    - name: Install built package
+      run: |
+        pip install dist/*.whl
     - name: Run tests and collect coverage
       run:
         export TESTNET_URL=${{secrets.TESTNET_URL}} &&
