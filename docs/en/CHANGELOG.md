@@ -1,5 +1,9 @@
 # Change Logs
 
+## 1.4.1
+
+* fix: packing issues
+
 ## 1.4.0
 
 * bump web3.py to 7.8.0
