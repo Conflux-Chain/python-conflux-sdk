@@ -1,5 +1,10 @@
 # Change Logs
 
+## 1.4.2
+
+* chore: bump web3.py to 7.10.0
+* chore: pin cfx-* package versions
+
 ## 1.4.1
 
 * fix: packing issues
