@@ -101,7 +101,7 @@ setup(
                   "cns": ["py.typed"]},
     url='https://github.com/conflux-chain/python-conflux-sdk',
     install_requires=[
-        "web3==7.10.0",
+        "web3==7.11.1",
         "cfx-address>=1.2.4,<1.3.0",
         "cfx-account>=1.2.2,<1.3.0", 
         "cfx-utils>=1.0.5,<1.2.0",
