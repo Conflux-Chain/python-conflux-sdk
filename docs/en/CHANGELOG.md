@@ -1,5 +1,9 @@
 # Change Logs
 
+## 1.4.3
+
+* chore: bump web3.py to 7.11.1
+
 ## 1.4.2
 
 * chore: bump web3.py to 7.10.0
