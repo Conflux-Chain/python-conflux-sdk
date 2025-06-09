@@ -105,6 +105,7 @@ setup(
         "cfx-address>=1.2.4,<1.3.0",
         "cfx-account>=1.2.2,<1.3.0", 
         "cfx-utils>=1.0.5,<1.2.0",
+        "typing-extensions<=4.13.2",
     ],  # add any additional packages that need to be installed
     # needs to be installed along with your package. Eg: 'caer'
     extras_require=extras_require,
