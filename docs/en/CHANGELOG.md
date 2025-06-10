@@ -1,5 +1,9 @@
 # Change Logs
 
+## 1.4.4
+
+* chore: pin typing-extensions to 4.13.2
+
 ## 1.4.3
 
 * chore: bump web3.py to 7.11.1
