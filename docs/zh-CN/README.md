@@ -1,6 +1,6 @@
 # Introduction
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/conflux-chain/python-conflux-sdk/dev?urlpath=tree/docs/en/examples/01-quickstart.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/conflux-chain/python-conflux-sdk/v1?urlpath=tree/docs/en/examples/01-quickstart.ipynb)
 [![Documentation Status](https://readthedocs.org/projects/python-conflux-sdk/badge/?version=latest)](https://python-conflux-sdk.readthedocs.io/en/latest/?badge=latest)
 
 [README](https://python-conflux-sdk.readthedocs.io/en/latest/README.html) | [中文文档](https://python-conflux-sdk.readthedocs.io/zh_CN/latest/README.html)
