@@ -1,5 +1,6 @@
-jupyter-book
+jupyter-book<2
 conflux-web3
 cfx-utils>=1.0.1
+mmg==2.0.0
 sphinx-autodoc-typehints
 # sphinx-design

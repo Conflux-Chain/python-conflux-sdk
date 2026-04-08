@@ -45,7 +45,7 @@ extras_require = {
         # "py-solc>=0.4.0",
         # "pytest>=6.2.5,<7",
         # "sphinx>=4.2.0,<5",
-        "jupyter-book",
+        "jupyter-book<2",
         "mmg==2.0.0",
         "sphinx-autodoc-typehints",
         # "sphinx_rtd_theme>=0.1.9",
